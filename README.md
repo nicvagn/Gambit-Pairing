@@ -1,4 +1,4 @@
-# Gambit Paring Application (Pre-Alpha)
+# Gambit Paring (Pre-Alpha)
 
 **Important:** Gambit Paring is in pre-alpha development. Features and stability are not guaranteed.
 
