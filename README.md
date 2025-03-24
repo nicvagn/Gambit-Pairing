@@ -1,4 +1,4 @@
-# Swiss Chess Tournament Application
+# Swiss Paring Application
 
 This is a desktop application for managing Swiss-system chess tournaments. It provides a graphical user interface (GUI) built with PyQt6, allowing users to:
 
