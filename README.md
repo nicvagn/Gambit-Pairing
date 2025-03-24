@@ -2,7 +2,7 @@
 
 **Important:** Gambit Paring is in pre-alpha development. Features and stability are not guaranteed.
 
-[(Join our Discord server )\[\[Insert Discord Server Link Here\](https://discord.gg/eEnnetMDfr)\]](https://discord.gg/eEnnetMDfr)
+[Join our Discord](https://discord.gg/eEnnetMDfr)
 
 This is a desktop application for making Swiss-system chess tournament parings. It provides a graphical user interface (GUI) built with PyQt6, allowing users to:
 
