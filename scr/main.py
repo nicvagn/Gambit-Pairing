@@ -1,29 +1,37 @@
 import sys
 import random
 import logging
+from typing import List, Optional, Tuple, Set
 from PyQt6 import QtWidgets, QtGui, QtCore
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class Player:
-    def __init__(self, name):
-        self.name = name
-        self.score = 0
-    def __repr__(self):
+    def __init__(self, name: str) -> None:
+        """Initialize a player with a name and a starting score of 0."""
+        self.name: str = name
+        self.score: float = 0
+
+    def __repr__(self) -> str:
         return self.name
 
 class Tournament:
-    def __init__(self, players):
-        self.players = players
-        self.rounds = []  # Track each round's results
-        self.previous_matches = set()  # Track previous pairings (as frozensets)
-    
-    def create_pairings(self):
-        # Improved pairing algorithm with color assignment: Greedy matching avoiding rematches if possible.
+    def __init__(self, players: List[Player]) -> None:
+        """Initialize the tournament with players and tracking variables."""
+        self.players: List[Player] = players
+        self.rounds: List[Tuple[List[Tuple[Player, Player]], Optional[Player]]] = []  # List of (pairings, bye)
+        self.previous_matches: Set[frozenset] = set()
+
+    def create_pairings(self) -> Tuple[List[Tuple[Player, Player]], Optional[Player]]:
+        """
+        Create pairings for the round using a greedy algorithm that avoids rematches.
+        Automatically awards a bye (1 point) if needed.
+        """
         players_sorted = sorted(self.players, key=lambda p: (-p.score, p.name))
         unpaired = players_sorted.copy()
-        pairings = []
-        bye = None
+        pairings: List[Tuple[Player, Player]] = []
+        bye: Optional[Player] = None
+
         while unpaired:
             p1 = unpaired.pop(0)
             opponent_found = False
@@ -47,7 +55,7 @@ class Tournament:
                     logging.debug(f"Pairing (forced): {white.name} (White) vs {black.name} (Black)")
                 else:
                     bye = p1
-                    bye.score += 1  # award bye point
+                    bye.score += 1  # Awarding bye point automatically
                     logging.debug(f"Bye given to: {bye.name}")
         self.rounds.append((pairings, bye))
         return pairings, bye
@@ -66,7 +74,8 @@ class RoundHistoryDialog(QtWidgets.QDialog):
         btn_close.clicked.connect(self.accept)
         layout.addWidget(btn_close)
     
-    def populate_history(self, rounds):
+    def populate_history(self, rounds) -> None:
+        """Fill the history view with past round pairings and bye information."""
         history = ""
         for index, (pairings, bye) in enumerate(rounds, 1):
             history += f"Round {index} Pairings:\n"
@@ -81,77 +90,83 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Swiss Chess Tournament")
-        self.tournament = None
-        self.round = 0
+        self.tournament: Optional[Tournament] = None
+        self.round: int = 0
+        self.last_round_changes = {}  # For undoing score changes
 
-        # Central widget and QSplitter layout for better separation
-        central_widget = QtWidgets.QWidget()
-        self.setCentralWidget(central_widget)
-        splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
-        layout = QtWidgets.QVBoxLayout(central_widget)
-        layout.addWidget(splitter)
+        # Overhauled GUI: Using a QTabWidget for better organization
+        self.tabs = QtWidgets.QTabWidget()
+        self.setCentralWidget(self.tabs)
 
-        # Top panel: Inputs
-        input_widget = QtWidgets.QWidget()
-        input_layout = QtWidgets.QVBoxLayout(input_widget)
-        # Remove players QPlainTextEdit and add a new players input system
-        self.player_entry_layout = QtWidgets.QHBoxLayout()
+        # ----- Tournament Tab -----
+        self.tournament_tab = QtWidgets.QWidget()
+        tab_layout = QtWidgets.QVBoxLayout(self.tournament_tab)
+        
+        # Control Panel (Player input, actions)
+        control_panel = QtWidgets.QWidget()
+        control_layout = QtWidgets.QHBoxLayout(control_panel)
+        # Left side: Player Input & List
+        player_panel = QtWidgets.QVBoxLayout()
         self.input_player_line = QtWidgets.QLineEdit()
         self.input_player_line.setPlaceholderText("Enter player name")
         self.btn_add_player = QtWidgets.QPushButton("Add Player")
         self.btn_add_player.clicked.connect(self.add_player)
-        self.player_entry_layout.addWidget(self.input_player_line)
-        self.player_entry_layout.addWidget(self.btn_add_player)
-        input_layout.addLayout(self.player_entry_layout)
+        player_panel.addWidget(self.input_player_line)
+        player_panel.addWidget(self.btn_add_player)
         self.list_players = QtWidgets.QListWidget()
-        # Added context-menu support for removing players
         self.list_players.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.list_players.customContextMenuRequested.connect(self.on_player_context_menu)
-        input_layout.addWidget(self.list_players)
-
+        player_panel.addWidget(self.list_players)
+        control_layout.addLayout(player_panel)
+        # Right side: Tournament Actions
+        action_panel = QtWidgets.QVBoxLayout()
         self.btn_start = QtWidgets.QPushButton("Start Tournament")
         self.btn_start.clicked.connect(self.start_tournament)
-        input_layout.addWidget(self.btn_start)
-
-        # Replace freeform results input with a results table for current pairings
-        self.table_results = QtWidgets.QTableWidget(0, 4)
-        self.table_results.setHorizontalHeaderLabels(["White", "Black", "White Score", "Black Score"])
-        self.table_results.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
-        input_layout.addWidget(self.table_results)
-
+        action_panel.addWidget(self.btn_start)
         self.btn_next = QtWidgets.QPushButton("Next Round")
         self.btn_next.clicked.connect(self.next_round)
         self.btn_next.setEnabled(False)
-        input_layout.addWidget(self.btn_next)
-
+        action_panel.addWidget(self.btn_next)
+        self.btn_undo = QtWidgets.QPushButton("Undo Last Round")
+        self.btn_undo.clicked.connect(self.undo_last_round)
+        self.btn_undo.setEnabled(False)
+        action_panel.addWidget(self.btn_undo)
         self.btn_history = QtWidgets.QPushButton("Round History")
         self.btn_history.clicked.connect(self.show_round_history)
         self.btn_history.setEnabled(False)
-        input_layout.addWidget(self.btn_history)
-
-        splitter.addWidget(input_widget)
-
-        # Bottom panel: Outputs
-        output_widget = QtWidgets.QWidget()
-        output_layout = QtWidgets.QVBoxLayout(output_widget)
-        self.pairings_label = QtWidgets.QLabel("Round Pairings:")
-        output_layout.addWidget(self.pairings_label)
+        action_panel.addWidget(self.btn_history)
+        control_layout.addLayout(action_panel)
+        tab_layout.addWidget(control_panel)
+        
+        # Results Table
+        self.table_results = QtWidgets.QTableWidget(0, 4)
+        self.table_results.setHorizontalHeaderLabels(["White", "Black", "White Score", "Black Score"])
+        self.table_results.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        tab_layout.addWidget(self.table_results)
+        
+        # Bottom Panel: Pairings and Standings side by side
+        bottom_panel = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.text_result = QtWidgets.QPlainTextEdit()
         self.text_result.setReadOnly(True)
-        output_layout.addWidget(self.text_result)
-
-        self.standings_label = QtWidgets.QLabel("Standings:")
-        output_layout.addWidget(self.standings_label)
+        bottom_panel.addWidget(self.text_result)
         self.table_standings = QtWidgets.QTableWidget(0, 2)
         self.table_standings.setHorizontalHeaderLabels(["Player", "Score"])
         self.table_standings.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
-        output_layout.addWidget(self.table_standings)
-
-        splitter.addWidget(output_widget)
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 2)
-
-        # Menu with Reset and Export options
+        bottom_panel.addWidget(self.table_standings)
+        bottom_panel.setSizes([300,300])
+        tab_layout.addWidget(bottom_panel)
+        
+        self.tabs.addTab(self.tournament_tab, "Tournament")
+        
+        # ----- History Tab -----
+        self.history_tab = QtWidgets.QWidget()
+        history_layout = QtWidgets.QVBoxLayout(self.history_tab)
+        self.history_view = QtWidgets.QPlainTextEdit()
+        self.history_view.setReadOnly(True)
+        history_layout.addWidget(self.history_view)
+        self.tabs.addTab(self.history_tab, "History")
+        
+        # Menu: Reset, Export, and Undo Last Round actions
         menu_bar = self.menuBar()
         tournament_menu = menu_bar.addMenu("Tournament")
         reset_action = QtGui.QAction("Reset Tournament", self)
@@ -160,46 +175,13 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         export_action = QtGui.QAction("Export Tournament", self)
         export_action.triggered.connect(self.export_tournament)
         tournament_menu.addAction(export_action)
-
-        # Apply enhanced high-contrast style sheet and custom fonts for better visibility
-        self.setStyleSheet("""
-            QMainWindow { 
-                background-color: #2e2e2e; 
-                font-family: Arial, sans-serif; 
-                font-size: 14px; 
-                color: #f0f0f0; 
-            }
-            QPushButton { 
-                background-color: #444444; 
-                border: none; 
-                padding: 8px; 
-                font-size: 14px; 
-                color: #f0f0f0; 
-            }
-            QPushButton:hover { 
-                background-color: #555555; 
-            }
-            QPlainTextEdit, QTableWidget { 
-                background-color: #3e3e3e; 
-                color: #f0f0f0; 
-                border: 1px solid #555555; 
-            }
-            QLabel { 
-                color: #f0f0f0; 
-            }
-            QHeaderView::section { 
-                background-color: #444444; 
-                color: #f0f0f0; 
-                padding: 4px; 
-            }
-        """)
-        # Set global font for readability
-        app_font = QtGui.QFont("Arial", 12)
-        self.setFont(app_font)
+        undo_action = QtGui.QAction("Undo Last Round", self)
+        undo_action.triggered.connect(self.undo_last_round)
+        tournament_menu.addAction(undo_action)
         self.statusBar().showMessage("Ready")
-
+    
     # New method to remove a player via context menu
-    def on_player_context_menu(self, point):
+    def on_player_context_menu(self, point) -> None:
         item = self.list_players.itemAt(point)
         if item:
             menu = QtWidgets.QMenu(self)
@@ -208,7 +190,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 row = self.list_players.row(item)
                 self.list_players.takeItem(row)
 
-    def add_player(self):
+    def add_player(self) -> None:
         name = self.input_player_line.text().strip()
         if name:
             # Optionally check if player already exists
@@ -218,7 +200,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             self.list_players.addItem(name)
             self.input_player_line.clear()
 
-    def reset_tournament(self):
+    def reset_tournament(self) -> None:
         reply = QtWidgets.QMessageBox.question(
             self, "Reset Tournament",
             "Are you sure you want to reset the tournament?",
@@ -237,7 +219,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             self.btn_next.setEnabled(False)
             self.btn_history.setEnabled(False)
 
-    def start_tournament(self):
+    def start_tournament(self) -> None:
         # Use players from list widget
         names = [self.list_players.item(i).text() for i in range(self.list_players.count())]
         if len(names) < 2:
@@ -253,17 +235,13 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.btn_add_player.setEnabled(False)
         self.display_round()
 
-    def next_round(self):
+    def next_round(self) -> None:
         # Check for any empty score fields
         row_count = self.table_results.rowCount()
-        empty_found = False
-        for row in range(row_count):
-            white_score_item = self.table_results.item(row, 2)
-            black_score_item = self.table_results.item(row, 3)
-            if (not white_score_item or white_score_item.text().strip() == "") or \
-               (not black_score_item or black_score_item.text().strip() == ""):
-                empty_found = True
-                break
+        empty_found = any(
+            not (self.table_results.item(row, 2).text().strip() and self.table_results.item(row, 3).text().strip())
+            for row in range(row_count)
+        )
         if empty_found:
             confirm = QtWidgets.QMessageBox.question(
                 self, "Incomplete Scores",
@@ -273,7 +251,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             if confirm == QtWidgets.QMessageBox.StandardButton.No:
                 return
 
-        # Iterate through results table to update scores
+        round_changes = {}
         for row in range(row_count):
             white_item = self.table_results.item(row, 0)
             black_item = self.table_results.item(row, 1)
@@ -294,13 +272,31 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             for player in self.tournament.players:
                 if player.name == white_name:
                     player.score += white_score
+                    round_changes[white_name] = round_changes.get(white_name, 0) + white_score
                 elif player.name == black_name:
                     player.score += black_score
+                    round_changes[black_name] = round_changes.get(black_name, 0) + black_score
+        self.last_round_changes = round_changes
+        self.btn_undo.setEnabled(True)
         self.table_results.setRowCount(0)
         self.round += 1
         self.display_round()
 
-    def display_round(self):
+    def undo_last_round(self) -> None:
+        """Undo the score changes from the last round."""
+        if not self.last_round_changes:
+            QtWidgets.QMessageBox.information(self, "Undo", "No round available to undo.")
+            return
+        for player in self.tournament.players:
+            if player.name in self.last_round_changes:
+                player.score -= self.last_round_changes[player.name]
+        self.last_round_changes = {}
+        self.round = max(self.round - 1, 0)
+        self.update_standings()
+        self.btn_undo.setEnabled(False)
+        QtWidgets.QMessageBox.information(self, "Undo", "Last round has been undone.")
+
+    def display_round(self) -> None:
         pairings, bye = self.tournament.create_pairings()
         # Update pairings text with color assignment
         output = f"Round {self.round} Pairings:\n"
@@ -318,19 +314,32 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.text_result.setPlainText(output)
         # Update round info in status bar
         self.statusBar().showMessage(f"Round {self.round} completed")
-        # Update standings table
+        self.update_standings()
+        # Also update the History tab
+        history = ""
+        for idx, (pair_list, bye) in enumerate(self.tournament.rounds, 1):
+            history += f"Round {idx}:\n"
+            for white, black in pair_list:
+                history += f"  {white} (White) vs {black} (Black)\n"
+            if bye:
+                history += f"  Bye: {bye} (1 point)\n"
+            history += "\n"
+        self.history_view.setPlainText(history)
+
+    def update_standings(self) -> None:
+        """Helper method to update the standings table from tournament players."""
         standings = sorted(self.tournament.players, key=lambda p: (-p.score, p.name))
         self.table_standings.setRowCount(len(standings))
         for row, player in enumerate(standings):
             self.table_standings.setItem(row, 0, QtWidgets.QTableWidgetItem(player.name))
             self.table_standings.setItem(row, 1, QtWidgets.QTableWidgetItem(str(player.score)))
 
-    def show_round_history(self):
+    def show_round_history(self) -> None:
         if self.tournament and self.tournament.rounds:
             dlg = RoundHistoryDialog(self.tournament.rounds, self)
             dlg.exec()
 
-    def export_tournament(self):
+    def export_tournament(self) -> None:
         if not self.tournament:
             QtWidgets.QMessageBox.information(self, "Export Tournament", "No tournament data to export.")
             return
