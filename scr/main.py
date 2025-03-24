@@ -353,22 +353,26 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(self, "Export Error", "TournamentReporter module not found!")
             return
         history = TournamentReporter(self.tournament.rounds).format_history()
+        # Generate standings details
+        standings = sorted(self.tournament.players, key=lambda p: (-p.score, p.name))
+        standings_str = "Standings:\n"
+        for idx, player in enumerate(standings, 1):
+            standings_str += f"{idx}. {player.name} - {player.score} points\n"
+        export_text = standings_str + "\n" + history
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export Tournament", "", "Text Files (*.txt)")
         if filename:
             try:
                 with open(filename, "w", encoding="utf-8") as f:
-                    f.write(history)
+                    f.write(export_text)
                 QtWidgets.QMessageBox.information(self, "Export Successful", f"Tournament exported to {filename}")
             except Exception as e:
                 QtWidgets.QMessageBox.warning(self, "Export Error", f"Error saving file: {e}")
 
-    # Modified method to view results without ending the tournament
     def end_tournament(self) -> None:
         """Display detailed tournament results without ending the tournament."""
         if not self.tournament:
             QtWidgets.QMessageBox.information(self, "View Results", "No tournament in progress.")
             return
-        # Removed disabling of UI elements so the tournament can continue
         detailed = "Current Standings:\n"
         standings = sorted(self.tournament.players, key=lambda p: (-p.score, p.name))
         for idx, player in enumerate(standings, 1):
