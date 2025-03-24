@@ -89,7 +89,7 @@ class RoundHistoryDialog(QtWidgets.QDialog):
 class SwissTournamentApp(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Swiss Chess Tournament")
+        self.setWindowTitle("Gambit Pairing")  # Changed title from "Swiss Chess Tournament"
         self.tournament: Optional[Tournament] = None
         self.round: int = 0
         self.last_round_changes = {}  # For undoing score changes
@@ -178,6 +178,10 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         undo_action = QtGui.QAction("Undo Last Round", self)
         undo_action.triggered.connect(self.undo_last_round)
         tournament_menu.addAction(undo_action)
+        # Modified: Changed button name to "View Results" instead of "End Tournament"
+        view_results_action = QtGui.QAction("View Results", self)
+        view_results_action.triggered.connect(self.end_tournament)
+        tournament_menu.addAction(view_results_action)
         self.statusBar().showMessage("Ready")
     
     # New method to remove a player via context menu
@@ -357,6 +361,38 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.information(self, "Export Successful", f"Tournament exported to {filename}")
             except Exception as e:
                 QtWidgets.QMessageBox.warning(self, "Export Error", f"Error saving file: {e}")
+
+    # Modified method to view results without ending the tournament
+    def end_tournament(self) -> None:
+        """Display detailed tournament results without ending the tournament."""
+        if not self.tournament:
+            QtWidgets.QMessageBox.information(self, "View Results", "No tournament in progress.")
+            return
+        # Removed disabling of UI elements so the tournament can continue
+        detailed = "Current Standings:\n"
+        standings = sorted(self.tournament.players, key=lambda p: (-p.score, p.name))
+        for idx, player in enumerate(standings, 1):
+            detailed += f"{idx}. {player.name} - {player.score} points\n"
+        detailed += "\nRound Details:\n"
+        for i, (pairings, bye) in enumerate(self.tournament.rounds, 1):
+            detailed += f"Round {i}:\n"
+            for white, black in pairings:
+                detailed += f"  {white.name} (White) vs {black.name} (Black)\n"
+            if bye:
+                detailed += f"  Bye: {bye.name}\n"
+            detailed += "\n"
+        # Show detailed results dialog
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle("Tournament Results")
+        layout = QtWidgets.QVBoxLayout(dlg)
+        text_edit = QtWidgets.QPlainTextEdit()
+        text_edit.setReadOnly(True)
+        text_edit.setPlainText(detailed)
+        layout.addWidget(text_edit)
+        btn_close = QtWidgets.QPushButton("Close")
+        btn_close.clicked.connect(dlg.accept)
+        layout.addWidget(btn_close)
+        dlg.exec()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
