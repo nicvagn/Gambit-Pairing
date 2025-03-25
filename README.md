@@ -1,4 +1,8 @@
 # Gambit Paring (Pre-Alpha)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/Python-3.6%2B-blue.svg)](https://www.python.org/)
+[![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 
 **Important:** Gambit Paring is in pre-alpha development. Features and stability are not guaranteed.
 
