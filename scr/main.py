@@ -60,6 +60,57 @@ class Tournament:
         self.rounds.append((pairings, bye))
         return pairings, bye
 
+    def get_opponents(self, player: Player) -> List[Player]:
+        """Return a list of opponents played by the given player."""
+        opponents = []
+        for pairings, bye in self.rounds:
+            for white, black in pairings:
+                if player.name == white.name:
+                    opponents.append(black)
+                elif player.name == black.name:
+                    opponents.append(white)
+        return opponents
+
+    def compute_tiebreakers(self) -> dict[str, dict[str, float]]:
+        """Compute tiebreakers for each player.
+        Returns a dict mapping player name to:
+          - modified_median
+          - solkoff
+          - cum_score
+          - cum_opp_score
+        """
+        tb = {}
+        round_count = len(self.rounds)
+        half_max = round_count / 2 if round_count > 0 else 0
+        for player in self.players:
+            opps = self.get_opponents(player)
+            opp_scores = [opp.score for opp in opps]
+            if not opp_scores:
+                mod_median = 0.0
+            else:
+                if player.score > half_max:
+                    # Plus: drop lowest opponent score
+                    mod_median = sum(opp_scores) - min(opp_scores)
+                elif player.score < half_max:
+                    # Minus: drop highest opponent score
+                    mod_median = sum(opp_scores) - max(opp_scores)
+                else:
+                    # Even: drop both lowest and highest if possible
+                    if len(opp_scores) > 2:
+                        mod_median = sum(opp_scores) - min(opp_scores) - max(opp_scores)
+                    else:
+                        mod_median = sum(opp_scores)
+            solkoff = sum(opp_scores)
+            cum_score = player.score  # Using final score as cumulative score
+            cum_opp_score = sum(opp.score for opp in opps)
+            tb[player.name] = {
+                'modified_median': mod_median,
+                'solkoff': solkoff,
+                'cum_score': cum_score,
+                'cum_opp_score': cum_opp_score
+            }
+        return tb
+
 # Enhanced GUI using PyQt6 with improved styles
 class RoundHistoryDialog(QtWidgets.QDialog):
     def __init__(self, rounds, parent=None):
@@ -87,12 +138,12 @@ class RoundHistoryDialog(QtWidgets.QDialog):
         self.history_text.setPlainText(history)
 
 class SwissTournamentApp(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Gambit Pairing")  # Changed title from "Swiss Chess Tournament"
         self.tournament: Optional[Tournament] = None
-        self.round: int = 0
-        self.last_round_changes = {}  # For undoing score changes
+        self.current_round: int = 1  # Renamed for clarity
+        self.last_round_changes: dict[str, float] = {}
 
         # Overhauled GUI: Using a QTabWidget for better organization
         self.tabs = QtWidgets.QTabWidget()
@@ -185,7 +236,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.statusBar().showMessage("Ready")
     
     # New method to remove a player via context menu
-    def on_player_context_menu(self, point) -> None:
+    def on_player_context_menu(self, point: QtCore.QPoint) -> None:
         item = self.list_players.itemAt(point)
         if item:
             menu = QtWidgets.QMenu(self)
@@ -195,14 +246,20 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 self.list_players.takeItem(row)
 
     def add_player(self) -> None:
-        name = self.input_player_line.text().strip()
-        if name:
-            # Optionally check if player already exists
-            for index in range(self.list_players.count()):
-                if self.list_players.item(index).text() == name:
-                    return
-            self.list_players.addItem(name)
-            self.input_player_line.clear()
+        """
+        Add a new player into the tournament list.
+        Do not allow duplicates or empty names.
+        """
+        name: str = self.input_player_line.text().strip()
+        if not name:
+            return
+        for index in range(self.list_players.count()):
+            if self.list_players.item(index).text() == name:
+                QtWidgets.QMessageBox.warning(self, "Duplicate Player",
+                                              f"Player '{name}' already exists.")
+                return
+        self.list_players.addItem(name)
+        self.input_player_line.clear()
 
     def reset_tournament(self) -> None:
         reply = QtWidgets.QMessageBox.question(
@@ -212,7 +269,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         )
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             self.tournament = None
-            self.round = 0
+            self.current_round = 1
             # Clear players list and results table; remove old widgets references not in use anymore.
             self.list_players.clear()
             self.table_results.setRowCount(0)
@@ -231,7 +288,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             return
         players = [Player(name) for name in names]
         self.tournament = Tournament(players)
-        self.round = 1
+        self.current_round = 1
         self.btn_next.setEnabled(True)
         self.btn_history.setEnabled(True)
         # Disable adding more players once the tournament starts
@@ -240,39 +297,37 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.display_round()
 
     def next_round(self) -> None:
-        # Check for any empty score fields
+        """
+        Process the scores and advance to the next round.
+        Treat empty score fields as 0 upon confirmation.
+        """
         row_count = self.table_results.rowCount()
         empty_found = any(
-            not (self.table_results.item(row, 2).text().strip() and self.table_results.item(row, 3).text().strip())
+            not (self.table_results.item(row, 2).text().strip() and
+                 self.table_results.item(row, 3).text().strip())
             for row in range(row_count)
         )
         if empty_found:
             confirm = QtWidgets.QMessageBox.question(
                 self, "Incomplete Scores",
-                "Some score fields are empty. Do you want to treat empty fields as 0?",
+                "Some score fields are empty. Treat empty fields as 0?",
                 QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
             )
             if confirm == QtWidgets.QMessageBox.StandardButton.No:
                 return
-
-        round_changes = {}
+        
+        round_changes: dict[str, float] = {}
         for row in range(row_count):
-            white_item = self.table_results.item(row, 0)
-            black_item = self.table_results.item(row, 1)
-            white_score_item = self.table_results.item(row, 2)
-            black_score_item = self.table_results.item(row, 3)
-            if not white_item or not black_item:
-                continue
-            white_name = white_item.text()
-            black_name = black_item.text()
+            white_name = self.table_results.item(row, 0).text()
+            black_name = self.table_results.item(row, 1).text()
             try:
-                white_score = float(white_score_item.text()) if white_score_item and white_score_item.text() else 0
+                white_score = float(self.table_results.item(row, 2).text().strip() or 0)
             except ValueError:
-                white_score = 0
+                white_score = 0.0
             try:
-                black_score = float(black_score_item.text()) if black_score_item and black_score_item.text() else 0
+                black_score = float(self.table_results.item(row, 3).text().strip() or 0)
             except ValueError:
-                black_score = 0
+                black_score = 0.0
             for player in self.tournament.players:
                 if player.name == white_name:
                     player.score += white_score
@@ -283,11 +338,13 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.last_round_changes = round_changes
         self.btn_undo.setEnabled(True)
         self.table_results.setRowCount(0)
-        self.round += 1
+        self.current_round += 1
         self.display_round()
 
     def undo_last_round(self) -> None:
-        """Undo the score changes from the last round."""
+        """
+        Revert the score changes applied in the last round.
+        """
         if not self.last_round_changes:
             QtWidgets.QMessageBox.information(self, "Undo", "No round available to undo.")
             return
@@ -295,38 +352,43 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             if player.name in self.last_round_changes:
                 player.score -= self.last_round_changes[player.name]
         self.last_round_changes = {}
-        self.round = max(self.round - 1, 0)
+        self.current_round = max(self.current_round - 1, 1)
         self.update_standings()
         self.btn_undo.setEnabled(False)
         QtWidgets.QMessageBox.information(self, "Undo", "Last round has been undone.")
+        self.update_history_view()
 
     def display_round(self) -> None:
+        """
+        Generate pairings & update UI for the current round.
+        """
         pairings, bye = self.tournament.create_pairings()
-        # Update pairings text with color assignment
-        output = f"Round {self.round} Pairings:\n"
-        # Populate the results table with pairing info for score input
+        output = f"Round {self.current_round} Pairings:\n"
         self.table_results.setRowCount(len(pairings))
         for row, (white, black) in enumerate(pairings):
-            output += f"{white} (White) vs {black} (Black)\n"
+            output += f"{white.name} (White) vs {black.name} (Black)\n"
             self.table_results.setItem(row, 0, QtWidgets.QTableWidgetItem(white.name))
             self.table_results.setItem(row, 1, QtWidgets.QTableWidgetItem(black.name))
-            # Leave score cells (columns 2 and 3) empty for user input
             self.table_results.setItem(row, 2, QtWidgets.QTableWidgetItem(""))
             self.table_results.setItem(row, 3, QtWidgets.QTableWidgetItem(""))
         if bye:
-            output += f"\nBye: {bye} (1 point awarded)\n"
+            output += f"\nBye: {bye.name} (1 point awarded)\n"
         self.text_result.setPlainText(output)
-        # Update round info in status bar
-        self.statusBar().showMessage(f"Round {self.round} completed")
+        self.statusBar().showMessage(f"Round {self.current_round} ready")
         self.update_standings()
-        # Also update the History tab
-        history = ""
+        self.update_history_view()
+
+    def update_history_view(self) -> None:
+        """
+        Consolidate tournament history and update the History tab.
+        """
+        history: str = ""
         for idx, (pair_list, bye) in enumerate(self.tournament.rounds, 1):
             history += f"Round {idx}:\n"
             for white, black in pair_list:
-                history += f"  {white} (White) vs {black} (Black)\n"
+                history += f"  {white.name} (White) vs {black.name} (Black)\n"
             if bye:
-                history += f"  Bye: {bye} (1 point)\n"
+                history += f"  Bye: {bye.name}\n"
             history += "\n"
         self.history_view.setPlainText(history)
 
@@ -358,7 +420,16 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         standings_str = "Standings:\n"
         for idx, player in enumerate(standings, 1):
             standings_str += f"{idx}. {player.name} - {player.score} points\n"
-        export_text = standings_str + "\n" + history
+        # New: Compute and append tiebreaker calculations
+        tiebreakers = self.tournament.compute_tiebreakers()
+        tiebreakers_str = "\nTiebreaker Calculations:\n"
+        for player in standings:
+            tb = tiebreakers.get(player.name, {})
+            tiebreakers_str += (f"{player.name}: Modified Median = {tb.get('modified_median', 0):.1f}, "
+                                f"Solkoff = {tb.get('solkoff', 0):.1f}, "
+                                f"Cumulative Score = {tb.get('cum_score', 0):.1f}, "
+                                f"Cumulative Opponent Score = {tb.get('cum_opp_score', 0):.1f}\n")
+        export_text = standings_str + tiebreakers_str + "\n" + history
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export Tournament", "", "Text Files (*.txt)")
         if filename:
             try:
@@ -369,14 +440,16 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.warning(self, "Export Error", f"Error saving file: {e}")
 
     def end_tournament(self) -> None:
-        """Display detailed tournament results without ending the tournament."""
+        """
+        Display detailed tournament results without ending the tournament.
+        """
         if not self.tournament:
             QtWidgets.QMessageBox.information(self, "View Results", "No tournament in progress.")
             return
-        detailed = "Current Standings:\n"
+        detailed: str = "Current Standings:\n"
         standings = sorted(self.tournament.players, key=lambda p: (-p.score, p.name))
         for idx, player in enumerate(standings, 1):
-            detailed += f"{idx}. {player.name} - {player.score} points\n"
+            detailed += f"{idx}. {player.name} - {player.score:.1f} points\n"
         detailed += "\nRound Details:\n"
         for i, (pairings, bye) in enumerate(self.tournament.rounds, 1):
             detailed += f"Round {i}:\n"
@@ -385,7 +458,16 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             if bye:
                 detailed += f"  Bye: {bye.name}\n"
             detailed += "\n"
-        # Show detailed results dialog
+        # Append tiebreaker calculations
+        tiebreakers = self.tournament.compute_tiebreakers()
+        detailed += "Tiebreaker Calculations:\n"
+        for player in sorted(self.tournament.players, key=lambda p: (-p.score, p.name)):
+            tb = tiebreakers.get(player.name, {})
+            detailed += (f"{player.name}: Modified Median = {tb.get('modified_median',0):.1f}, "
+                         f"Solkoff = {tb.get('solkoff',0):.1f}, "
+                         f"Cumulative Score = {tb.get('cum_score',0):.1f}, "
+                         f"Cumulative Opponent Score = {tb.get('cum_opp_score',0):.1f}\n")
+        detailed += "\n"
         dlg = QtWidgets.QDialog(self)
         dlg.setWindowTitle("Tournament Results")
         layout = QtWidgets.QVBoxLayout(dlg)
