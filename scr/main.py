@@ -2112,7 +2112,8 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
               f"<p>Version: {APP_VERSION}</p>"
               "<p>A simple Swiss pairing application using PyQt6.</p>"
               "<p>Features USCF-style pairings and tiebreaks.</p>"
-              "<p>&copy; 2025</p>") # Replace with actual copyright/author
+              "<p><a href='https://discord.gg/eEnnetMDfr'>Join our Discord community</a></p>"
+              "<p>&copy; 2025</p>")
 
 
     def closeEvent(self, event: QCloseEvent):
