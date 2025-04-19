@@ -43,9 +43,9 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 ## Installation
 
 1. Install Python 3.8 or higher.
-2. Install PyQt6:
+2. Install all required dependencies using `requirements.txt`:
     ```bash
-    pip install PyQt6
+    pip install -r requirements.txt
     ```
 3. Download or clone this repository.
 
