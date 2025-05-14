@@ -1,10 +1,10 @@
-# Gambit Pairing (Alpha)
+# Gambit Pairing (Alpha 0.2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 
-**Important:** Gambit Pairing is in alpha development (version 0.1.0). Features and stability are not guaranteed.
+**Important:** Gambit Pairing is in alpha development (version 0.2.0). Features and stability are not guaranteed.
 
 [Join our Discord](https://discord.gg/eEnnetMDfr)
 
@@ -13,8 +13,9 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 ## Features
 
 - **Player Management**
-  - Add, edit, withdraw/reactivate, and remove players.
-  - Import/export player lists from/to CSV or text files.
+  - Add, edit, withdraw/reactivate, and remove players.
+  - Manage player details with GUI.
+  - Import/export player lists/details from/to CSV or text files.
 - **Tournament Setup**
   - Configure number of rounds and tiebreak order (Median, Solkoff, Cumulative, etc.).
   - Save/load tournaments to/from disk.
@@ -85,7 +86,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 - Tiebreak order is fully configurable and reflected in the standings.
 - Manual pairing adjustments are logged and cannot be undone automatically.
 - Tournament data is saved in `.gpf` files (JSON format).
-- This is an alpha version (0.1.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr).
+- This is an alpha version (0.2.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
 
 ## License
 
