@@ -13,9 +13,9 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 ## Features
 
 - **Player Management**
-  - Add, edit, withdraw/reactivate, and remove players.
-  - Manage player details with GUI.
-  - Import/export player lists/details from/to CSV or text files.
+  - Add, edit, withdraw/reactivate, and remove players.
+  - Manage player details with GUI.
+  - Import/export player lists/details from/to CSV or text files.
 - **Tournament Setup**
   - Configure number of rounds and tiebreak order (Median, Solkoff, Cumulative, etc.).
   - Save/load tournaments to/from disk.
