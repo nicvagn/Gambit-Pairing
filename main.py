@@ -2627,7 +2627,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
               # Fill diagonal (player vs self) with gray background
               diag_item = QtWidgets.QTableWidgetItem("X") # Or player's score again, or empty
-              diag_item.setBackground(QtGui.QColor(220, 220, 220)) # Light gray
+              diag_item.setBackground(QtGui.QColor(157, 157, 157)) # Light gray
               diag_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
               self.table_crosstable.setItem(r_idx, r_idx + 3, diag_item)
 
