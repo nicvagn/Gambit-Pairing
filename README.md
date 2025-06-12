@@ -39,25 +39,6 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
   - Tabbed interface: Tournament Control, Standings, Cross-Table, History Log.
   - High-contrast, accessible UI with tooltips and context menus.
 
-## Screenshots
-
-> _Below are some example screenshots of Gambit Pairing in action._
-
-**Main Tournament Control Tab**  
-![Main Tournament Control](docs/screenshots/main_control.png)
-
-**Standings Tab**  
-![Standings Tab](docs/screenshots/standings.png)
-
-**Cross-Table Tab**  
-![Cross-Table Tab](docs/screenshots/crosstable.png)
-
-**History Log Tab**  
-![History Log Tab](docs/screenshots/history_log.png)
-
-**Print Dialog**  
-![Print Dialog](docs/screenshots/print_gui.png)
-
 ## Requirements
 
 - Python 3.8+
@@ -116,3 +97,22 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 ## License
 
 This project is open source and available under the [MIT License](https://mit-license.org/).
+
+## Screenshots
+
+> _Below are some example screenshots of Gambit Pairing in action._
+
+**Main Tournament Control Tab**  
+![Main Tournament Control](docs/screenshots/main_control.png)
+
+**Standings Tab**  
+![Standings Tab](docs/screenshots/standings.png)
+
+**Cross-Table Tab**  
+![Cross-Table Tab](docs/screenshots/crosstable.png)
+
+**History Log Tab**  
+![History Log Tab](docs/screenshots/history_log.png)
+
+**Print Dialog**  
+![Print Dialog](docs/screenshots/print_gui.png)
