@@ -8,6 +8,7 @@ from typing import List, Optional, Tuple, Set, Dict, Any
 from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtCore import Qt, QDateTime, QFileInfo
 from PyQt6.QtGui import QAction, QFontDatabase, QCloseEvent
+from PyQt6.QtPrintSupport import QPrinter, QPrintDialog, QPrintPreviewDialog
 
 # --- Logging Setup ---
 # Setup logging to file and console
@@ -41,7 +42,7 @@ root_logger.addHandler(console_handler)
 
 # --- Constants ---
 APP_NAME = "Gambit Pairing"
-APP_VERSION = "0.2" # Incremented version
+APP_VERSION = "0.3" # Incremented version
 SAVE_FILE_EXTENSION = ".gpf"
 SAVE_FILE_FILTER = f"Gambit Pairing Files (*{SAVE_FILE_EXTENSION});;All Files (*)"
 CSV_FILTER = "CSV Files (*.csv);;Text Files (*.txt)"
@@ -473,20 +474,20 @@ class Tournament:
                     p2 = temp_final_unpaired.pop(idx)
                     # Assign colors (using same logic as above)
                     pref1 = p1.get_color_preference()
-                    pref2 = p2.get_color_preference()
+                    pref2 = p2_candidate.get_color_preference()
                     white, black = None, None
-                    if pref1 == "White" and (pref2 == "Black" or pref2 is None): white, black = p1, p2
-                    elif pref1 == "Black" and (pref2 == "White" or pref2 is None): white, black = p2, p1
-                    elif pref2 == "White" and (pref1 == "Black" or pref1 is None): white, black = p2, p1
-                    elif pref2 == "Black" and (pref1 == "White" or pref1 is None): white, black = p1, p2
+                    if pref1 == "White" and (pref2 == "Black" or pref2 is None): white, black = p1, p2_candidate
+                    elif pref1 == "Black" and (pref2 == "White" or pref2 is None): white, black = p2_candidate, p1
+                    elif pref2 == "White" and (pref1 == "Black" or pref1 is None): white, black = p2_candidate, p1
+                    elif pref2 == "Black" and (pref1 == "White" or pref1 is None): white, black = p1, p2_candidate
                     if white is None:
                         p1_vc = [c for c in p1.color_history if c is not None]
-                        p2_vc = [c for c in p2.color_history if c is not None]
+                        p2_vc = [c for c in p2_candidate.color_history if c is not None]
                         p1_bal = p1_vc.count("White") - p1_vc.count("Black")
                         p2_bal = p2_vc.count("White") - p2_vc.count("Black")
-                        if p1_bal > p2_bal: white, black = p2, p1
-                        elif p2_bal > p1_bal: white, black = p1, p2
-                        else: white, black = (p1, p2) if p1.rating >= p2.rating else (p2, p1)
+                        if p1_bal > p2_bal: white, black = p2_candidate, p1
+                        elif p2_bal > p1_bal: white, black = p1, p2_candidate
+                        else: white, black = (p1, p2_candidate) if p1.rating >= p2_candidate.rating else (p2_candidate, p1)
                     
                     pairings.append((white, black))
                     round_pairings_ids.append((white.id, black.id))
@@ -517,7 +518,7 @@ class Tournament:
                                 else: white, black = (p1, p2_candidate) if p1.rating >= p2_candidate.rating else (p2_candidate, p1)
                             pairings.append((white, black))
                             round_pairings_ids.append((white.id, black.id))
-                            self.previous_matches.add(frozenset({p1.id, p2_candidate.id}))
+                            self.previous_matches.add(frozenset({p1.id, p2.id}))
                             temp_final_unpaired.pop(idx)
                             paired_p1 = True
                             break
@@ -640,7 +641,7 @@ class Tournament:
                 current_bye_id = self.rounds_byes_ids[round_index]
                 if current_bye_id is not None and current_bye_id != new_opponent_id: 
                      logging.error("Manual Adjust: Complex bye scenario, cannot auto-assign new bye.")
-                     return False # Or handle more gracefully
+                     return False
                 self.rounds_byes_ids[round_index] = p1_orig_opp_id
                 # Remove new_opp's original pairing (which was effectively with a bye)
                 if new_opp_pair_idx != p1_pair_idx and new_opp_pair_idx < len(current_pairings_ids_for_round): # if new_opp was not bye but paired
@@ -1380,6 +1381,11 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         round_layout.addWidget(self.table_pairings)
         self.lbl_bye = QtWidgets.QLabel("Bye: None")
         round_layout.addWidget(self.lbl_bye)
+        # --- Add Print Pairings Button ---
+        self.btn_print_pairings = QtWidgets.QPushButton("Print Pairings")
+        self.btn_print_pairings.setToolTip("Print the current round's pairings")
+        self.btn_print_pairings.clicked.connect(self.print_pairings)
+        round_layout.addWidget(self.btn_print_pairings)
         tab_layout.addWidget(self.round_group)
         self.tabs.addTab(self.tournament_tab, "Tournament Control")
         self.standings_tab = QtWidgets.QWidget()
@@ -1394,6 +1400,11 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.table_standings.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_standings.setAlternatingRowColors(True)
         standings_layout.addWidget(self.table_standings)
+        # --- Add Print Standings Button ---
+        self.btn_print_standings = QtWidgets.QPushButton("Print Standings")
+        self.btn_print_standings.setToolTip("Print the current standings table")
+        self.btn_print_standings.clicked.connect(self.print_standings)
+        standings_layout.addWidget(self.btn_print_standings)
         standings_tab_layout.addWidget(self.standings_group)
         self.tabs.addTab(self.standings_tab, "Standings")
         self.crosstable_tab = QtWidgets.QWidget()
@@ -1898,8 +1909,11 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
         # round_to_prepare_idx is the index for rounds_pairings_ids (0 for R1, 1 for R2, etc.)
         # This should align with self.current_round_index if it means "round for which results are completed"
-        # So, if completed rounds = 0 (self.current_round_index=0), we prepare R1 (index 0).
-        # If completed rounds = 1 (self.current_round_index=1), we prepare R2 (index 1).
+        # Or, more accurately, completed_rounds is the number of rounds whose results are IN.
+        # If current_round_index points to the round WHOSE PAIRINGS ARE SHOWN, then current_round_index = completed_rounds.
+        # For example, after R1 results recorded, current_round_index becomes 1. Completed rounds = 1.
+        # Pairings for R2 (index 1) are then generated. So pairings_generated_for_rounds = 2.
+        
         round_to_prepare_idx = self.current_round_index 
         
         if round_to_prepare_idx >= self.tournament.num_rounds:
@@ -1939,7 +1953,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 return
 
 
-        display_round_number = round_to_prepare_idx + 1
+        display_round_number = self.current_round_index + 1
         self.statusBar().showMessage(f"Generating pairings for Round {display_round_number}...")
         QtWidgets.QApplication.processEvents()
 
@@ -2332,7 +2346,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
               score_b_display = f"{WIN_SCORE - score_w:.1f}" # Calculate display for black's score
               self.update_history_log(f"  {w.name if w else w_id} ({score_w:.1f}) - {b.name if b else b_id} ({score_b_display})")
          
-         # Log bye if one was assigned for this round
+         # Log bye if one was assigned for the undone round
          if round_index_recorded < len(self.tournament.rounds_byes_ids):
             bye_id = self.tournament.rounds_byes_ids[round_index_recorded]
             if bye_id:
@@ -2400,8 +2414,11 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             
             pairings_to_redisplay = []
             for w_id, b_id in pairings_ids_to_redisplay:
-                 w = self.tournament.players.get(w_id); b = self.tournament.players.get(b_id)
+                 w = self.tournament.players.get(w_id)
+                 b = self.tournament.players.get(b_id)
                  if w and b: pairings_to_redisplay.append((w,b))
+                 else: logging.warning(f"Load: Missing player for pairing ({w_id} vs {b_id}) in loaded round {display_round_to_redisplay}")
+            
             bye_player_to_redisplay = self.tournament.players.get(bye_id_to_redisplay) if bye_id_to_redisplay else None
             
             self.display_pairings_for_input(pairings_to_redisplay, bye_player_to_redisplay)
@@ -2500,7 +2517,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                   # status_str = "" if player.is_active else " (I)" 
                   
                   item_rank = QtWidgets.QTableWidgetItem(rank_str)
-                  item_player = QtWidgets.QTableWidgetItem(f"{player.name} ({player.rating or 'NR'}){status_str}") # NR for No Rating
+                  item_player = QtWidgets.QTableWidgetItem(f"{player.name} ({player.rating or 'NR'})" + status_str) # NR for No Rating
                   item_score = QtWidgets.QTableWidgetItem(f"{player.score:.1f}")
                   
                   item_rank.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -2763,7 +2780,8 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                    
                    pairings_to_show = []
                    for w_id, b_id in pairings_ids:
-                        w = self.tournament.players.get(w_id); b = self.tournament.players.get(b_id)
+                        w = self.tournament.players.get(w_id)
+                        b = self.tournament.players.get(b_id)
                         if w and b: pairings_to_show.append((w,b))
                         else: logging.warning(f"Load: Missing player for pairing ({w_id} vs {b_id}) in loaded round {display_round_num}")
                    
@@ -2798,7 +2816,248 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
          finally:
               self._update_ui_state()
 
+    def print_pairings(self):
+        """Print the current round's pairings table in a clean, ink-friendly, professional format (no input widgets)."""
+        if self.table_pairings.rowCount() == 0:
+            QtWidgets.QMessageBox.information(self, "Print Pairings", "No pairings to print.")
+            return
+        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+        preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
+        preview.setWindowTitle("Print Preview - Pairings")
+        def render_preview(printer_obj):
+            doc = QtGui.QTextDocument()
+            round_title = self.round_group.title() if hasattr(self, "round_group") else ""
+            html = f"""
+            <html>
+            <head>
+                <style>
+                    body {{
+                        font-family: Arial, sans-serif;
+                        color: #000;
+                        background: #fff;
+                        margin: 0;
+                        padding: 0;
+                    }}
+                    h2 {{
+                        text-align: center;
+                        margin: 0 0 0.5em 0;
+                        font-size: 1.35em;
+                        font-weight: normal;
+                        letter-spacing: 0.03em;
+                    }}
+                    .subtitle {{
+                        text-align: center;
+                        font-size: 1.05em;
+                        margin-bottom: 1.2em;
+                    }}
+                    table.pairings {{
+                        border-collapse: collapse;
+                        width: 100%;
+                        margin: 0 auto 1.5em auto;
+                    }}
+                    table.pairings th, table.pairings td {{
+                        border: 1px solid #222;
+                        padding: 6px 10px;
+                        text-align: left;
+                        font-size: 11pt;
+                        white-space: nowrap;
+                    }}
+                    table.pairings th {{
+                        font-weight: bold;
+                        background: none;
+                    }}
+                    .bye-row td {{
+                        font-style: italic;
+                        font-weight: bold;
+                        text-align: center;
+                        border-top: 2px solid #222;
+                    }}
+                    .footer {{
+                        text-align: center;
+                        font-size: 9pt;
+                        margin-top: 2em;
+                        color: #888;
+                        letter-spacing: 0.04em;
+                    }}
+                </style>
+            </head>
+            <body>
+                <h2>Pairings</h2>
+                <div class="subtitle">{round_title}</div>
+                <table class="pairings">
+                    <tr>
+                        <th style="width:7%;">Bd</th>
+                        <th style="width:46%;">White</th>
+                        <th style="width:46%;">Black</th>
+                    </tr>
+            """
+            for row in range(self.table_pairings.rowCount()):
+                white_item = self.table_pairings.item(row, 0)
+                black_item = self.table_pairings.item(row, 1)
+                white = white_item.text() if white_item else ""
+                black = black_item.text() if black_item else ""
+                html += f"""
+                    <tr>
+                        <td style="text-align:center;">{row + 1}</td>
+                        <td>{white}</td>
+                        <td>{black}</td>
+                    </tr>
+                """
+            if self.lbl_bye.isVisible() and self.lbl_bye.text() and self.lbl_bye.text() != "Bye: None":
+                html += f"""
+                <tr class="bye-row">
+                    <td colspan="3">{self.lbl_bye.text()}</td>
+                </tr>
+                """
+            html += f"""
+                </table>
+                <div class="footer">
+                    Printed by Gambit Pairing &mdash; {QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm")}
+                </div>
+            </body>
+            </html>
+            """
+            doc.setHtml(html)
+            doc.print(printer_obj)
+        preview.paintRequested.connect(render_preview)
+        preview.exec()
 
+    def print_standings(self):
+        """Print the current standings table in a clean, ink-friendly, professional format with a polished legend."""
+        if self.table_standings.rowCount() == 0:
+            QtWidgets.QMessageBox.information(self, "Print Standings", "No standings to print.")
+            return
+        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+        preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
+        preview.setWindowTitle("Print Preview - Standings")
+        def render_preview(printer_obj):
+            doc = QtGui.QTextDocument()
+            tb_keys = []
+            tb_legend = []
+            for i, tb_key in enumerate(self.tournament.tiebreak_order):
+                short = f"TB{i+1}"
+                tb_keys.append(short)
+                tb_legend.append((short, TIEBREAK_NAMES.get(tb_key, tb_key.title())))
+            html = f"""
+            <html>
+            <head>
+                <style>
+                    body {{
+                        font-family: Arial, sans-serif;
+                        color: #000;
+                        background: #fff;
+                        margin: 0;
+                        padding: 0;
+                    }}
+                    h2 {{
+                        text-align: center;
+                        margin: 0 0 0.5em 0;
+                        font-size: 1.35em;
+                        font-weight: normal;
+                        letter-spacing: 0.03em;
+                    }}
+                    .subtitle {{
+                        text-align: center;
+                        font-size: 1.05em;
+                        margin-bottom: 1.2em;
+                    }}
+                    table.standings {{
+                        border-collapse: collapse;
+                        width: 100%;
+                        margin: 0 auto 1.5em auto;
+                    }}
+                    table.standings th, table.standings td {{
+                        border: 1px solid #222;
+                        padding: 6px 10px;
+                        text-align: center;
+                        font-size: 11pt;
+                        white-space: nowrap;
+                    }}
+                    table.standings th {{
+                        font-weight: bold;
+                        background: none;
+                    }}
+                    .legend {{
+                        width: 100%;
+                        margin: 0 auto 1.5em auto;
+                        font-size: 10.5pt;
+                        color: #222;
+                        border: 1px solid #bbb;
+                        background: none;
+                        padding: 8px 12px;
+                        text-align: left;
+                    }}
+                    .legend-title {{
+                        font-weight: bold;
+                        font-size: 11pt;
+                        margin-bottom: 0.3em;
+                        display: block;
+                        letter-spacing: 0.02em;
+                    }}
+                    .legend-table {{
+                        border-collapse: collapse;
+                        margin-top: 0.2em;
+                    }}
+                    .legend-table td {{
+                        border: none;
+                        padding: 2px 10px 2px 0;
+                        font-size: 10pt;
+                        vertical-align: top;
+                    }}
+                    .footer {{
+                        text-align: center;
+                        font-size: 9pt;
+                        margin-top: 2em;
+                        color: #888;
+                        letter-spacing: 0.04em;
+                    }}
+                </style>
+            </head>
+            <body>
+                <h2>Standings</h2>
+                <div class="subtitle">{self.round_group.title() if hasattr(self, "round_group") else ""}</div>
+                <div class="legend">
+                    <span class="legend-title">Tiebreaker Legend</span>
+                    <table class="legend-table">
+            """
+            for short, name in tb_legend:
+                html += f"<tr><td><b>{short}</b></td><td>{name}</td></tr>"
+            html += """
+                    </table>
+                </div>
+                <table class="standings">
+                    <tr>
+                        <th style="width:6%;">#</th>
+                        <th style="width:32%;">Player</th>
+                        <th style="width:10%;">Score</th>
+            """
+            for short in tb_keys:
+                html += f'<th style="width:7%;">{short}</th>'
+            html += "</tr>"
+            # --- Table Rows ---
+            for row in range(self.table_standings.rowCount()):
+                html += "<tr>"
+                for col in range(self.table_standings.columnCount()):
+                    item = self.table_standings.item(row, col)
+                    cell = item.text() if item else ""
+                    # Rank and Score columns bold
+                    if col == 0 or col == 2:
+                        html += f'<td style="font-weight:bold;">{cell}</td>'
+                    else:
+                        html += f"<td>{cell}</td>"
+                html += "</tr>"
+            html += f"""
+                </table>
+                <div class="footer">
+                    Printed by Gambit Pairing &mdash; {QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm")}
+                </div>
+            </body>
+            </html>
+            """
+            doc.setHtml(html)
+            doc.print(printer_obj)
+        preview.paintRequested.connect(render_preview)
+        preview.exec()
     def check_save_before_proceeding(self) -> bool:
          if not self._dirty or not self.tournament:
               return True 

@@ -1,10 +1,10 @@
-# Gambit Pairing (Alpha 0.2.1)
+# Gambit Pairing (Alpha 0.3.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 
-**Important:** Gambit Pairing is in alpha development (version 0.2.0). Features and stability are not guaranteed.
+**Important:** Gambit Pairing is in alpha development (version 0.3.0). Features and stability are not guaranteed.
 
 [Join our Discord](https://discord.gg/eEnnetMDfr)
 
@@ -29,6 +29,9 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 - **Standings & Tiebreaks**
   - Standings table with configurable tiebreak columns.
   - Cross-table view showing all results.
+- **Print Feature**
+  - Print pairings, standings, or player lists directly from the application.
+  - Print preview and printer selection supported.
 - **History & Export**
   - Detailed history log of actions, pairings, and results.
   - Export standings and player lists to CSV or text.
@@ -74,10 +77,13 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 6. **Standings & Cross-Table:**
     - View current standings and tiebreaks in the Standings tab.
     - View all results in the Cross-Table tab.
-7. **Export & Save:**
+7. **Print:**
+    - Print pairings, standings, or player lists via the "File > Print..." menu.
+    - Use print preview and select your printer before printing.
+8. **Export & Save:**
     - Export standings or player lists via the File menu.
     - Save or load tournaments at any time.
-8. **History:**
+9. **History:**
     - Review all actions and results in the History Log tab.
 
 ## Notes
@@ -86,7 +92,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 - Tiebreak order is fully configurable and reflected in the standings.
 - Manual pairing adjustments are logged and cannot be undone automatically.
 - Tournament data is saved in `.gpf` files (JSON format).
-- This is an alpha version (0.2.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
+- This is an alpha version (0.3.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
 
 ## License
 
