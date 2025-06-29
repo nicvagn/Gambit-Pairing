@@ -1,6 +1,6 @@
 # --- Constants ---
 APP_NAME = "Gambit Pairing"
-APP_VERSION = "0.4" # Incremented version
+APP_VERSION = "0.4.0" # Incremented version
 SAVE_FILE_EXTENSION = ".gpf"
 SAVE_FILE_FILTER = f"Gambit Pairing Files (*{SAVE_FILE_EXTENSION});;All Files (*)"
 CSV_FILTER = "CSV Files (*.csv);;Text Files (*.txt)"

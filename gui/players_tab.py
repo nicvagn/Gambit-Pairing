@@ -68,7 +68,6 @@ QHeaderView::section {
     border: 1px solid #d5dbe4;
     border-bottom: 2px solid #a8b2c4;
     border-right: none;
-    transition: background 0.2s ease-in-out;
 }
 
 QHeaderView::section:pressed,

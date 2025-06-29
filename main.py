@@ -9,7 +9,7 @@ if __name__ == "__main__":
     
     app = QtWidgets.QApplication(sys.argv)
     app.setWindowIcon(QIcon("resources/icons/icon2.webp"))
-    # Optionally load stylesheet
+    # load stylesheet
     try:
         with open("styles.qss", "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
@@ -22,7 +22,6 @@ if __name__ == "__main__":
             app.setStyle("WindowsVista")
         elif "WindowsVista" in available_styles and sys.platform == "win32": # Windows specific
             app.setStyle("WindowsVista")
-        # Add other preferred styles if needed
     except Exception as e: 
         logging.warning(f"Could not set preferred application style: {e}")
 
@@ -30,3 +29,4 @@ if __name__ == "__main__":
     window.set_app_instance(app)
     window.show()
     sys.exit(app.exec())
+

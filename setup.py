@@ -9,7 +9,7 @@ build_exe_options = {
     "packages": ["requests", "packaging"],
     "include_files": [
         "styles.qss",
-        "icon.ico",
+        ("resources/icons/icon.ico", "icon.ico"), # Correctly reference and place the icon
         "license.rtf",
         "version.json",
         "core/",       # include entire core folder
@@ -23,7 +23,7 @@ bdist_msi_options = {
     "upgrade_code": "{E7CDA630-CB74-4A99-BDB4-F09CB777D3F8}",
     "add_to_path": False,
     "initial_target_dir": r"[ProgramFilesFolder]\Gambit Pairing",
-    "install_icon": "icon.ico",
+    "install_icon": "icon.ico", # This now correctly points to the included icon
     "launch_on_finish": True,
     "license_file": "license.rtf",
 }

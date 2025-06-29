@@ -392,6 +392,15 @@ class TournamentTab(QtWidgets.QWidget):
         self.table_pairings.resizeColumnsToContents()
         self.table_pairings.resizeRowsToContents()
 
+    def clear_pairings_display(self):
+        """Clears the pairings table and bye player label."""
+        self.table_pairings.setRowCount(0)
+        self.lbl_bye.setText("Bye: None")
+        if self.tournament:
+            self.lbl_round_title.setText(f"Round {self.current_round_index + 1} - Not Started")
+        else:
+            self.lbl_round_title.setText("No Tournament Loaded")
+
     def show_pairing_context_menu(self, pos: QtCore.QPoint):
         item = self.table_pairings.itemAt(pos)
         if not item or not self.tournament:
