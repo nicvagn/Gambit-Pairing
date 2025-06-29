@@ -1,10 +1,10 @@
-# Gambit Pairing (Alpha 0.3.0)
+# Gambit Pairing (Alpha 0.4.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 
-**Important:** Gambit Pairing is in alpha development (version 0.3.0). Features and stability are not guaranteed.
+**Important:** Gambit Pairing is in alpha development (version 0.4.0). Features and stability are not guaranteed.
 
 [Join our Discord](https://discord.gg/eEnnetMDfr)
 
@@ -12,37 +12,59 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 
 ## Features
 
+- **Modern User Interface**
+  - Polished, high-contrast, accessible UI with custom stylesheets.
+  - Tabbed interface: Players, Tournament Control, Standings, Cross-Table, History Log.
+  - Tooltips, context menus, and responsive layouts.
+  - Print preview dialogs for pairings and standings.
+
 - **Player Management**
   - Add, edit, withdraw/reactivate, and remove players.
-  - Manage player details with GUI.
+  - Manage detailed player info: name, rating, gender, date of birth, phone, email, club, federation.
   - Import/export player lists/details from/to CSV or text files.
+
 - **Tournament Setup**
   - Configure number of rounds and tiebreak order (Median, Solkoff, Cumulative, etc.).
-  - Save/load tournaments to/from disk.
+  - Save/load tournaments to/from disk (`.json` files, JSON format).
+  - Full tiebreaker configuration with drag-and-drop order in settings.
+
 - **Swiss Pairings**
   - Automated pairings for each round, avoiding rematches and balancing colors.
-  - Manual adjustment of pairings before results are entered.
-  - Bye assignment according to USCF rules.
+  - Manual adjustment of pairings before results are entered (with dialog).
+  - Bye assignment according to USCF rules, including handling of inactive/withdrawn players.
+
 - **Results Entry**
   - Enter round results via an interactive table with quick result buttons.
+  - Auto-set results for inactive players.
   - Undo last round's results.
+
 - **Standings & Tiebreaks**
   - Standings table with configurable tiebreak columns.
   - Cross-table view showing all results.
-- **Print Feature**
+  - Tiebreaker legend in printouts.
+  - Support for Median, Solkoff, Cumulative, Sonnenborn-Berger, Most Blacks, and more.
+
+- **Print & Export**
   - Print pairings, standings, or player lists directly from the application.
   - Print preview and printer selection supported.
-- **History & Export**
-  - Detailed history log of actions, pairings, and results.
   - Export standings and player lists to CSV or text.
-- **User Interface**
-  - Tabbed interface: Tournament Control, Standings, Cross-Table, History Log.
-  - High-contrast, accessible UI with tooltips and context menus.
+
+- **History & Logging**
+  - Detailed history log of actions, pairings, and results.
+  - Exportable log.
+  - Logging to file and console for debugging.
+
+- **Update Checker**
+  - Built-in update checker for packaged releases.
+  - Modern dialogs for update prompts and progress.
+  - Automatic and manual update checks.
 
 ## Requirements
 
 - Python 3.8+
 - PyQt6
+- requests
+- packaging
 
 ## Installation
 
@@ -63,7 +85,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
     - Use "File > New Tournament..." or "File > Load Tournament..." to start.
     - Configure rounds and tiebreaks in "Settings".
 3. **Add Players:**
-    - Enter player names (optionally with rating) and click "Add Player".
+    - Enter player details (name, rating, gender, etc.) and click "Add New Player...".
     - Import players from CSV via "File > Import Players from CSV...".
     - Edit, withdraw/reactivate, or remove players via right-click context menu.
 4. **Start Tournament:**
@@ -72,7 +94,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 5. **Pairings and Results:**
     - Prepare next round and enter results in the pairings table.
     - Use quick result buttons or select from the dropdown.
-    - Manually adjust pairings if needed.
+    - Manually adjust pairings if needed (right-click pairing row).
     - Undo last round's results if necessary.
 6. **Standings & Cross-Table:**
     - View current standings and tiebreaks in the Standings tab.
@@ -85,14 +107,16 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
     - Save or load tournaments at any time.
 9. **History:**
     - Review all actions and results in the History Log tab.
+10. **Check for Updates:**
+    - Use "Help > Check for Updates..." to check for new versions (packaged releases only).
 
 ## Notes
 
 - The pairing algorithm follows USCF-style Swiss rules, including color balancing and bye assignment.
-- Tiebreak order is fully configurable and reflected in the standings.
+- Tiebreak order is fully configurable and reflected in the standings and printouts.
 - Manual pairing adjustments are logged and cannot be undone automatically.
-- Tournament data is saved in `.gpf` files (JSON format).
-- This is an alpha version (0.3.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
+- Tournament data is saved in `.json` files (JSON format).
+- This is an alpha version (0.4.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
 
 ## License
 
@@ -102,8 +126,11 @@ This project is open source and available under the [MIT License](https://mit-li
 
 > _Below are some example screenshots of Gambit Pairing in action._
 
-**Main Tournament Control Tab**  
-![Main Tournament Control](docs/screenshots/main_control.png)
+**Tournament Control Tab**  
+![Main Tournament Control](docs/screenshots/tournament.png)
+
+**Player Manager Tab**  
+![Main Tournament Control](docs/screenshots/player.png)
 
 **Standings Tab**  
 ![Standings Tab](docs/screenshots/standings.png)
@@ -115,4 +142,4 @@ This project is open source and available under the [MIT License](https://mit-li
 ![History Log Tab](docs/screenshots/history_log.png)
 
 **Print Dialog**  
-![Print Dialog](docs/screenshots/print_gui.png)
+![Print Dialog](docs/screenshots/print_dialog.png)
