@@ -9,11 +9,11 @@ class Tournament:
     def __init__(self, players: List[Player], num_rounds: int, tiebreak_order: Optional[List[str]] = None) -> None:
         self.players: Dict[str, Player] = {p.id: p for p in players}
         self.num_rounds: int = num_rounds
-        self.tiebreak_order: List[str] = tiebreak_order or list(DEFAULT_TIEBREAK_SORT_ORDER) 
-        self.rounds_pairings_ids: List[List[Tuple[str, str]]] = [] 
+        self.tiebreak_order: List[str] = tiebreak_order or list(DEFAULT_TIEBREAK_SORT_ORDER)
+        self.rounds_pairings_ids: List[List[Tuple[str, str]]] = []
         self.rounds_byes_ids: List[Optional[str]] = []
-        self.previous_matches: Set[frozenset[str]] = set() 
-        self.manual_pairings: Dict[int, Dict[str, str]] = {} 
+        self.previous_matches: Set[frozenset[str]] = set()
+        self.manual_pairings: Dict[int, Dict[str, str]] = {}
 
     def get_player_list(self, active_only=False) -> List[Player]:
         players = list(self.players.values())
@@ -64,7 +64,7 @@ class Tournament:
         if current_round == 1:
             players_sorted = sorted(active_players, key=lambda p: (-p.rating, p.name))
             bye_player = None
-            
+
             if len(players_sorted) % 2 == 1:
                 # In R1, lowest rated player gets the bye. _get_eligible_bye_player handles this.
                 # Candidate for bye is the lowest rated among all active players.
@@ -74,7 +74,7 @@ class Tournament:
                 else: # Should not happen in R1 if active_players is not empty
                     logging.error("R1: Could not assign a bye even with odd players.")
                     # Potentially raise error or return empty if critical
-            
+
             mid = len(players_sorted) // 2
             top_half, bottom_half = players_sorted[:mid], players_sorted[mid:]
             pairings, round_pairings_ids = [], []
@@ -84,7 +84,7 @@ class Tournament:
                 pairings.append((white, black))
                 round_pairings_ids.append((white.id, black.id))
                 self.previous_matches.add(frozenset({p1.id, p2.id}))
-            
+
             if bye_player:
                 logging.info(f"Round 1 Bye assigned to: {bye_player.name}")
 
@@ -98,23 +98,23 @@ class Tournament:
             score_groups.setdefault(p.score, []).append(p)
         sorted_scores = sorted(score_groups.keys(), reverse=True)
         pairings, round_pairings_ids = [], []
-        
+
         # Players carried down from a higher score group because they couldn't be paired or were floated.
         # Initially, this list is empty. It can accumulate players who need to be paired down.
-        unpaired_from_higher_groups: List[Player] = [] 
+        unpaired_from_higher_groups: List[Player] = []
 
         floated_this_round: Set[str] = set() # Track players floated *in this round's processing*
 
         for score in sorted_scores:
             current_score_group = sorted(score_groups[score], key=lambda p: (-p.rating, p.name))
-            
+
             # Add players carried down from higher score groups (if any)
             # These players must be paired first if possible, or float further.
             # They are effectively part of this score group for pairing purposes now.
             group_to_pair = unpaired_from_higher_groups + current_score_group
             group_to_pair.sort(key=lambda p: (-p.rating, p.name)) # Re-sort combined group
             unpaired_from_higher_groups = [] # Clear for next iteration
-            
+
             logging.debug(f"Processing Score Group: {score}, Players: {[p.name for p in group_to_pair]}")
 
             # Handle floating if current group (group_to_pair) is odd
@@ -124,13 +124,13 @@ class Tournament:
                 float_candidates = [p for p in group_to_pair if p.id not in floated_this_round]
                 if not float_candidates: # All have floated this round (should not happen if logic is correct)
                     logging.warning(f"All players in group for score {score} already floated this round. Taking from original group_to_pair.")
-                    float_candidates = group_to_pair 
-                
+                    float_candidates = group_to_pair
+
                 if float_candidates: # Ensure there's someone to float
                     # Sort by: never floated > floated longest ago, then rating, then name
                     float_candidates.sort(key=lambda p: (p.float_history[-1] if p.float_history else -999, p.rating, p.name))
                     floater = float_candidates[0]
-                    
+
                     unpaired_from_higher_groups.append(floater) # This floater moves to the next (lower) score group
                     floated_this_round.add(floater.id)
                     floater.float_history.append(current_round)
@@ -144,10 +144,10 @@ class Tournament:
             # Standard Dutch pairing: top half vs bottom half if possible, or iterative.
             # Current iterative method:
             temp_unpaired_in_group = list(group_to_pair) # Work with a copy
-            
+
             while len(temp_unpaired_in_group) >= 2:
                 p1 = temp_unpaired_in_group.pop(0) # Highest rated available
-                
+
                 best_opponent_for_p1: Optional[Player] = None
                 min_color_conflict_score = float('inf')
                 best_opponent_idx = -1
@@ -158,7 +158,7 @@ class Tournament:
 
                     p1_pref = p1.get_color_preference()
                     p2_cand_pref = p2_candidate.get_color_preference()
-                    
+
                     current_conflict_score = 0
                     if p1_pref is not None and p2_cand_pref is not None and p1_pref == p2_cand_pref:
                         current_conflict_score += 2 # Both want/need same color
@@ -168,7 +168,7 @@ class Tournament:
                         best_opponent_for_p1 = p2_candidate
                         best_opponent_idx = idx
                         if min_color_conflict_score == 0: # Perfect color match (or no preference from one/both)
-                            break 
+                            break
                     # If multiple opponents give same low conflict_score, prefer closer rating? (More complex)
                     # Current logic takes the first one encountered with the best score.
 
@@ -186,34 +186,34 @@ class Tournament:
 
                 if best_opponent_for_p1 and best_opponent_idx != -1:
                     p2 = temp_unpaired_in_group.pop(best_opponent_idx)
-                    
+
                     # Assign colors
                     pref1 = p1.get_color_preference()
                     pref2 = p2.get_color_preference()
                     white, black = None, None
 
-                    if pref1 == "White" and (pref2 == "Black" or pref2 is None): white, black = p1, p2
-                    elif pref1 == "Black" and (pref2 == "White" or pref2 is None): white, black = p2, p1
-                    elif pref2 == "White" and (pref1 == "Black" or pref1 is None): white, black = p2, p1 # Redundant if covered by above
-                    elif pref2 == "Black" and (pref1 == "White" or pref1 is None): white, black = p1, p2 # Redundant
-                    
+                    if pref1 == W and (pref2 == B or pref2 is None): white, black = p1, p2
+                    elif pref1 == B and (pref2 == W or pref2 is None): white, black = p2, p1
+                    elif pref2 == W and (pref1 == B or pref1 is None): white, black = p2, p1 # Redundant if covered by above
+                    elif pref2 == B and (pref1 == W or pref1 is None): white, black = p1, p2 # Redundant
+
                     # Handle cases where one has preference and other doesn't (covered above if None is included)
                     # Or if both have same preference, or both no preference
                     if white is None: # If not assigned yet
-                        if pref1 == "White": white, black = p1, p2 # p1 gets preference if p2 has same or no conflicting
-                        elif pref1 == "Black": white, black = p2, p1
-                        elif pref2 == "White": white, black = p2, p1
-                        elif pref2 == "Black": white, black = p1, p2
+                        if pref1 == W: white, black = p1, p2 # p1 gets preference if p2 has same or no conflicting
+                        elif pref1 == B: white, black = p2, p1
+                        elif pref2 == W: white, black = p2, p1
+                        elif pref2 == B: white, black = p1, p2
                         else: # Both None, or both want same and it wasn't resolved to a clear assignment
                             p1_vc = [c for c in p1.color_history if c is not None]
                             p2_vc = [c for c in p2.color_history if c is not None]
-                            p1_bal = p1_vc.count("White") - p1_vc.count("Black")
-                            p2_bal = p2_vc.count("White") - p2_vc.count("Black")
+                            p1_bal = p1_vc.count(W) - p1_vc.count(B)
+                            p2_bal = p2_vc.count(W) - p2_vc.count(B)
 
                             if p1_bal > p2_bal: white, black = p2, p1 # p1 more W, gets B
                             elif p2_bal > p1_bal: white, black = p1, p2 # p2 more W, gets B
                             else: white, black = (p1, p2) if p1.rating >= p2.rating else (p2, p1)
-                    
+
                     pairings.append((white, black))
                     round_pairings_ids.append((white.id, black.id))
                     self.previous_matches.add(frozenset({p1.id, p2.id}))
@@ -222,7 +222,7 @@ class Tournament:
                     # Add p1 to be carried down.
                     unpaired_from_higher_groups.append(p1)
                     logging.warning(f"Player {p1.name} could not be paired in score group {score} and will be carried down.")
-            
+
             # Any players remaining in temp_unpaired_in_group also couldn't be paired
             unpaired_from_higher_groups.extend(temp_unpaired_in_group)
 
@@ -265,24 +265,24 @@ class Tournament:
                     pref1 = p1.get_color_preference()
                     pref2 = p2_candidate.get_color_preference()
                     white, black = None, None
-                    if pref1 == "White" and (pref2 == "Black" or pref2 is None): white, black = p1, p2_candidate
-                    elif pref1 == "Black" and (pref2 == "White" or pref2 is None): white, black = p2_candidate, p1
-                    elif pref2 == "White" and (pref1 == "Black" or pref1 is None): white, black = p2_candidate, p1
-                    elif pref2 == "Black" and (pref1 == "White" or pref1 is None): white, black = p1, p2_candidate
+                    if pref1 == W and (pref2 == B or pref2 is None): white, black = p1, p2_candidate
+                    elif pref1 == B and (pref2 == W or pref2 is None): white, black = p2_candidate, p1
+                    elif pref2 == W and (pref1 == B or pref1 is None): white, black = p2_candidate, p1
+                    elif pref2 == B and (pref1 == W or pref1 is None): white, black = p1, p2_candidate
                     if white is None:
                         p1_vc = [c for c in p1.color_history if c is not None]
                         p2_vc = [c for c in p2_candidate.color_history if c is not None]
-                        p1_bal = p1_vc.count("White") - p1_vc.count("Black")
-                        p2_bal = p2_vc.count("White") - p2_vc.count("Black")
+                        p1_bal = p1_vc.count(W) - p1_vc.count(B)
+                        p2_bal = p2_vc.count(W) - p2_vc.count(B)
                         if p1_bal > p2_bal: white, black = p2_candidate, p1
                         elif p2_bal > p1_bal: white, black = p1, p2_candidate
                         else: white, black = (p1, p2_candidate) if p1.rating >= p2_candidate.rating else (p2_candidate, p1)
-                    
+
                     pairings.append((white, black))
                     round_pairings_ids.append((white.id, black.id))
                     self.previous_matches.add(frozenset({p1.id, p2.id}))
                     paired_p1 = True
-                    break 
+                    break
             # Fallback: allow repeat pairing if user agrees
             if not paired_p1:
                 for idx, p2_candidate in enumerate(temp_final_unpaired):
@@ -293,15 +293,15 @@ class Tournament:
                             pref1 = p1.get_color_preference()
                             pref2 = p2_candidate.get_color_preference()
                             white, black = None, None
-                            if pref1 == "White" and (pref2 == "Black" or pref2 is None): white, black = p1, p2_candidate
-                            elif pref1 == "Black" and (pref2 == "White" or pref2 is None): white, black = p2_candidate, p1
-                            elif pref2 == "White" and (pref1 == "Black" or pref1 is None): white, black = p2_candidate, p1
-                            elif pref2 == "Black" and (pref1 == "White" or pref1 is None): white, black = p1, p2_candidate
+                            if pref1 == W and (pref2 == B or pref2 is None): white, black = p1, p2_candidate
+                            elif pref1 == B and (pref2 == W or pref2 is None): white, black = p2_candidate, p1
+                            elif pref2 == W and (pref1 == B or pref1 is None): white, black = p2_candidate, p1
+                            elif pref2 == B and (pref1 == W or pref1 is None): white, black = p1, p2_candidate
                             if white is None:
                                 p1_vc = [c for c in p1.color_history if c is not None]
                                 p2_vc = [c for c in p2_candidate.color_history if c is not None]
-                                p1_bal = p1_vc.count("White") - p1_vc.count("Black")
-                                p2_bal = p2_vc.count("White") - p2_vc.count("Black")
+                                p1_bal = p1_vc.count(W) - p1_vc.count(B)
+                                p2_bal = p2_vc.count(W) - p2_vc.count(B)
                                 if p1_bal > p2_bal: white, black = p2_candidate, p1
                                 elif p2_bal > p1_bal: white, black = p1, p2_candidate
                                 else: white, black = (p1, p2_candidate) if p1.rating >= p2_candidate.rating else (p2_candidate, p1)
@@ -329,7 +329,7 @@ class Tournament:
              return False
 
         current_pairings_ids_for_round = self.rounds_pairings_ids[round_index]
-        
+
         p1 = self.players.get(player1_id)
         new_opp = self.players.get(new_opponent_id)
 
@@ -342,7 +342,7 @@ class Tournament:
 
         # Store original pairings for logging/reversion if needed (complex)
         if round_index not in self.manual_pairings: self.manual_pairings[round_index] = {}
-        
+
         # Find p1's current pairing and original opponent (p1_orig_opp)
         p1_orig_opp_id = None
         p1_pair_idx = -1
@@ -359,7 +359,7 @@ class Tournament:
                 p1_pair_idx = idx
                 p1_was_white = False
                 break
-        
+
         if p1_pair_idx == -1 : # p1 might be the bye player
             current_bye_id = self.rounds_byes_ids[round_index]
             if current_bye_id == player1_id: # p1 was bye, now paired with new_opp
@@ -371,7 +371,7 @@ class Tournament:
             else:
                 logging.error(f"Manual Adjust: Player {p1.name} not found in pairings or bye list for round {round_index+1}.")
                 return False
-        
+
         if p1_orig_opp_id == new_opponent_id:
              logging.warning(f"Manual Adjust: Player {p1.name} is already paired with {new_opp.name}.")
              return True # No change needed, but not an error
@@ -392,7 +392,7 @@ class Tournament:
                 new_opp_pair_idx = idx
                 new_opp_was_white = False
                 break
-        
+
         # Case 1: new_opp was also paired (most common)
         if new_opp_pair_idx != -1 and new_opp_orig_opp_id is not None:
             # Record changes before making them
@@ -408,7 +408,7 @@ class Tournament:
                 current_pairings_ids_for_round[p1_pair_idx] = (player1_id, new_opponent_id)
             else:
                 current_pairings_ids_for_round[p1_pair_idx] = (new_opponent_id, player1_id)
-            
+
             # Pair p1_orig_opp with new_opp_orig_opp.
             # Retain p1_orig_opp's color slot if possible.
             if p1_orig_opp_id and new_opp_orig_opp_id : # Both original opponents exist
@@ -428,7 +428,7 @@ class Tournament:
             elif p1_orig_opp_id : # new_opp_orig_opp_id was None (new_opp was bye)
                 # p1_orig_opp now gets a bye.
                 current_bye_id = self.rounds_byes_ids[round_index]
-                if current_bye_id is not None and current_bye_id != new_opponent_id: 
+                if current_bye_id is not None and current_bye_id != new_opponent_id:
                      logging.error("Manual Adjust: Complex bye scenario, cannot auto-assign new bye.")
                      return False
                 self.rounds_byes_ids[round_index] = p1_orig_opp_id
@@ -454,13 +454,13 @@ class Tournament:
             # Pair p1 with new_opp
             if p1_was_white: current_pairings_ids_for_round[p1_pair_idx] = (player1_id, new_opponent_id)
             else: current_pairings_ids_for_round[p1_pair_idx] = (new_opponent_id, player1_id)
-            
+
             # p1's original opponent (p1_orig_opp_id) now gets the bye
             self.rounds_byes_ids[round_index] = p1_orig_opp_id
         else:
             logging.error(f"Manual Adjust: New opponent {new_opp.name} not found in pairings or bye list for round {round_index+1}.")
             return False
-            
+
         # Update previous_matches cautiously. Adding new ones is fine. Removing old ones might be too aggressive.
         self.previous_matches.add(frozenset({player1_id, new_opponent_id}))
         # If p1_orig_opp_id and new_opp_orig_opp_id were re-paired:
@@ -479,7 +479,7 @@ class Tournament:
         """Records results, checking for active status and round index."""
         if round_index < 0 or round_index >= len(self.rounds_pairings_ids):
             logging.error(f"Record Results: Invalid round index {round_index}")
-            return False 
+            return False
 
         round_pairings_ids = self.rounds_pairings_ids[round_index]
         round_bye_id = self.rounds_byes_ids[round_index]
@@ -494,11 +494,11 @@ class Tournament:
             if not (p_white and p_black):
                  logging.error(f"Record Results: Could not find players {white_id} or {black_id}.")
                  success = False; continue
-            
+
             # Allow recording for inactive players but log warning.
             if not p_white.is_active : logging.warning(f"Record Results: White player {p_white.name} is inactive.")
             if not p_black.is_active : logging.warning(f"Record Results: Black player {p_black.name} is inactive.")
-                 
+
             # Check if result already recorded for this round for these players
             # This check needs to be robust. A player's result list grows by one each round.
             # If len(p_white.results) is already round_index + 1, it means result for this round_index is in.
@@ -519,8 +519,8 @@ class Tournament:
 
 
             black_score = WIN_SCORE - white_score
-            p_white.add_round_result(opponent=p_black, result=white_score, color="White")
-            p_black.add_round_result(opponent=p_white, result=black_score, color="Black")
+            p_white.add_round_result(opponent=p_black, result=white_score, color=W)
+            p_black.add_round_result(opponent=p_white, result=black_score, color=B)
             processed_player_ids.add(white_id)
             processed_player_ids.add(black_id)
             logging.debug(f"Recorded result: {p_white.name} ({white_score}) vs {p_black.name} ({black_score})")
@@ -535,7 +535,7 @@ class Tournament:
                  # A player given a bye should generally get the point unless withdrawn *before* pairings.
                  # This depends on tournament policy. USCF: usually bye stands if player withdraws after pairings.
                  # For simplicity, if p_bye exists and is in rounds_byes_ids, they get point if active.
-                 
+
                  if len(p_bye.results) == round_index: # Ensure not already recorded for this round
                       if p_bye.is_active:
                            p_bye.add_round_result(opponent=None, result=BYE_SCORE, color=None)
@@ -584,12 +584,12 @@ class Tournament:
             for i, opp_obj in enumerate(opponents):
                  if opp_obj is not None: # Not a bye
                       actual_opponents.append(opp_obj)
-                      
+
                       # For tiebreaks like Solkoff/Median, use opponent's score.
                       # If opponent withdrew, their score is fixed at point of withdrawal for some systems,
                       # or their "final" score if tournament ended. Simpler: use current score.
                       # The original code's check for inactive opponent score seems reasonable:
-                      # opp_final_score = (opp_obj.running_scores[-1] if opp_obj.running_scores and not opp_obj.is_active 
+                      # opp_final_score = (opp_obj.running_scores[-1] if opp_obj.running_scores and not opp_obj.is_active
                       #                    else self.players.get(opp_obj.id, opp_obj).score) # Fallback if opp_obj is a shallow copy
                       # Simpler and often used: just use the opponent's current total score.
                       opp_current_score = self.players[opp_obj.id].score
@@ -608,14 +608,14 @@ class Tournament:
             # USCF: "Adjusted scores of opponents. For players with more than 50% score, drop lowest. For less than 50%, drop highest. For 50%, drop highest and lowest."
             # This applies to games played, not total rounds.
             num_games_played_by_player = len([r for r in player.results if r is not None]) # Count actual games, not byes
-            
+
             # Median / Solkoff usually doesn't count unplayed games (e.g. forfeits by opponent after pairing) as 0 for opponent score.
             # Here, opponent_final_scores are scores of opponents they actually played.
 
             if opponent_final_scores:
                 # Sort scores for median calculation
                 sorted_opp_scores = sorted(list(opponent_final_scores)) # Make a copy for manipulation
-                
+
                 # For Median Buchholz variants, handling of unplayed games (e.g., if an opponent later forfeits unrelated games) can vary.
                 # Here we use the actual scores of opponents faced.
 
@@ -624,10 +624,10 @@ class Tournament:
                 # This is sum of opponents' scores, highest and lowest dropped if player's score is 50% of max possible for games played.
                 # If player's score > 50% of max possible for games played, drop only lowest.
                 # If player's score < 50% of max possible for games played, drop only highest.
-                
+
                 # Max possible score for games player *actually played* (excluding byes this player received)
                 max_score_for_played_games = float(len(actual_opponents)) * WIN_SCORE
-                
+
                 # Player's score from *played games only* (excluding points from byes player received)
                 score_from_played_games = sum(player.results[i] for i, opp_id in enumerate(player.opponent_ids) if opp_id is not None and i < len(player.results))
 
@@ -650,7 +650,7 @@ class Tournament:
                              median_val = sum(sorted_opp_scores) # Or 0 if only 1-2 opps and 50% score. Sum is fine.
             else:
                 median_val = 0.0
-            
+
             player.tiebreakers[TB_MEDIAN] = median_val
             player.tiebreakers[TB_SOLKOFF] = sum(opponent_final_scores) # Sum of all opponents' scores
             player.tiebreakers[TB_CUMULATIVE] = sum(player.running_scores) if player.running_scores else 0.0
@@ -671,11 +671,11 @@ class Tournament:
                 result = p1.results[i]
                 if result == WIN_SCORE: p1_won_h2h = True
                 elif result == LOSS_SCORE: p2_won_h2h = True
-        
+
         if p1_won_h2h and not p2_won_h2h: return 1 # p1 beat p2
         if p2_won_h2h and not p1_won_h2h: return -1 # p2 beat p1
 
-        for tb_key in self.tiebreak_order: 
+        for tb_key in self.tiebreak_order:
             tb1 = p1.tiebreakers.get(tb_key, 0.0)
             tb2 = p2.tiebreakers.get(tb_key, 0.0)
             if tb1 != tb2: return 1 if tb1 > tb2 else -1
@@ -686,14 +686,14 @@ class Tournament:
     def get_standings(self) -> List[Player]:
         # Active players are typically shown first, then inactive ones, or inactive are hidden.
         # Current _get_active_players() filters out inactive ones. This is fine for standings.
-        players_for_standings = self._get_active_players() 
+        players_for_standings = self._get_active_players()
         # If you want to show inactive players at the bottom:
         # players_for_standings = list(self.players.values())
         # players_for_standings.sort(key=lambda p: not p.is_active) # Active players first
 
         if not players_for_standings: return []
-        self.compute_tiebreakers() 
-        
+        self.compute_tiebreakers()
+
         # Sort primarily by active status (active first), then score, then tiebreaks
         # However, get_standings is usually for ranked list of those still competing.
         # If inactive players are included, they usually appear after active ones with same score.
@@ -726,14 +726,14 @@ class Tournament:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            'app_version': APP_VERSION, 
+            'app_version': APP_VERSION,
             'num_rounds': self.num_rounds,
             'tiebreak_order': self.tiebreak_order,
             'players': [p.to_dict() for p in self.players.values()],
             'rounds_pairings_ids': self.rounds_pairings_ids,
             'rounds_byes_ids': self.rounds_byes_ids,
             'previous_matches': [list(pair) for pair in self.previous_matches],
-            'manual_pairings': self.manual_pairings, 
+            'manual_pairings': self.manual_pairings,
         }
 
     @classmethod
@@ -747,22 +747,22 @@ class Tournament:
 
         players = [Player.from_dict(p_data) for p_data in players_data]
         num_rounds = data.get('num_rounds', 0)
-        tiebreak_order = data.get('tiebreak_order', list(DEFAULT_TIEBREAK_SORT_ORDER)) 
+        tiebreak_order = data.get('tiebreak_order', list(DEFAULT_TIEBREAK_SORT_ORDER))
 
         if num_rounds <= 0: # Infer if missing
              num_rounds = len(data.get('rounds_pairings_ids', [])) or 3 # Default to 3 if nothing else
              logging.warning(f"Number of rounds not found or invalid, inferred/defaulted to {num_rounds}")
 
-        tournament = cls(players, num_rounds, tiebreak_order) 
+        tournament = cls(players, num_rounds, tiebreak_order)
         tournament.rounds_pairings_ids = data.get('rounds_pairings_ids', [])
         tournament.rounds_byes_ids = data.get('rounds_byes_ids', [])
         tournament.previous_matches = set(frozenset(map(str, pair)) for pair in data.get('previous_matches', [])) # Ensure IDs are str
-        
+
         # Convert round keys in manual_pairings back to int
         raw_manual_pairings = data.get('manual_pairings', {})
         tournament.manual_pairings = {int(k): v for k, v in raw_manual_pairings.items()}
 
-        for p in tournament.players.values(): p._opponents_played_cache = [] 
+        for p in tournament.players.values(): p._opponents_played_cache = []
         return tournament
 
 
