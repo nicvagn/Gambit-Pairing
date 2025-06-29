@@ -313,27 +313,18 @@ QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow {
     /* Remove PNG spinner icons, use Unicode arrows for clarity */
     image: none;
 }
-QSpinBox::up-arrow {
-    /* Unicode up arrow, dark for contrast */
-    qproperty-text: "▲";
-    color: #23272f;
+
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+    image: url(resources/icons/arrow-up.svg);
 }
-QSpinBox::down-arrow {
-    qproperty-text: "▼";
-    color: #23272f;
+
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+    image: url(resources/icons/arrow-down.svg);
 }
-QDoubleSpinBox::up-arrow {
-    qproperty-text: "▲";
-    color: #23272f;
-}
-QDoubleSpinBox::down-arrow {
-    qproperty-text: "▼";
-    color: #23272f;
-}
+
 QSpinBox::up-arrow:disabled, QSpinBox::down-arrow:disabled,
 QDoubleSpinBox::up-arrow:disabled, QDoubleSpinBox::down-arrow:disabled {
-    qproperty-text: "";
-    color: #a1a7b3;
+    image: none;
 }
 
 /* ComboBox specific */
