@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtCore import Qt
 from typing import List, Optional, Tuple, Dict, Any
 from core.player import Player
@@ -24,7 +24,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.name_edit = QtWidgets.QLineEdit("My Swiss Tournament")
         self.rounds_spin = QtWidgets.QSpinBox()
         self.rounds_spin.setRange(1, 50)
-        self.rounds_spin.setValue(3)
+        self.rounds_spin.setValue(5)
         form_layout.addRow("Tournament Name:", self.name_edit)
         form_layout.addRow("Number of Rounds:", self.rounds_spin)
         self.layout.addWidget(general_group)
@@ -172,18 +172,27 @@ class PlayerDetailDialog(QtWidgets.QDialog):
         gender_dob_layout.addWidget(self.dob_edit)
         phone_layout = QtWidgets.QHBoxLayout()
         self.phone_edit = QtWidgets.QLineEdit()
-        self.btn_copy_phone = QtWidgets.QPushButton("📋")
-        self.btn_copy_phone.setFixedWidth(28)
+        self.btn_copy_phone = QtWidgets.QPushButton()
+        copy_icon = QtGui.QIcon.fromTheme("edit-copy")
+        if not copy_icon.isNull():
+            self.btn_copy_phone.setIcon(copy_icon)
+        else:
+            self.btn_copy_phone.setText("Copy")
+        self.btn_copy_phone.setFixedWidth(40)
         self.btn_copy_phone.setToolTip("Copy phone number")
-        self.btn_copy_phone.clicked.connect(lambda: QtWidgets.QApplication.clipboard().setText(self.phone_edit.text()))
+        self.btn_copy_phone.clicked.connect(lambda: self.copy_and_notify(self.phone_edit.text()))
         phone_layout.addWidget(self.phone_edit)
         phone_layout.addWidget(self.btn_copy_phone)
         email_layout = QtWidgets.QHBoxLayout()
         self.email_edit = QtWidgets.QLineEdit()
-        self.btn_copy_email = QtWidgets.QPushButton("📋")
-        self.btn_copy_email.setFixedWidth(28)
+        self.btn_copy_email = QtWidgets.QPushButton()
+        if not copy_icon.isNull():
+            self.btn_copy_email.setIcon(copy_icon)
+        else:
+            self.btn_copy_email.setText("Copy")
+        self.btn_copy_email.setFixedWidth(40)
         self.btn_copy_email.setToolTip("Copy email address")
-        self.btn_copy_email.clicked.connect(lambda: QtWidgets.QApplication.clipboard().setText(self.email_edit.text()))
+        self.btn_copy_email.clicked.connect(lambda: self.copy_and_notify(self.email_edit.text()))
         email_layout.addWidget(self.email_edit)
         email_layout.addWidget(self.btn_copy_email)
         self.club_edit = QtWidgets.QLineEdit()
@@ -237,6 +246,56 @@ class PlayerDetailDialog(QtWidgets.QDialog):
             'club': self.club_edit.text().strip() or None,
             'federation': self.federation_edit.text().strip() or None
         }
+
+    def copy_and_notify(self, text):
+        QtWidgets.QApplication.clipboard().setText(text)
+        self.show_copy_notification()
+
+    def show_copy_notification(self):
+        if hasattr(self, '_copy_notification') and self._copy_notification:
+            self._copy_notification.close()
+        self._copy_notification = QtWidgets.QLabel("Copied to clipboard!", self)
+        self._copy_notification.setStyleSheet("""
+            QLabel {
+                background: rgba(30,30,30,220);
+                color: black;
+                border-radius: 8px;
+                padding: 10px 24px;
+                font-size: 12pt;
+                font-weight: bold;
+                min-width: 180px;
+                qproperty-alignment: AlignCenter;
+            }
+        """)
+        self._copy_notification.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.ToolTip)
+        self._copy_notification.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._copy_notification.setAttribute(QtCore.Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        self._copy_notification.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self._copy_notification.adjustSize()
+        geo = self.geometry()
+        notif_geo = self._copy_notification.frameGeometry()
+        x = geo.x() + (geo.width() - notif_geo.width()) // 2
+        y = geo.y() + geo.height() - notif_geo.height() - 40
+        self._copy_notification.move(x, y)
+        self._copy_notification.setWindowOpacity(0.0)
+        self._copy_notification.show()
+        self._copy_notification.raise_()
+        # Animation
+        self._anim = QtCore.QPropertyAnimation(self._copy_notification, b"windowOpacity", self)
+        self._anim.setDuration(200)
+        self._anim.setStartValue(0.0)
+        self._anim.setEndValue(1.0)
+        self._anim.finished.connect(lambda: QtCore.QTimer.singleShot(900, self.fade_out_copy_notification))
+        self._anim.start()
+
+    def fade_out_copy_notification(self):
+        if hasattr(self, '_copy_notification') and self._copy_notification:
+            anim = QtCore.QPropertyAnimation(self._copy_notification, b"windowOpacity", self)
+            anim.setDuration(400)
+            anim.setStartValue(1.0)
+            anim.setEndValue(0.0)
+            anim.finished.connect(self._copy_notification.close)
+            anim.start()
 
 class SettingsDialog(QtWidgets.QDialog):
     def __init__(self, num_rounds: int, tiebreak_order: List[str], parent=None):
