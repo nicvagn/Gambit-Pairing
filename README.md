@@ -64,7 +64,12 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 - Python 3.8+
 - PyQt6
 - requests
-- packaging
+- logging
+- typing
+- pathlib
+- sys
+- subprocess
+- json
 
 ## Installation
 
