@@ -1,4 +1,8 @@
 PyQt6
 requests
-packaging
-pyqtdarktheme
+logging
+typing
+pathlib
+sys
+subprocess
+json
