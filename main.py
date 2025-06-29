@@ -1,5 +1,6 @@
 import sys
 from PyQt6 import QtWidgets
+from PyQt6.QtGui import QIcon
 from gui.mainwindow import SwissTournamentApp
 import logging
 
@@ -7,6 +8,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
     app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(QIcon("resources/icons/icon2.webp"))
     # Optionally load stylesheet
     try:
         with open("styles.qss", "r", encoding="utf-8") as f:
