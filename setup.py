@@ -6,12 +6,10 @@ base = "Win32GUI" if sys.platform == "win32" else None
 
 # Include entire folders along with other files
 build_exe_options = {
-    "packages": ["requests", "packaging"],
     "include_files": [
         "styles.qss",
-        ("resources/icons/icon.ico", "icon.ico"), # Correctly reference and place the icon
+        ("resources/icons/icon.ico", "icon.ico"),
         "license.rtf",
-        "version.json",
         "core/",       # include entire core folder
         "gui/",        # include entire gui folder
         "resources/",  # include entire resources folder
@@ -41,7 +39,7 @@ executables = [
 
 setup(
     name="Gambit Pairing",
-    version="0.4.0",
+    version="0.4.1",
     description="Swiss pairing app to streamline tournament management.",
     options={
         "build_exe": build_exe_options,

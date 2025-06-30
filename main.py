@@ -8,7 +8,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
     app = QtWidgets.QApplication(sys.argv)
-    app.setWindowIcon(QIcon("resources/icons/icon2.webp"))
+    app.setWindowIcon(QIcon("icon.ico"))  # Set the application icon
     # load stylesheet
     try:
         with open("styles.qss", "r", encoding="utf-8") as f:
