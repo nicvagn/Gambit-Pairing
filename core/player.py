@@ -76,7 +76,7 @@ class Player:
 
         return None
 
-    def add_round_result(self, opponent: Optional['Player'], result: float, color: Optional[str]):
+    def add_round_result(self, opponent: Optional['Player'], result: float, color: Optional[str]) -> None:
         """Records the outcome of a round for the player."""
         opponent_id = opponent.id if opponent else None
         self.opponent_ids.append(opponent_id)
