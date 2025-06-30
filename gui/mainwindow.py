@@ -2,12 +2,11 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtCore import QDateTime, QFileInfo, Qt
 from typing import List, Tuple, Optional
-import logging
-import json
 from pathlib import Path
 import sys
+import os
 from core.updater import Updater
-
+import json
 from core.tournament import Tournament
 from core.player import Player
 from core.constants import *
@@ -24,6 +23,21 @@ from gui.update_worker import UpdateWorker
 import subprocess
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
 from PyQt6.QtGui import QPixmap
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def resource_path(relative_path: str) -> str:
+    """ Get absolute path to resource, works for dev and for cx_Freeze """
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        base_path = os.path.dirname(sys.executable)
+    else:
+        # The application is not frozen
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+    return os.path.join(base_path, relative_path)
 
 # --- Main Application Window ---
 
@@ -442,12 +456,11 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
     def show_about_dialog(self):
         """Show the About dialog with app info and about.webp image."""
-        import os
         dialog = QDialog(self)
         dialog.setWindowTitle(f"About {APP_NAME}")
         layout = QVBoxLayout(dialog)
         # Add about.webp image
-        image_path = os.path.join(os.path.dirname(__file__), "about.webp")
+        image_path = resource_path("resources/about.webp")
         if os.path.exists(image_path):
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
@@ -456,7 +469,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 layout.addWidget(img_label)
         # Add app info text
-        info_label = QLabel(f"<b>{APP_NAME} v{APP_VERSION}</b><br>\nSwiss Tournament Manager\n<br>Copyright \u00A9 2025\n<br>Developed by Chickaboo\n<br><br>For help, join the <a href=\"https://discord.gg/eEnnetMDfr\">Discord</a> or contact <a href=\"https://www.chickaboo.net/contact\">support</a>.")
+        info_label = QLabel(f"<b>{APP_NAME} v{APP_VERSION}</b><br>\nSwiss Tournament Manager\n<br>Copyright © 2025\n<br>Developed by Chickaboo\n<br><br>For help, join the <a href=\"https://discord.gg/eEnnetMDfr\">Discord</a> or contact <a href=\"https://www.chickaboo.net/contact\">support</a>.")
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setOpenExternalLinks(True)
         layout.addWidget(info_label)
