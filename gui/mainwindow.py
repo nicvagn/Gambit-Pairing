@@ -12,7 +12,7 @@ from core.tournament import Tournament
 from core.player import Player
 from core.constants import *
 
-from gui.dialogs import SettingsDialog
+from gui.dialogs import SettingsDialog, NewTournamentDialog
 from gui.players_tab import PlayersTab
 from gui.tournament_tab import TournamentTab
 from gui.standings_tab import StandingsTab
@@ -231,25 +231,37 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
         # Update window title
         title = APP_NAME
-        if self._current_filepath:
-            title += f" - {QFileInfo(self._current_filepath).fileName()}"
-        if self._dirty:
-            title += "*"
+        if self.tournament:
+            base_name = self.tournament.name
+            if self._dirty:
+                base_name += "*"
+            
+            if self._current_filepath:
+                file_name = QFileInfo(self._current_filepath).fileName()
+                title = f"{base_name} - {file_name} - {APP_NAME}"
+            else:
+                title = f"{base_name} - {APP_NAME}"
+        else:
+            if self._current_filepath:
+                 title = f"{QFileInfo(self._current_filepath).fileName()} - {APP_NAME}"
+
         self.setWindowTitle(title)
         
         # Update status bar
         status = "Ready"
         if tournament_exists:
             if not tournament_started:
-                status = f"Add players, then Start. {len(self.tournament.players)} players registered."
+                status = f"Tournament '{self.tournament.name}': Add players, then Start. {len(self.tournament.players)} players registered."
             elif can_record:
-                status = f"Round {results_recorded + 1} pairings ready. Please enter results."
+                status = f"Round {results_recorded + 1} pairings ready for '{self.tournament.name}'. Please enter results."
             elif can_prepare:
-                status = f"Round {results_recorded} results recorded. Prepare Round {results_recorded + 1}."
-            elif results_recorded == total_rounds and total_rounds > 0:
-                status = f"Tournament finished. Final standings are available."
+                status = f"Round {results_recorded} results recorded for '{self.tournament.name}'. Prepare Round {results_recorded + 1}."
+            elif tournament_finished:
+                status = f"Tournament '{self.tournament.name}' finished. Final standings are available."
             else:
-                status = f"Tournament in progress. Completed rounds: {results_recorded}/{total_rounds}."
+                status = f"Tournament '{self.tournament.name}' in progress. Completed rounds: {results_recorded}/{total_rounds}."
+        else:
+            status = "Ready - Create New or Load Tournament."
         self.statusBar().showMessage(status)
 
     def mark_dirty(self, dirty=True):
@@ -305,19 +317,20 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
     def prompt_new_tournament(self):
         if not self.check_save_before_proceeding():
             return
-        self.reset_tournament_state()
-        
-        self.tournament = Tournament([], num_rounds=3, tiebreak_order=list(DEFAULT_TIEBREAK_SORT_ORDER))
-        
-        if self.show_settings_dialog():
-            self.update_history_log(f"--- New Tournament Created (Rounds: {self.tournament.num_rounds}) ---")
-            self.mark_dirty()
-            self._set_tournament_on_tabs()
-            self.standings_tab.update_standings_table_headers()
-        else:
-            self.reset_tournament_state()
-        
-        self._update_ui_state()
+
+        dialog = NewTournamentDialog(self)
+        if dialog.exec():
+            data = dialog.get_data()
+            if data:
+                name, num_rounds, tiebreak_order = data
+                self.reset_tournament_state()
+                self.tournament = Tournament(name=name, players=[], num_rounds=num_rounds, tiebreak_order=tiebreak_order)
+                
+                self.update_history_log(f"--- New Tournament '{name}' Created (Rounds: {num_rounds}) ---")
+                self.mark_dirty()
+                self._set_tournament_on_tabs()
+                self.standings_tab.update_standings_table_headers()
+                self._update_ui_state()
 
     def show_settings_dialog(self) -> bool:
         if not self.tournament:
@@ -397,8 +410,14 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             self.standings_tab.update_standings_table_headers()
             self.standings_tab.update_standings_table()
             self.crosstable_tab.update_crosstable()
-            self.tournament_tab.display_pairings_for_input() # Display current round
             
+            # Display pairings for the current round if they exist
+            if self.tournament and 0 <= self.current_round_index < len(self.tournament.rounds_pairings_ids):
+                pairings, bye_player = self.tournament.get_pairings_for_round(self.current_round_index)
+                self.tournament_tab.display_pairings_for_input(pairings, bye_player)
+            else:
+                self.tournament_tab.clear_pairings_display()
+
             self.mark_clean()
             self.update_history_log(f"--- Tournament loaded from {QFileInfo(filename).fileName()} ---")
             self.statusBar().showMessage(f"Loaded tournament: {self.tournament.name}")

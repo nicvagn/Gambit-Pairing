@@ -6,7 +6,8 @@ import functools
 
 class Tournament:
     """Manages the tournament state, pairings, results, and tiebreakers."""
-    def __init__(self, players: List[Player], num_rounds: int, tiebreak_order: Optional[List[str]] = None) -> None:
+    def __init__(self, name: str, players: List[Player], num_rounds: int, tiebreak_order: Optional[List[str]] = None) -> None:
+        self.name = name
         self.players: Dict[str, Player] = {p.id: p for p in players}
         self.num_rounds: int = num_rounds
         self.tiebreak_order: List[str] = tiebreak_order or list(DEFAULT_TIEBREAK_SORT_ORDER)
@@ -317,6 +318,24 @@ class Tournament:
 
         self.rounds_pairings_ids.append(round_pairings_ids)
         self.rounds_byes_ids.append(bye_player.id if bye_player else None)
+        return pairings, bye_player
+
+    def get_pairings_for_round(self, round_index: int) -> Tuple[List[Tuple[Player, Player]], Optional[Player]]:
+        """Retrieves the pairings and bye player for a given round index."""
+        if not (0 <= round_index < len(self.rounds_pairings_ids)):
+            return [], None
+
+        pairings_ids = self.rounds_pairings_ids[round_index]
+        bye_player_id = self.rounds_byes_ids[round_index]
+
+        pairings = []
+        for p1_id, p2_id in pairings_ids:
+            p1 = self.players.get(p1_id)
+            p2 = self.players.get(p2_id)
+            if p1 and p2:
+                pairings.append((p1, p2))
+
+        bye_player = self.players.get(bye_player_id) if bye_player_id else None
         return pairings, bye_player
 
     def manually_adjust_pairing(self, round_index: int, player1_id: str, new_opponent_id: str) -> bool:
@@ -725,11 +744,12 @@ class Tournament:
 
 
     def to_dict(self) -> Dict[str, Any]:
+        """Serializes the tournament state to a dictionary."""
         return {
-            'app_version': APP_VERSION,
+            'name': self.name,
+            'players': [p.to_dict() for p in self.players.values()],
             'num_rounds': self.num_rounds,
             'tiebreak_order': self.tiebreak_order,
-            'players': [p.to_dict() for p in self.players.values()],
             'rounds_pairings_ids': self.rounds_pairings_ids,
             'rounds_byes_ids': self.rounds_byes_ids,
             'previous_matches': [list(pair) for pair in self.previous_matches],
@@ -738,32 +758,25 @@ class Tournament:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Tournament':
-        players_data = data.get('players', [])
-        if not players_data:
-            # Compatibility: try to load from a simpler list of player dicts if 'players' key is missing
-            # This depends on older save format, assuming it was just a list of player dicts at top level.
-            # For now, assume current format or raise error.
-             raise ValueError("Cannot load tournament: No player data found in 'players' key.")
+        """Deserializes a tournament from a dictionary."""
+        players = [Player.from_dict(p_data) for p_data in data['players']]
+        num_rounds = data['num_rounds']
 
-        players = [Player.from_dict(p_data) for p_data in players_data]
-        num_rounds = data.get('num_rounds', 0)
-        tiebreak_order = data.get('tiebreak_order', list(DEFAULT_TIEBREAK_SORT_ORDER))
+        # Handle legacy files that may not have a name
+        name = data.get('name', 'Untitled Tournament')
 
-        if num_rounds <= 0: # Infer if missing
-             num_rounds = len(data.get('rounds_pairings_ids', [])) or 3 # Default to 3 if nothing else
-             logging.warning(f"Number of rounds not found or invalid, inferred/defaulted to {num_rounds}")
-
-        tournament = cls(players, num_rounds, tiebreak_order)
-        tournament.rounds_pairings_ids = data.get('rounds_pairings_ids', [])
-        tournament.rounds_byes_ids = data.get('rounds_byes_ids', [])
-        tournament.previous_matches = set(frozenset(map(str, pair)) for pair in data.get('previous_matches', [])) # Ensure IDs are str
+        tourney = cls(name, players, num_rounds)
+        tourney.tiebreak_order = data.get('tiebreak_order', list(DEFAULT_TIEBREAK_SORT_ORDER))
+        tourney.rounds_pairings_ids = [tuple(map(tuple, r)) for r in data.get('rounds_pairings_ids', [])]
+        tourney.rounds_byes_ids = data.get('rounds_byes_ids', [])
+        tourney.previous_matches = set(frozenset(map(str, pair)) for pair in data.get('previous_matches', [])) # Ensure IDs are str
 
         # Convert round keys in manual_pairings back to int
         raw_manual_pairings = data.get('manual_pairings', {})
-        tournament.manual_pairings = {int(k): v for k, v in raw_manual_pairings.items()}
+        tourney.manual_pairings = {int(k): v for k, v in raw_manual_pairings.items()}
 
-        for p in tournament.players.values(): p._opponents_played_cache = []
-        return tournament
+        for p in tourney.players.values(): p._opponents_played_cache = []
+        return tourney
 
 
 # --- GUI Dialogs ---
