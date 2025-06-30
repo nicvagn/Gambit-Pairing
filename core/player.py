@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional, Dict, Any, Tuple
 from core.utils import generate_id
 from core.constants import *
@@ -20,7 +21,7 @@ class Player:
         self.is_active: bool = True # Used for withdrawals
 
         # History
-        self.color_history: List[Optional[str]] = [] # Stores "White", "Black", or None (for bye)
+        self.color_history: List[Optional[str]] = [] # Stores W, B, or None (for bye)
         self.opponent_ids: List[Optional[str]] = []
         self.results: List[Optional[float]] = []
         self.running_scores: List[float] = []
@@ -63,16 +64,16 @@ class Player:
             last_color = valid_played_colors[-1]
             second_last_color = valid_played_colors[-2]
             if last_color == second_last_color:
-                return "Black" if last_color == "White" else "White"
+                return B if last_color == B else W
 
-        white_games_played = valid_played_colors.count("White")
-        black_games_played = valid_played_colors.count("Black")
+        white_games_played = valid_played_colors.count(W)
+        black_games_played = valid_played_colors.count(B)
 
         if white_games_played > black_games_played:
-            return "Black"
+            return B
         elif black_games_played > white_games_played:
-            return "White"
-        
+            return W
+
         return None
 
     def add_round_result(self, opponent: Optional['Player'], result: float, color: Optional[str]):
@@ -83,7 +84,7 @@ class Player:
         self.score += result
         self.running_scores.append(self.score)
         self.color_history.append(color) # color can be None for a bye
-        if color == "Black": 
+        if color == B:
             self.num_black_games += 1
         if opponent is None: # This means it was a bye
             self.has_received_bye = True
@@ -119,6 +120,6 @@ class Player:
         if not hasattr(player, 'has_received_bye'): # For older save files
             player.has_received_bye = (None in player.opponent_ids) if player.opponent_ids else False
         if not hasattr(player, 'num_black_games'): # For older save files
-            player.num_black_games = player.color_history.count("Black") if player.color_history else 0
+            player.num_black_games = player.color_history.count(B) if player.color_history else 0
 
         return player
