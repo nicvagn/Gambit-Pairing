@@ -28,5 +28,6 @@ if __name__ == "__main__":
     window = SwissTournamentApp()
     window.set_app_instance(app)
     window.show()
+    window.show_about_dialog()
     sys.exit(app.exec())
 
