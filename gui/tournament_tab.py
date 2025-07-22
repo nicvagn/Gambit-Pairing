@@ -228,7 +228,13 @@ class TournamentTab(QtWidgets.QWidget):
             self.lbl_round_title.setText(f"Round {display_round_number} Pairings & Results")
             self.display_pairings_for_input(pairings, bye_player)
             self.history_message.emit(f"--- Round {display_round_number} Pairings Generated ---")
-            for white, black in pairings: self.history_message.emit(f"  {white.name} (W) vs {black.name} (B)")
+            for pair in pairings:
+                if len(pair) == 3:
+                    white, black, color = pair
+                    self.history_message.emit(f"  {white.name} ({color}) vs {black.name} ({'B' if color == 'W' else 'W'})")
+                else:
+                    white, black = pair
+                    self.history_message.emit(f"  {white.name} (W) vs {black.name} (B)")
             if bye_player: self.history_message.emit(f"  Bye: {bye_player.name}")
             self.history_message.emit("-" * 20)
             self.dirty.emit()
@@ -312,7 +318,13 @@ class TournamentTab(QtWidgets.QWidget):
             self.lbl_round_title.setText(f"Round {display_round_number} Pairings & Results")
             self.display_pairings_for_input(pairings, bye_player)
             self.history_message.emit(f"--- Round {display_round_number} Pairings Generated ---")
-            for white, black in pairings: self.history_message.emit(f"  {white.name} (W) vs {black.name} (B)")
+            for pair in pairings:
+                if len(pair) == 3:
+                    white, black, color = pair
+                    self.history_message.emit(f"  {white.name} ({color}) vs {black.name} ({'B' if color == 'W' else 'W'})")
+                else:
+                    white, black = pair
+                    self.history_message.emit(f"  {white.name} (W) vs {black.name} (B)")
             if bye_player: self.history_message.emit(f"  Bye: {bye_player.name}")
             self.history_message.emit("-" * 20)
             self.dirty.emit()
@@ -352,10 +364,21 @@ class TournamentTab(QtWidgets.QWidget):
         can_adjust_pairings = True # Assume yes unless logic to disable is added for "already recorded" state.
                                   # Manual adjust should only be before results are recorded.
 
-        for row, (white, black) in enumerate(pairings):
+        for row, pair in enumerate(pairings):
+            # Support (Player, Player, color) tuples
+            if len(pair) == 3:
+                p1, p2, color = pair
+                if color == 'W':
+                    white, black = p1, p2
+                else:
+                    white, black = p2, p1
+            else:
+                white, black = pair
+                color = None
             item_white = QtWidgets.QTableWidgetItem(f"{white.name} ({white.rating})" + (" (I)" if not white.is_active else ""))
             item_white.setFlags(item_white.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            item_white.setToolTip(f"ID: {white.id}\nColor History: {' '.join(c or '_' for c in white.color_history)}")
+            color_info = f"Color: {color}" if color else ""
+            item_white.setToolTip(f"ID: {white.id}\nColor History: {' '.join(c or '_' for c in white.color_history)}\n{color_info}")
             if not white.is_active: item_white.setForeground(QtGui.QColor("gray"))
             self.table_pairings.setItem(row, 0, item_white)
 

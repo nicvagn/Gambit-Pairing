@@ -39,8 +39,8 @@ executables = [
 
 setup(
     name="Gambit Pairing",
-    version="0.4.1",
-    description="Swiss pairing app to streamline tournament management.",
+    version="0.5.0",
+    description="Gambit Pairing",
     options={
         "build_exe": build_exe_options,
         "bdist_msi": bdist_msi_options

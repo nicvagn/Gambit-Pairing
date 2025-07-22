@@ -3,11 +3,10 @@ from core.player import Player
 from core.constants import *
 import logging
 import functools
-from core.pairing_dutch_swiss import create_dutch_swiss_pairings
 
 class Tournament:
     """Manages the tournament state, pairings, results, and tiebreakers."""
-    def __init__(self, name: str, players: List[Player], num_rounds: int, tiebreak_order: Optional[List[str]] = None, pairing_system: str = "dutch_swiss") -> None:
+    def __init__(self, name: str, players: List[Player], num_rounds: int, tiebreak_order: Optional[List[str]] = None) -> None:
         self.name = name
         self.players: Dict[str, Player] = {p.id: p for p in players}
         self.num_rounds: int = num_rounds
@@ -16,7 +15,6 @@ class Tournament:
         self.rounds_byes_ids: List[Optional[str]] = []
         self.previous_matches: Set[frozenset[str]] = set()
         self.manual_pairings: Dict[int, Dict[str, str]] = {}
-        self.pairing_system: str = pairing_system  # NEW: pairing system type
 
     def get_player_list(self, active_only=False) -> List[Player]:
         players = list(self.players.values())
@@ -57,21 +55,270 @@ class Tournament:
 
 
     def create_pairings(self, current_round: int, allow_repeat_pairing_callback=None) -> Tuple[List[Tuple[Player, Player]], Optional[Player]]:
-        """Generates pairings for the next round using the selected pairing system."""
+        """Generates pairings for the next round with improved bye, floating, and color assignment."""
         active_players = self._get_active_players()
-        if self.pairing_system == "dutch_swiss":
-            pairings, bye_player, round_pairings_ids, bye_player_id = create_dutch_swiss_pairings(
-                active_players,
-                current_round,
-                self.previous_matches,
-                self._get_eligible_bye_player,
-                allow_repeat_pairing_callback
-            )
+        if not active_players:
+            logging.error("No active players available for pairing.")
+            return [], None # Return empty list and no bye player
+
+        # --- Round 1 Pairing (Seed-based) ---
+        if current_round == 1:
+            players_sorted = sorted(active_players, key=lambda p: (-p.rating, p.name))
+            bye_player = None
+
+            if len(players_sorted) % 2 == 1:
+                # In R1, lowest rated player gets the bye. _get_eligible_bye_player handles this.
+                # Candidate for bye is the lowest rated among all active players.
+                bye_player = self._get_eligible_bye_player(players_sorted)
+                if bye_player:
+                    players_sorted.remove(bye_player) # Remove bye player from pairing list
+                else: # Should not happen in R1 if active_players is not empty
+                    logging.error("R1: Could not assign a bye even with odd players.")
+                    # Potentially raise error or return empty if critical
+
+            mid = len(players_sorted) // 2
+            top_half, bottom_half = players_sorted[:mid], players_sorted[mid:]
+            pairings, round_pairings_ids = [], []
+
+            for p1, p2 in zip(top_half, bottom_half):
+                white, black = p1, p2 # Higher seed White
+                pairings.append((white, black))
+                round_pairings_ids.append((white.id, black.id))
+                self.previous_matches.add(frozenset({p1.id, p2.id}))
+
+            if bye_player:
+                logging.info(f"Round 1 Bye assigned to: {bye_player.name}")
+
             self.rounds_pairings_ids.append(round_pairings_ids)
-            self.rounds_byes_ids.append(bye_player_id)
+            self.rounds_byes_ids.append(bye_player.id if bye_player else None)
             return pairings, bye_player
-        else:
-            raise NotImplementedError(f"Pairing system '{self.pairing_system}' is not implemented.")
+
+        # --- Subsequent Rounds Pairing (Score Group based) ---
+        score_groups: Dict[float, List[Player]] = {}
+        for p in active_players:
+            score_groups.setdefault(p.score, []).append(p)
+        sorted_scores = sorted(score_groups.keys(), reverse=True)
+        pairings, round_pairings_ids = [], []
+
+        # Players carried down from a higher score group because they couldn't be paired or were floated.
+        # Initially, this list is empty. It can accumulate players who need to be paired down.
+        unpaired_from_higher_groups: List[Player] = []
+
+        floated_this_round: Set[str] = set() # Track players floated *in this round's processing*
+
+        for score in sorted_scores:
+            current_score_group = sorted(score_groups[score], key=lambda p: (-p.rating, p.name))
+
+            # Add players carried down from higher score groups (if any)
+            # These players must be paired first if possible, or float further.
+            # They are effectively part of this score group for pairing purposes now.
+            group_to_pair = unpaired_from_higher_groups + current_score_group
+            group_to_pair.sort(key=lambda p: (-p.rating, p.name)) # Re-sort combined group
+            unpaired_from_higher_groups = [] # Clear for next iteration
+
+            logging.debug(f"Processing Score Group: {score}, Players: {[p.name for p in group_to_pair]}")
+
+            # Handle floating if current group (group_to_pair) is odd
+            if len(group_to_pair) % 2 == 1:
+                # Select floater: lowest rating, hasn't floated this round, hasn't floated recently if possible
+                # Candidates are from group_to_pair
+                float_candidates = [p for p in group_to_pair if p.id not in floated_this_round]
+                if not float_candidates: # All have floated this round (should not happen if logic is correct)
+                    logging.warning(f"All players in group for score {score} already floated this round. Taking from original group_to_pair.")
+                    float_candidates = group_to_pair
+
+                if float_candidates: # Ensure there's someone to float
+                    # Sort by: never floated > floated longest ago, then rating, then name
+                    float_candidates.sort(key=lambda p: (p.float_history[-1] if p.float_history else -999, p.rating, p.name))
+                    floater = float_candidates[0]
+
+                    unpaired_from_higher_groups.append(floater) # This floater moves to the next (lower) score group
+                    floated_this_round.add(floater.id)
+                    floater.float_history.append(current_round)
+                    group_to_pair.remove(floater)
+                    logging.info(f"Player {floater.name} floated down from score group {score}.")
+                else:
+                    logging.warning(f"Odd group for score {score} but no float candidates found. This is unusual.")
+
+
+            # Pair players within the (now even-sized) group_to_pair
+            # Standard Dutch pairing: top half vs bottom half if possible, or iterative.
+            # Current iterative method:
+            temp_unpaired_in_group = list(group_to_pair) # Work with a copy
+
+            while len(temp_unpaired_in_group) >= 2:
+                p1 = temp_unpaired_in_group.pop(0) # Highest rated available
+
+                best_opponent_for_p1: Optional[Player] = None
+                min_color_conflict_score = float('inf')
+                best_opponent_idx = -1
+
+                for idx, p2_candidate in enumerate(temp_unpaired_in_group):
+                    if frozenset({p1.id, p2_candidate.id}) in self.previous_matches:
+                        continue
+
+                    p1_pref = p1.get_color_preference()
+                    p2_cand_pref = p2_candidate.get_color_preference()
+
+                    current_conflict_score = 0
+                    if p1_pref is not None and p2_cand_pref is not None and p1_pref == p2_cand_pref:
+                        current_conflict_score += 2 # Both want/need same color
+
+                    if current_conflict_score < min_color_conflict_score:
+                        min_color_conflict_score = current_conflict_score
+                        best_opponent_for_p1 = p2_candidate
+                        best_opponent_idx = idx
+                        if min_color_conflict_score == 0: # Perfect color match (or no preference from one/both)
+                            break
+                    # If multiple opponents give same low conflict_score, prefer closer rating? (More complex)
+                    # Current logic takes the first one encountered with the best score.
+
+                # If no valid opponent (all are previous matches), fallback: allow repeat pairing if user agrees
+                if best_opponent_for_p1 is None:
+                    # Try to find a previous opponent if user allows
+                    for idx, p2_candidate in enumerate(temp_unpaired_in_group):
+                        if allow_repeat_pairing_callback is not None:
+                            # Prompt user for repeat pairing
+                            proceed = allow_repeat_pairing_callback(p1, p2_candidate)
+                            if proceed:
+                                best_opponent_for_p1 = p2_candidate
+                                best_opponent_idx = idx
+                                break
+
+                if best_opponent_for_p1 and best_opponent_idx != -1:
+                    p2 = temp_unpaired_in_group.pop(best_opponent_idx)
+
+                    # Assign colors
+                    pref1 = p1.get_color_preference()
+                    pref2 = p2.get_color_preference()
+                    white, black = None, None
+
+                    if pref1 == W and (pref2 == B or pref2 is None): white, black = p1, p2
+                    elif pref1 == B and (pref2 == W or pref2 is None): white, black = p2, p1
+                    elif pref2 == W and (pref1 == B or pref1 is None): white, black = p2, p1 # Redundant if covered by above
+                    elif pref2 == B and (pref1 == W or pref1 is None): white, black = p1, p2 # Redundant
+
+                    # Handle cases where one has preference and other doesn't (covered above if None is included)
+                    # Or if both have same preference, or both no preference
+                    if white is None: # If not assigned yet
+                        if pref1 == W: white, black = p1, p2 # p1 gets preference if p2 has same or no conflicting
+                        elif pref1 == B: white, black = p2, p1
+                        elif pref2 == W: white, black = p2, p1
+                        elif pref2 == B: white, black = p1, p2
+                        else: # Both None, or both want same and it wasn't resolved to a clear assignment
+                            p1_vc = [c for c in p1.color_history if c is not None]
+                            p2_vc = [c for c in p2.color_history if c is not None]
+                            p1_bal = p1_vc.count(W) - p1_vc.count(B)
+                            p2_bal = p2_vc.count(W) - p2_vc.count(B)
+
+                            if p1_bal > p2_bal: white, black = p2, p1 # p1 more W, gets B
+                            elif p2_bal > p1_bal: white, black = p1, p2 # p2 more W, gets B
+                            else: white, black = (p1, p2) if p1.rating >= p2.rating else (p2, p1)
+
+                    pairings.append((white, black))
+                    round_pairings_ids.append((white.id, black.id))
+                    self.previous_matches.add(frozenset({p1.id, p2.id}))
+                else:
+                    # p1 could not be paired in this group (e.g., all remaining are previous opponents)
+                    # Add p1 to be carried down.
+                    unpaired_from_higher_groups.append(p1)
+                    logging.warning(f"Player {p1.name} could not be paired in score group {score} and will be carried down.")
+
+            # Any players remaining in temp_unpaired_in_group also couldn't be paired
+            unpaired_from_higher_groups.extend(temp_unpaired_in_group)
+
+
+        # --- Handle any remaining unpaired players (usually from the lowest score group or floaters) ---
+        bye_player = None
+        # These are players who couldn't be paired in their score groups or were floated down to the very end.
+        final_unpaired_list = unpaired_from_higher_groups
+        final_unpaired_list.sort(key=lambda p: (-p.rating, p.name)) # Sort them for consistent processing
+
+
+        if len(final_unpaired_list) % 2 == 1:
+            # An odd player remains, needs a bye.
+            # Pass the single player in a list to _get_eligible_bye_player
+            bye_candidate_player = final_unpaired_list[-1] # Typically lowest rated of this small group
+            bye_player = self._get_eligible_bye_player([bye_candidate_player]) # Pass as list
+            if bye_player:
+                if bye_player in final_unpaired_list : final_unpaired_list.remove(bye_player)
+                logging.info(f"Round {current_round} Bye assigned to: {bye_player.name}")
+            else:
+                # This is a critical error: odd player remains but _get_eligible_bye_player returned None.
+                # This implies the only remaining player is inactive or some other rule prevents bye.
+                # For robustness, if _get_eligible_bye_player fails here with an odd player,
+                # it's a situation that needs manual TD intervention or indicates a flaw.
+                logging.error(f"Critical: Odd player {bye_candidate_player.name} remains but cannot be assigned a bye. Pairing may be incomplete.")
+                # Potentially raise an error or return incomplete pairings.
+                # For now, we proceed, but this player won't be paired.
+
+        # Pair the rest of final_unpaired_list (should be even now)
+        # This logic is simpler as these are "leftovers"
+        # Use the same pairing and color logic as within score groups
+        temp_final_unpaired = list(final_unpaired_list)
+        while len(temp_final_unpaired) >= 2:
+            p1 = temp_final_unpaired.pop(0)
+            paired_p1 = False
+            for idx, p2_candidate in enumerate(temp_final_unpaired):
+                if frozenset({p1.id, p2_candidate.id}) not in self.previous_matches:
+                    p2 = temp_final_unpaired.pop(idx)
+                    # Assign colors (using same logic as above)
+                    pref1 = p1.get_color_preference()
+                    pref2 = p2_candidate.get_color_preference()
+                    white, black = None, None
+                    if pref1 == W and (pref2 == B or pref2 is None): white, black = p1, p2_candidate
+                    elif pref1 == B and (pref2 == W or pref2 is None): white, black = p2_candidate, p1
+                    elif pref2 == W and (pref1 == B or pref1 is None): white, black = p2_candidate, p1
+                    elif pref2 == B and (pref1 == W or pref1 is None): white, black = p1, p2_candidate
+                    if white is None:
+                        p1_vc = [c for c in p1.color_history if c is not None]
+                        p2_vc = [c for c in p2_candidate.color_history if c is not None]
+                        p1_bal = p1_vc.count(W) - p1_vc.count(B)
+                        p2_bal = p2_vc.count(W) - p2_vc.count(B)
+                        if p1_bal > p2_bal: white, black = p2_candidate, p1
+                        elif p2_bal > p1_bal: white, black = p1, p2_candidate
+                        else: white, black = (p1, p2_candidate) if p1.rating >= p2_candidate.rating else (p2_candidate, p1)
+
+                    pairings.append((white, black))
+                    round_pairings_ids.append((white.id, black.id))
+                    self.previous_matches.add(frozenset({p1.id, p2.id}))
+                    paired_p1 = True
+                    break
+            # Fallback: allow repeat pairing if user agrees
+            if not paired_p1:
+                for idx, p2_candidate in enumerate(temp_final_unpaired):
+                    if allow_repeat_pairing_callback is not None:
+                        proceed = allow_repeat_pairing_callback(p1, p2_candidate)
+                        if proceed:
+                            # Assign colors as above
+                            pref1 = p1.get_color_preference()
+                            pref2 = p2_candidate.get_color_preference()
+                            white, black = None, None
+                            if pref1 == W and (pref2 == B or pref2 is None): white, black = p1, p2_candidate
+                            elif pref1 == B and (pref2 == W or pref2 is None): white, black = p2_candidate, p1
+                            elif pref2 == W and (pref1 == B or pref1 is None): white, black = p2_candidate, p1
+                            elif pref2 == B and (pref1 == W or pref1 is None): white, black = p1, p2_candidate
+                            if white is None:
+                                p1_vc = [c for c in p1.color_history if c is not None]
+                                p2_vc = [c for c in p2_candidate.color_history if c is not None]
+                                p1_bal = p1_vc.count(W) - p1_vc.count(B)
+                                p2_bal = p2_vc.count(W) - p2_vc.count(B)
+                                if p1_bal > p2_bal: white, black = p2_candidate, p1
+                                elif p2_bal > p1_bal: white, black = p1, p2_candidate
+                                else: white, black = (p1, p2_candidate) if p1.rating >= p2_candidate.rating else (p2_candidate, p1)
+                            pairings.append((white, black))
+                            round_pairings_ids.append((white.id, black.id))
+                            self.previous_matches.add(frozenset({p1.id, p2.id}))
+                            temp_final_unpaired.pop(idx)
+                            paired_p1 = True
+                            break
+            if not paired_p1:
+                logging.error(f"Player {p1.name} could not be paired in the final pairing stage.")
+
+
+        self.rounds_pairings_ids.append(round_pairings_ids)
+        self.rounds_byes_ids.append(bye_player.id if bye_player else None)
+        return pairings, bye_player
 
     def get_pairings_for_round(self, round_index: int) -> Tuple[List[Tuple[Player, Player]], Optional[Player]]:
         """Retrieves the pairings and bye player for a given round index."""
@@ -507,7 +754,6 @@ class Tournament:
             'rounds_byes_ids': self.rounds_byes_ids,
             'previous_matches': [list(pair) for pair in self.previous_matches],
             'manual_pairings': self.manual_pairings,
-            'pairing_system': self.pairing_system,  # NEW: serialize pairing system
         }
 
     @classmethod
@@ -519,8 +765,7 @@ class Tournament:
         # Handle legacy files that may not have a name
         name = data.get('name', 'Untitled Tournament')
 
-        pairing_system = data.get('pairing_system', 'dutch_swiss')  # NEW: load pairing system
-        tourney = cls(name, players, num_rounds, pairing_system=pairing_system)
+        tourney = cls(name, players, num_rounds)
         tourney.tiebreak_order = data.get('tiebreak_order', list(DEFAULT_TIEBREAK_SORT_ORDER))
         tourney.rounds_pairings_ids = [tuple(map(tuple, r)) for r in data.get('rounds_pairings_ids', [])]
         tourney.rounds_byes_ids = data.get('rounds_byes_ids', [])

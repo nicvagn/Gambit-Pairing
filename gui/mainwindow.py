@@ -336,11 +336,17 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         if dialog.exec():
             data = dialog.get_data()
             if data:
-                name, num_rounds, tiebreak_order = data
+                name, num_rounds, tiebreak_order, pairing_system = data
                 self.reset_tournament_state()
-                self.tournament = Tournament(name=name, players=[], num_rounds=num_rounds, tiebreak_order=tiebreak_order)
-                
-                self.update_history_log(f"--- New Tournament '{name}' Created (Rounds: {num_rounds}) ---")
+                self.tournament = Tournament(
+                    name=name,
+                    players=[],
+                    num_rounds=num_rounds,
+                    tiebreak_order=tiebreak_order
+                )
+                # Store pairing_system as an attribute if needed:
+                self.pairing_system = pairing_system
+                self.update_history_log(f"--- New Tournament '{name}' Created (Rounds: {num_rounds}, Pairing: {pairing_system}) ---")
                 self.mark_dirty()
                 self._set_tournament_on_tabs()
                 self.standings_tab.update_standings_table_headers()
@@ -352,11 +358,17 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         
         dialog = SettingsDialog(self.tournament.num_rounds, self.tournament.tiebreak_order, self)
         tournament_started = len(self.tournament.rounds_pairings_ids) > 0
-        dialog.spin_num_rounds.setEnabled(not tournament_started)
+        # Disable rounds spinbox if round robin or tournament started
+        if getattr(self.tournament, 'pairing_system', None) == 'round_robin':
+            dialog.spin_num_rounds.setEnabled(False)
+            dialog.spin_num_rounds.setToolTip("Number of rounds is fixed for Round Robin: players - 1.")
+        else:
+            dialog.spin_num_rounds.setEnabled(not tournament_started)
+            dialog.spin_num_rounds.setToolTip("")
 
         if dialog.exec():
             new_rounds, new_tiebreaks = dialog.get_settings()
-            if self.tournament.num_rounds != new_rounds and not tournament_started:
+            if self.tournament.num_rounds != new_rounds and not tournament_started and getattr(self.tournament, 'pairing_system', None) != 'round_robin':
                 self.tournament.num_rounds = new_rounds
                 self.update_history_log(f"Number of rounds set to {new_rounds}.")
                 self.mark_dirty()
