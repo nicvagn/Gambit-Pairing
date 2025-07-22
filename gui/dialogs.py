@@ -55,7 +55,6 @@ class NewTournamentDialog(QtWidgets.QDialog):
         pairing_layout = QtWidgets.QHBoxLayout(pairing_group)
         self.pairing_combo = QtWidgets.QComboBox()
         self.pairing_combo.addItem("Dutch System (FIDE/USCF-style)", "dutch_swiss")
-        self.pairing_combo.addItem("Traditional Swiss System", "swiss_traditional")
         self.pairing_combo.addItem("Round Robin (All-Play-All)", "round_robin")
         self.pairing_combo.setToolTip("Select the pairing system for this tournament.")
         pairing_layout.addWidget(self.pairing_combo)
@@ -117,13 +116,6 @@ class NewTournamentDialog(QtWidgets.QDialog):
                 "fide": True,
                 "uscf": True,
                 "details": "<ul><li><b>Pairing Logic:</b> Players are sorted by score, then paired top vs bottom within each score group, avoiding previous opponents and balancing colors.</li><li><b>Best For:</b> Most open tournaments, FIDE/USCF events.</li><li><b>Notes:</b> This is the standard Swiss system for rated events.</li></ul>"
-            },
-            "swiss_traditional": {
-                "title": "Traditional Swiss System (Original Logic)",
-                "desc": "Uses the exact pairing algorithm from the original tournament.py backup file. Score-based grouping with original floating logic and color assignment rules.",
-                "fide": False,
-                "uscf": False,
-                "details": "<ul><li><b>Pairing Logic:</b> Players grouped by score, with the original floating system from your tournament backup, iterative pairing within groups, and original color conflict resolution.</li><li><b>Best For:</b> Developer testing and comparison with the original tournament algorithm.</li><li><b>Notes:</b> This is the exact algorithm extracted from your backup tournament.py file for reference purposes.</li></ul>"
             },
             "round_robin": {
                 "title": "Round Robin",

@@ -4,11 +4,10 @@ from core.constants import *
 import logging
 import functools
 from core.pairing_dutch_swiss import create_dutch_swiss_pairings
-from core.pairing_swiss_traditional import create_swiss_pairings
 
 class Tournament:
     """Manages the tournament state, pairings, results, and tiebreakers."""
-    def __init__(self, name: str, players: List[Player], num_rounds: int, tiebreak_order: Optional[List[str]] = None, pairing_system: str = PAIRING_DUTCH_SWISS) -> None:
+    def __init__(self, name: str, players: List[Player], num_rounds: int, tiebreak_order: Optional[List[str]] = None, pairing_system: str = "dutch_swiss") -> None:
         self.name = name
         self.players: Dict[str, Player] = {p.id: p for p in players}
         self.num_rounds: int = num_rounds
@@ -60,8 +59,7 @@ class Tournament:
     def create_pairings(self, current_round: int, allow_repeat_pairing_callback=None) -> Tuple[List[Tuple[Player, Player]], Optional[Player]]:
         """Generates pairings for the next round using the selected pairing system."""
         active_players = self._get_active_players()
-        
-        if self.pairing_system == PAIRING_DUTCH_SWISS:
+        if self.pairing_system == "dutch_swiss":
             pairings, bye_player, round_pairings_ids, bye_player_id = create_dutch_swiss_pairings(
                 active_players,
                 current_round,
@@ -72,19 +70,6 @@ class Tournament:
             self.rounds_pairings_ids.append(round_pairings_ids)
             self.rounds_byes_ids.append(bye_player_id)
             return pairings, bye_player
-            
-        elif self.pairing_system == PAIRING_SWISS_TRADITIONAL:
-            pairings, bye_player, round_pairings_ids, bye_player_id = create_swiss_pairings(
-                active_players,
-                current_round,
-                self.previous_matches,
-                self._get_eligible_bye_player,
-                allow_repeat_pairing_callback
-            )
-            self.rounds_pairings_ids.append(round_pairings_ids)
-            self.rounds_byes_ids.append(bye_player_id)
-            return pairings, bye_player
-            
         else:
             raise NotImplementedError(f"Pairing system '{self.pairing_system}' is not implemented.")
 
