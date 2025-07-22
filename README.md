@@ -1,33 +1,33 @@
 ```
 
- $$$$$$\                       $$\      $$\  $$\           
-$$  __$$\                      $$ |     \__| $$ |          
-$$ /  \__|$$$$$$\ $$$$$$\$$$$\ $$$$$$$\ $$\$$$$$$\         
-$$ |$$$$\ \____$$\$$  _$$  _$$\$$  __$$\$$ \_$$  _|        
-$$ |\_$$ |$$$$$$$ $$ / $$ / $$ $$ |  $$ $$ | $$ |          
-$$ |  $$ $$  __$$ $$ | $$ | $$ $$ |  $$ $$ | $$ |$$\       
-\$$$$$$  \$$$$$$$ $$ | $$ | $$ $$$$$$$  $$ | \$$$$  |      
- \______/ \_______\__| \__| \__\_______/\__|  \____/       
-$$$$$$$\         $$\         $$\                           
-$$  __$$\        \__|        \__|                          
-$$ |  $$ $$$$$$\ $$\ $$$$$$\ $$\$$$$$$$\  $$$$$$\          
-$$$$$$$  \____$$\$$ $$  __$$\$$ $$  __$$\$$  __$$\         
-$$  ____/$$$$$$$ $$ $$ |  \__$$ $$ |  $$ $$ /  $$ |        
-$$ |    $$  __$$ $$ $$ |     $$ $$ |  $$ $$ |  $$ |        
-$$ |    \$$$$$$$ $$ $$ |     $$ $$ |  $$ \$$$$$$$ |        
-\__|     \_______\__\__|     \__\__|  \__|\____$$ |        
-                                         $$\   $$ |        
-                                         \$$$$$$  |        
-                                          \______/                                                         
-                                                                   
+ $$$$$$\                       $$\      $$\  $$\
+$$  __$$\                      $$ |     \__| $$ |
+$$ /  \__|$$$$$$\ $$$$$$\$$$$\ $$$$$$$\ $$\$$$$$$\
+$$ |$$$$\ \____$$\$$  _$$  _$$\$$  __$$\$$ \_$$  _|
+$$ |\_$$ |$$$$$$$ $$ / $$ / $$ $$ |  $$ $$ | $$ |
+$$ |  $$ $$  __$$ $$ | $$ | $$ $$ |  $$ $$ | $$ |$$\
+\$$$$$$  \$$$$$$$ $$ | $$ | $$ $$$$$$$  $$ | \$$$$  |
+ \______/ \_______\__| \__| \__\_______/\__|  \____/
+$$$$$$$\         $$\         $$\
+$$  __$$\        \__|        \__|
+$$ |  $$ $$$$$$\ $$\ $$$$$$\ $$\$$$$$$$\  $$$$$$\
+$$$$$$$  \____$$\$$ $$  __$$\$$ $$  __$$\$$  __$$\
+$$  ____/$$$$$$$ $$ $$ |  \__$$ $$ |  $$ $$ /  $$ |
+$$ |    $$  __$$ $$ $$ |     $$ $$ |  $$ $$ |  $$ |
+$$ |    \$$$$$$$ $$ $$ |     $$ $$ |  $$ \$$$$$$$ |
+\__|     \_______\__\__|     \__\__|  \__|\____$$ |
+                                         $$\   $$ |
+                                         \$$$$$$  |
+                                          \______/
 
-  ___     ___       __      .______    __    __       ___           ___       _  _       __  ___  
- /  /    /   \     |  |     |   _  \  |  |  |  |     /   \         / _ \     | || |     /_ | \  \ 
+
+  ___     ___       __      .______    __    __       ___           ___       _  _       __  ___
+ /  /    /   \     |  |     |   _  \  |  |  |  |     /   \         / _ \     | || |     /_ | \  \
 |  |    /  ^  \    |  |     |  |_)  | |  |__|  |    /  ^  \       | | | |    | || |_     | |  |  |
 |  |   /  /_\  \   |  |     |   ___/  |   __   |   /  /_\  \      | | | |    |__   _|    | |  |  |
 |  |  /  _____  \  |  `----.|  |      |  |  |  |  /  _____  \     | |_| |  __   | |    __| |  |  |
 |  | /__/     \__\ |_______|| _|      |__|  |__| /__/     \__\     \___/  (__)  |_|   (__)_|  |  |
- \__\                                                                                        /__/ 
+ \__\                                                                                        /__/
 
 ```
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -91,17 +91,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
   - Automatic and manual update checks.
 
 ## Requirements
-
-- Python 3.8+
-- PyQt6
-- requests
-- logging
-- typing
-- pathlib
-- sys
-- subprocess
-- json
-
+> see requirements.txt
 ## Installation
 
 1. Install Python 3.8 or higher.
@@ -162,20 +152,20 @@ This project is open source and available under the [MIT License](https://mit-li
 
 > _Below are some example screenshots of Gambit Pairing in action._
 
-**Tournament Control Tab**  
+**Tournament Control Tab**
 ![Main Tournament Control](docs/screenshots/tournament.png)
 
-**Player Manager Tab**  
+**Player Manager Tab**
 ![Main Tournament Control](docs/screenshots/player.png)
 
-**Standings Tab**  
+**Standings Tab**
 ![Standings Tab](docs/screenshots/standings.png)
 
-**Cross-Table Tab**  
+**Cross-Table Tab**
 ![Cross-Table Tab](docs/screenshots/crosstable.png)
 
-**History Log Tab**  
+**History Log Tab**
 ![History Log Tab](docs/screenshots/history_log.png)
 
-**Print Dialog**  
+**Print Dialog**
 ![Print Dialog](docs/screenshots/print_dialog.png)
