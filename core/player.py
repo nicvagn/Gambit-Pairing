@@ -28,6 +28,7 @@ class Player:
         self.has_received_bye: bool = False
         self.num_black_games: int = 0 # Counts actual games played as Black
         self.float_history: List[int] = []  # Track rounds where player floated down
+        self.match_history: List[Optional[Dict[str, Any]]] = [] # Stores {'opponent_id': str, 'opponent_score': float}
 
         # Tiebreakers (calculated)
         self.tiebreakers: Dict[str, float] = {}
@@ -81,6 +82,23 @@ class Player:
         opponent_id = opponent.id if opponent else None
         self.opponent_ids.append(opponent_id)
         self.results.append(result)
+        
+        # Record match details for both players before updating scores
+        player_score_before_round = self.score
+        opponent_score_before_round = opponent.score if opponent else 0.0
+
+        self.match_history.append({
+            'opponent_id': opponent_id,
+            'player_score': player_score_before_round,
+            'opponent_score': opponent_score_before_round
+        })
+        if opponent:
+            opponent.match_history.append({
+                'opponent_id': self.id,
+                'player_score': opponent_score_before_round,
+                'opponent_score': player_score_before_round
+            })
+
         self.score += result
         self.running_scores.append(self.score)
         self.color_history.append(color) # color can be None for a bye
