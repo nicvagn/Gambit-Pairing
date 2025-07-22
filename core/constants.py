@@ -47,6 +47,15 @@ DEFAULT_TIEBREAK_SORT_ORDER = [
 
 UPDATE_URL = "https://api.github.com/repos/Chickaboo/Gambit-Pairing/releases/latest"
 
+# Pairing Systems
+PAIRING_DUTCH_SWISS = "dutch_swiss"
+PAIRING_SWISS_TRADITIONAL = "swiss_traditional"
+
+PAIRING_SYSTEM_NAMES = {
+    PAIRING_DUTCH_SWISS: "Dutch Swiss System",
+    PAIRING_SWISS_TRADITIONAL: "Traditional Swiss System"
+}
+
 # chess colors
 W = "White"
 B = "Black"
