@@ -9,7 +9,7 @@ build_exe_options = {
     "include_files": [
         "styles.qss",
         ("resources/icons/icon.ico", "icon.ico"),
-        "license.rtf",
+        "LICENSE",
         "core/",       # include entire core folder
         "gui/",        # include entire gui folder
         "resources/",  # include entire resources folder
@@ -38,7 +38,8 @@ executables = [
 ]
 
 setup(
-    name="Gambit Pairing",
+    # name must be single token when building rpm package.
+    name="Gambit_Pairing",
     version="0.5.0",
     description="Gambit Pairing",
     options={
