@@ -201,7 +201,7 @@ print((BERGER_TABLES["3-4"]))
 class RoundRobin(self):
     """A round robin chess tournament"""
     self.players: tuple[Player, ...]
-    self.round_num: int = 0
+    self.round_num: int
     self.b_table: Tuple
 
     def __init__(self, players: List[Player]) -> None:
@@ -239,6 +239,11 @@ class RoundRobin(self):
         else:
             self.b_table = BERGER_TABLES["3-4"]
             root_logger.info("round robin created for 3-4 players")
+
+        self.round_num = 1
+        # we transform the list of players into an immutable tuple.
+        # The order must be kept constant as the Berger tables require it.
+        self.players = tuple(players)
 
     def _pair_round_robin_round(round_number: int):
         raise NotImplementedError()
