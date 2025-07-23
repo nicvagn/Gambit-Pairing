@@ -1,15 +1,52 @@
 # Building Executable
 
-## steps to get windows executable
-### I am told:
-"Something I forgot to mention is that cx freeze will not work with anything newer than python 3.12"
+## How to build I windows exectable with setup.py
 
-1. install python requirements
-`pip install -r requirements.txt`
-2. to get windows executable
-python setup.py build
+### Note:
+cx_freeze does not support python 3.13
+
+#### Install python requirements
+1. `pip install -r requirements.txt`
+2. `pip install cx_freeze`
+
+> to get windows executable
+`python setup.py build`
 
 > for an installer:
 `python setup.py bdist_msi`
 
-> this is 2nd hand information. But should get you started.
+> This should get you started.
+
+---
+
+## All cx_Freeze build commands supported by this setup.py
+
+### Windows
+- Build executable:
+  ```
+  python setup.py build
+  ```
+- Build MSI installer:
+  ```
+  python setup.py bdist_msi
+  ```
+
+### macOS
+- Build macOS app bundle:
+  ```
+  python setup.py bdist_mac
+  ```
+
+### Linux
+- Build RPM package:
+  ```
+  python setup.py bdist_rpm
+  ```
+- Build DEB package:
+  ```
+  python setup.py bdist_deb
+  ```
+
+---
+
+> Run these commands on the appropriate operating system for the desired output.
