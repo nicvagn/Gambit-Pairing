@@ -13,6 +13,7 @@ build_exe_options = {
         "core/",       # include entire core folder
         "gui/",        # include entire gui folder
         "resources/",  # include entire resources folder
+        "license.rtf",
     ],
 }
 
