@@ -183,13 +183,18 @@ class NewTournamentDialog(QtWidgets.QDialog):
     def on_pairing_system_changed(self):
         key = self.pairing_combo.currentData()
         if key == "round_robin":
-            # For round robin, rounds = players - 1, disable editing
-            self.rounds_spin.setDisabled(True)
+            # For round robin, rounds = players - 1, hide the input
+            self.rounds_spin.hide()
+            label = self.layout.itemAt(0).widget().layout().labelForField(self.rounds_spin)
+            if label:
+                label.hide()
             self.rounds_spin.setToolTip("Number of rounds is fixed for Round Robin: players - 1.")
-            # Set to current player count minus one
             self.rounds_spin.setValue(max(1, self.player_count - 1))
         else:
-            self.rounds_spin.setDisabled(False)
+            self.rounds_spin.show()
+            label = self.layout.itemAt(0).widget().layout().labelForField(self.rounds_spin)
+            if label:
+                label.show()
             self.rounds_spin.setToolTip("")
 
     def set_player_count(self, count: int):
