@@ -9,7 +9,7 @@ build_exe_options = {
     "include_files": [
         "styles.qss",
         ("resources/icons/icon.ico", "icon.ico"),
-        "license.rtf",
+        "LICENSE",
         "core/",       # include entire core folder
         "gui/",        # include entire gui folder
         "resources/",  # include entire resources folder
