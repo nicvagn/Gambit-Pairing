@@ -42,11 +42,13 @@ elif sys.platform == "darwin":
     }
 else:
     options["bdist_rpm"] = {
+        "name": "GambitPairing",
         "requires": ["python3"],
         "license": "LICENSE",
         "icon": "icon.png",
     }
     options["bdist_deb"] = {
+        "name": "GambitPairing",
         "requires": ["python3"],
         "license": "LICENSE",
         "icon": "icon.png",
@@ -64,7 +66,7 @@ executables = [
 ]
 
 setup(
-    name="Gambit Pairing",
+    name="GambitPairing",
     version="0.5.0",
     description="Gambit Pairing",
     options=options,
