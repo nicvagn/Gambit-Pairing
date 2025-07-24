@@ -3,7 +3,7 @@
 ## How to build an exectable with setup.py
 
 ### Note:
-cx_freeze does not support python 3.13
+cx_freeze does not support building windows msi installer in python 3.13
 
 #### Install python requirements
 1. `pip install -r requirements.txt`
