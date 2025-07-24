@@ -1,6 +1,6 @@
 # Building Executable
 
-## How to build I windows exectable with setup.py
+## How to build an exectable with setup.py
 
 ### Note:
 cx_freeze does not support python 3.13
@@ -8,14 +8,7 @@ cx_freeze does not support python 3.13
 #### Install python requirements
 1. `pip install -r requirements.txt`
 2. `pip install cx_freeze`
-
-> to get windows executable
-`python setup.py build`
-
-> for an installer:
-`python setup.py bdist_msi`
-
-> This should get you started.
+3. Use the build commands for your operating system
 
 ---
 
