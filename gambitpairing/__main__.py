@@ -6,21 +6,37 @@ import logging
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    import os
+    def get_icon_path():
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        icon_folder = os.path.join(base_dir, "..", "resources", "icons")
+        ico_path = os.path.join(icon_folder, "icon.ico")
+        png_path = os.path.join(icon_folder, "icon.png")
+        if os.path.exists(ico_path):
+            return ico_path
+        elif os.path.exists(png_path):
+            return png_path
+        return None
+
     def run_app():
         app = QtWidgets.QApplication(sys.argv)
-        app.setWindowIcon(QIcon("icon.ico"))  # Set the application icon
+        icon_path = get_icon_path()
+        if icon_path:
+            app.setWindowIcon(QIcon(icon_path))
+        else:
+            logging.warning("App icon not found in resources/icons.")
         # load stylesheet
         try:
             with open("styles.qss", "r", encoding="utf-8") as f:
                 app.setStyleSheet(f.read())
         except Exception as e:
             logging.error(f"Could not load stylesheet: {e}")
-        try: 
+        try:
             # Try to apply a modern style if available
             available_styles = QtWidgets.QStyleFactory.keys()
             if "Fusion" in available_styles:
                 app.setStyle("WindowsVista")
-        except Exception as e: 
+        except Exception as e:
             logging.warning(f"Could not set preferred application style: {e}")
 
         window = SwissTournamentApp()
