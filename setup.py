@@ -46,6 +46,7 @@ else:
         "requires": ["python3"],
         "license": "LICENSE",
         "icon": "icon.png",
+        'debug': False
     }
     options["bdist_deb"] = {
         "name": "GambitPairing",
