@@ -29,21 +29,25 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def resource_path(relative_path: str) -> str:
-    """ Get absolute path to resource, works for dev and for cx_Freeze """
-    if getattr(sys, 'frozen', False):
+    """Get absolute path to resource, works for dev and for cx_Freeze"""
+    if getattr(sys, "frozen", False):
         # The application is frozen
         base_path = os.path.dirname(sys.executable)
     else:
         # The application is not frozen
-        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
     return os.path.join(base_path, relative_path)
 
+
 # --- Main Application Window ---
+
 
 class SwissTournamentApp(QtWidgets.QMainWindow):
     """Main application window for the Swiss Tournament."""
+
     def __init__(self) -> None:
         super().__init__()
         self.tournament: Optional[Tournament] = None
@@ -58,10 +62,10 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
         self._setup_ui()
         self._update_ui_state()
-        
+
         # Check for pending update first, then check for new online updates.
         if not self.check_for_pending_update():
-             if self.updater:
+            if self.updater:
                 QtCore.QTimer.singleShot(1500, self.check_for_updates_auto)
 
     def _setup_ui(self):
@@ -95,7 +99,9 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.tournament_tab.dirty.connect(self.mark_dirty)
         self.tournament_tab.dirty.connect(self._update_ui_state)
         self.tournament_tab.round_completed.connect(self._on_round_completed)
-        self.tournament_tab.standings_update_requested.connect(self.standings_tab.update_standings_table)
+        self.tournament_tab.standings_update_requested.connect(
+            self.standings_tab.update_standings_table
+        )
 
         self.tabs.addTab(self.players_tab, "Players")
         self.tabs.addTab(self.tournament_tab, "Tournament")
@@ -106,22 +112,48 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
     def _setup_menu(self):
         """Sets up the main menu bar, connecting actions to methods in the main window or tabs."""
         menu_bar = self.menuBar()
-        
+
         # File Menu
         file_menu = menu_bar.addMenu("&File")
-        self.new_action = self._create_action("&New Tournament...", self.prompt_new_tournament, "Ctrl+N")
-        self.load_action = self._create_action("&Load Tournament...", self.load_tournament, "Ctrl+O")
-        self.save_action = self._create_action("&Save Tournament", self.save_tournament, "Ctrl+S")
-        self.save_as_action = self._create_action("Save Tournament &As...", lambda: self.save_tournament(save_as=True), "Ctrl+Shift+S")
-        self.import_players_action = self._create_action("&Import Players from CSV...", self.players_tab.import_players_csv)
-        self.export_players_action = self._create_action("&Export Players to CSV...", self.players_tab.export_players_csv)
-        self.export_standings_action = self._create_action("&Export Standings...", self.standings_tab.export_standings)
-        self.settings_action = self._create_action("S&ettings...", self.show_settings_dialog)
+        self.new_action = self._create_action(
+            "&New Tournament...", self.prompt_new_tournament, "Ctrl+N"
+        )
+        self.load_action = self._create_action(
+            "&Load Tournament...", self.load_tournament, "Ctrl+O"
+        )
+        self.save_action = self._create_action(
+            "&Save Tournament", self.save_tournament, "Ctrl+S"
+        )
+        self.save_as_action = self._create_action(
+            "Save Tournament &As...",
+            lambda: self.save_tournament(save_as=True),
+            "Ctrl+Shift+S",
+        )
+        self.import_players_action = self._create_action(
+            "&Import Players from CSV...", self.players_tab.import_players_csv
+        )
+        self.export_players_action = self._create_action(
+            "&Export Players to CSV...", self.players_tab.export_players_csv
+        )
+        self.export_standings_action = self._create_action(
+            "&Export Standings...", self.standings_tab.export_standings
+        )
+        self.settings_action = self._create_action(
+            "S&ettings...", self.show_settings_dialog
+        )
         self.exit_action = self._create_action("E&xit", self.close, "Ctrl+Q")
 
-        file_menu.addActions([self.new_action, self.load_action, self.save_action, self.save_as_action])
+        file_menu.addActions(
+            [self.new_action, self.load_action, self.save_action, self.save_as_action]
+        )
         file_menu.addSeparator()
-        file_menu.addActions([self.import_players_action, self.export_players_action, self.export_standings_action])
+        file_menu.addActions(
+            [
+                self.import_players_action,
+                self.export_players_action,
+                self.export_standings_action,
+            ]
+        )
         file_menu.addSeparator()
         file_menu.addAction(self.settings_action)
         file_menu.addSeparator()
@@ -129,41 +161,75 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
         # Tournament Menu
         tournament_menu = menu_bar.addMenu("&Tournament")
-        self.start_action = self._create_action("&Start Tournament", self.tournament_tab.start_tournament)
-        self.prepare_round_action = self._create_action("&Prepare Next Round", self.tournament_tab.prepare_next_round)
-        self.record_results_action = self._create_action("&Record Results && Advance", self.tournament_tab.record_and_advance)
-        self.undo_results_action = self._create_action("&Undo Last Results", self.tournament_tab.undo_last_results)
-        tournament_menu.addActions([self.start_action, self.prepare_round_action, self.record_results_action, self.undo_results_action])
+        self.start_action = self._create_action(
+            "&Start Tournament", self.tournament_tab.start_tournament
+        )
+        self.prepare_round_action = self._create_action(
+            "&Prepare Next Round", self.tournament_tab.prepare_next_round
+        )
+        self.record_results_action = self._create_action(
+            "&Record Results && Advance", self.tournament_tab.record_and_advance
+        )
+        self.undo_results_action = self._create_action(
+            "&Undo Last Results", self.tournament_tab.undo_last_results
+        )
+        tournament_menu.addActions(
+            [
+                self.start_action,
+                self.prepare_round_action,
+                self.record_results_action,
+                self.undo_results_action,
+            ]
+        )
 
         # Player Menu
         player_menu = menu_bar.addMenu("&Players")
-        self.add_player_action = self._create_action("&Add Player...", self.players_tab.add_player_detailed)
+        self.add_player_action = self._create_action(
+            "&Add Player...", self.players_tab.add_player_detailed
+        )
         player_menu.addAction(self.add_player_action)
 
         # View Menu
         view_menu = menu_bar.addMenu("&View")
-        view_menu.addAction("Players", lambda: self.tabs.setCurrentWidget(self.players_tab))
-        view_menu.addAction("Tournament Control", lambda: self.tabs.setCurrentWidget(self.tournament_tab))
-        view_menu.addAction("Standings", lambda: self.tabs.setCurrentWidget(self.standings_tab))
-        view_menu.addAction("Cross-Table", lambda: self.tabs.setCurrentWidget(self.crosstable_tab))
-        view_menu.addAction("History Log", lambda: self.tabs.setCurrentWidget(self.history_tab))
+        view_menu.addAction(
+            "Players", lambda: self.tabs.setCurrentWidget(self.players_tab)
+        )
+        view_menu.addAction(
+            "Tournament Control",
+            lambda: self.tabs.setCurrentWidget(self.tournament_tab),
+        )
+        view_menu.addAction(
+            "Standings", lambda: self.tabs.setCurrentWidget(self.standings_tab)
+        )
+        view_menu.addAction(
+            "Cross-Table", lambda: self.tabs.setCurrentWidget(self.crosstable_tab)
+        )
+        view_menu.addAction(
+            "History Log", lambda: self.tabs.setCurrentWidget(self.history_tab)
+        )
         view_menu.addSeparator()
         # Add Legacy GUI toggle
         self.legacy_gui_action = QtGui.QAction("Legacy GUI", self)
         self.legacy_gui_action.setCheckable(True)
         # Load saved state
         self.legacy_gui_action.setChecked(style_manager.load_legacy_setting())
-        self.legacy_gui_action.setToolTip("Disable modern styling and use system default appearance. Requires application restart.")
+        self.legacy_gui_action.setToolTip(
+            "Disable modern styling and use system default appearance. Requires application restart."
+        )
         self.legacy_gui_action.triggered.connect(self.show_legacy_gui_restart_dialog)
         view_menu.addAction(self.legacy_gui_action)
 
         # Help Menu
         help_menu = menu_bar.addMenu("&Help")
         help_menu.addAction("About...", self.show_about_dialog)
-        self.update_action = self._create_action("Check for &Updates...", self.check_for_updates_manual)
+        self.update_action = self._create_action(
+            "Check for &Updates...", self.check_for_updates_manual
+        )
         help_menu.addAction(self.update_action)
 
-    def _create_action(self, text: str, slot: callable, shortcut: str = "", tooltip: str = "") -> QAction:
+    def _create_action(
+        self, text: str, slot: callable, shortcut: str = "", tooltip: str = ""
+    ) -> QAction:
         """Helper function to create and configure a QAction.
 
         Args:
@@ -177,8 +243,11 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """
         action = QAction(text, self)
         action.triggered.connect(slot)
-        if shortcut: action.setShortcut(QtGui.QKeySequence(shortcut))
-        if tooltip: action.setToolTip(tooltip); action.setStatusTip(tooltip)
+        if shortcut:
+            action.setShortcut(QtGui.QKeySequence(shortcut))
+        if tooltip:
+            action.setToolTip(tooltip)
+            action.setStatusTip(tooltip)
         action.setIconVisibleInMenu(False)  # Hide icon in menus
         return action
 
@@ -188,13 +257,18 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """
         toolbar = self.addToolBar("Main Toolbar")
         toolbar.setIconSize(QtCore.QSize(24, 24))
-        apply_stylesheet(toolbar, """
+        apply_stylesheet(
+            toolbar,
+            """
             QToolBar {
                 background: #f9fafb;
                 border-bottom: 1px solid #bbb;
             }
-        """)
-        QtGui.QIcon.setThemeName("Adwaita")  # Adwaita is often monochrome, fallback to system if not found
+        """,
+        )
+        QtGui.QIcon.setThemeName(
+            "Adwaita"
+        )  # Adwaita is often monochrome, fallback to system if not found
         self.new_action.setIcon(QtGui.QIcon.fromTheme("document-new"))
         self.load_action.setIcon(QtGui.QIcon.fromTheme("document-open"))
         self.save_action.setIcon(QtGui.QIcon.fromTheme("document-save"))
@@ -205,22 +279,47 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         # Add toolbar actions
         toolbar.addActions([self.new_action, self.load_action, self.save_action])
         toolbar.addSeparator()
-        toolbar.addActions([self.start_action, self.prepare_round_action, self.record_results_action, self.undo_results_action])
+        toolbar.addActions(
+            [
+                self.start_action,
+                self.prepare_round_action,
+                self.record_results_action,
+                self.undo_results_action,
+            ]
+        )
 
     def _update_ui_state(self):
         """Updates the state of UI elements based on the tournament's current state."""
         tournament_exists = self.tournament is not None
-        pairings_generated = len(self.tournament.rounds_pairings_ids) if tournament_exists else 0
+        pairings_generated = (
+            len(self.tournament.rounds_pairings_ids) if tournament_exists else 0
+        )
         results_recorded = self.current_round_index
         total_rounds = self.tournament.num_rounds if tournament_exists else 0
         tournament_started = tournament_exists and pairings_generated > 0
-        tournament_finished = tournament_exists and results_recorded >= total_rounds and total_rounds > 0
+        tournament_finished = (
+            tournament_exists and results_recorded >= total_rounds and total_rounds > 0
+        )
 
         # can_start = tournament_exists and not tournament_started and len(self.tournament.players) >= 2
         can_start = tournament_exists and not tournament_started
-        can_prepare = tournament_exists and tournament_started and pairings_generated == results_recorded and not tournament_finished
-        can_record = tournament_exists and tournament_started and pairings_generated > results_recorded and not tournament_finished
-        can_undo = tournament_exists and results_recorded > 0 and bool(self.last_recorded_results_data)
+        can_prepare = (
+            tournament_exists
+            and tournament_started
+            and pairings_generated == results_recorded
+            and not tournament_finished
+        )
+        can_record = (
+            tournament_exists
+            and tournament_started
+            and pairings_generated > results_recorded
+            and not tournament_finished
+        )
+        can_undo = (
+            tournament_exists
+            and results_recorded > 0
+            and bool(self.last_recorded_results_data)
+        )
 
         # Update main actions (toolbar and menu)
         self.start_action.setEnabled(can_start)
@@ -229,9 +328,15 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.undo_results_action.setEnabled(can_undo)
         self.save_action.setEnabled(tournament_exists)
         self.save_as_action.setEnabled(tournament_exists)
-        self.export_standings_action.setEnabled(tournament_exists and results_recorded > 0)
-        self.import_players_action.setEnabled(tournament_exists and not tournament_started)
-        self.export_players_action.setEnabled(tournament_exists and len(self.tournament.players) > 0)
+        self.export_standings_action.setEnabled(
+            tournament_exists and results_recorded > 0
+        )
+        self.import_players_action.setEnabled(
+            tournament_exists and not tournament_started
+        )
+        self.export_players_action.setEnabled(
+            tournament_exists and len(self.tournament.players) > 0
+        )
         self.add_player_action.setEnabled(not tournament_started)
         self.settings_action.setEnabled(tournament_exists)
 
@@ -251,7 +356,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             base_name = self.tournament.name
             if self._dirty:
                 base_name += "*"
-            
+
             if self._current_filepath:
                 file_name = QFileInfo(self._current_filepath).fileName()
                 title = f"{base_name} - {file_name} - {APP_NAME}"
@@ -259,10 +364,10 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 title = f"{base_name} - {APP_NAME}"
         else:
             if self._current_filepath:
-                 title = f"{QFileInfo(self._current_filepath).fileName()} - {APP_NAME}"
+                title = f"{QFileInfo(self._current_filepath).fileName()} - {APP_NAME}"
 
         self.setWindowTitle(title)
-        
+
         # Update status bar
         status = "Ready"
         if tournament_exists:
@@ -290,11 +395,17 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
     def _set_tournament_on_tabs(self):
         """Passes the current tournament object to all tabs so they can access its data."""
-        for tab in [self.players_tab, self.tournament_tab, self.standings_tab, self.crosstable_tab, self.history_tab]:
-            if hasattr(tab, 'set_tournament'):
+        for tab in [
+            self.players_tab,
+            self.tournament_tab,
+            self.standings_tab,
+            self.crosstable_tab,
+            self.history_tab,
+        ]:
+            if hasattr(tab, "set_tournament"):
                 tab.set_tournament(self.tournament)
         # Also set current_round_index on tournament_tab if method exists
-        if hasattr(self.tournament_tab, 'set_current_round_index'):
+        if hasattr(self.tournament_tab, "set_current_round_index"):
             self.tournament_tab.set_current_round_index(self.current_round_index)
         # Ensure UI state is updated after tournament propagation
         self._update_ui_state()
@@ -306,9 +417,9 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.last_recorded_results_data = []
         self._current_filepath = None
         self.mark_clean()
-        
-        self._set_tournament_on_tabs() # Pass None to clear tabs
-        
+
+        self._set_tournament_on_tabs()  # Pass None to clear tabs
+
         # Explicitly clear UI elements in tabs
         self.players_tab.list_players.clear()
         self.tournament_tab.table_pairings.setRowCount(0)
@@ -316,7 +427,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.standings_tab.table_standings.setRowCount(0)
         self.crosstable_tab.table_crosstable.setRowCount(0)
         self.history_tab.history_view.clear()
-        
+
         self._update_ui_state()
 
     def _on_round_completed(self, new_round_index: int) -> None:
@@ -326,7 +437,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """
         self.current_round_index = new_round_index
         # Propagate the new round index to the tournament_tab
-        if hasattr(self.tournament_tab, 'set_current_round_index'):
+        if hasattr(self.tournament_tab, "set_current_round_index"):
             self.tournament_tab.set_current_round_index(new_round_index)
         self._update_ui_state()
 
@@ -344,11 +455,13 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                     name=name,
                     players=[],
                     num_rounds=num_rounds,
-                    tiebreak_order=tiebreak_order
+                    tiebreak_order=tiebreak_order,
                 )
                 # Store pairing_system as an attribute if needed:
                 self.pairing_system = pairing_system
-                self.update_history_log(f"--- New Tournament '{name}' Created (Rounds: {num_rounds}, Pairing: {pairing_system}) ---")
+                self.update_history_log(
+                    f"--- New Tournament '{name}' Created (Rounds: {num_rounds}, Pairing: {pairing_system}) ---"
+                )
                 self.mark_dirty()
                 self._set_tournament_on_tabs()
                 self.standings_tab.update_standings_table_headers()
@@ -357,24 +470,32 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
     def show_settings_dialog(self) -> bool:
         if not self.tournament:
             return False
-        
-        dialog = SettingsDialog(self.tournament.num_rounds, self.tournament.tiebreak_order, self)
+
+        dialog = SettingsDialog(
+            self.tournament.num_rounds, self.tournament.tiebreak_order, self
+        )
         tournament_started = len(self.tournament.rounds_pairings_ids) > 0
         # Disable rounds spinbox if round robin or tournament started
-        if getattr(self.tournament, 'pairing_system', None) == 'round_robin':
+        if getattr(self.tournament, "pairing_system", None) == "round_robin":
             dialog.spin_num_rounds.setEnabled(False)
-            dialog.spin_num_rounds.setToolTip("Number of rounds is fixed for Round Robin: players - 1.")
+            dialog.spin_num_rounds.setToolTip(
+                "Number of rounds is fixed for Round Robin: players - 1."
+            )
         else:
             dialog.spin_num_rounds.setEnabled(not tournament_started)
             dialog.spin_num_rounds.setToolTip("")
 
         if dialog.exec():
             new_rounds, new_tiebreaks = dialog.get_settings()
-            if self.tournament.num_rounds != new_rounds and not tournament_started and getattr(self.tournament, 'pairing_system', None) != 'round_robin':
+            if (
+                self.tournament.num_rounds != new_rounds
+                and not tournament_started
+                and getattr(self.tournament, "pairing_system", None) != "round_robin"
+            ):
                 self.tournament.num_rounds = new_rounds
                 self.update_history_log(f"Number of rounds set to {new_rounds}.")
                 self.mark_dirty()
-            
+
             if self.tournament.tiebreak_order != new_tiebreaks:
                 self.tournament.tiebreak_order = new_tiebreaks
                 self.update_history_log(f"Tiebreak order updated.")
@@ -391,82 +512,135 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.history_tab.update_history_log(message)
 
     def save_tournament(self, save_as=False):
-        if not self.tournament: return False
+        if not self.tournament:
+            return False
         if not self._current_filepath or save_as:
-            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Tournament", "", "JSON Files (*.json)")
-            if not filename: return False
+            filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+                self, "Save Tournament", "", "JSON Files (*.json)"
+            )
+            if not filename:
+                return False
             self._current_filepath = filename
-        
+
         try:
             data = self.tournament.to_dict()
-            data['gui_state'] = {
-                'current_round_index': self.current_round_index,
-                'last_recorded_results_data': self.last_recorded_results_data
+            data["gui_state"] = {
+                "current_round_index": self.current_round_index,
+                "last_recorded_results_data": self.last_recorded_results_data,
             }
-            with open(self._current_filepath, 'w', encoding='utf-8') as f:
+            with open(self._current_filepath, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
             self.mark_clean()
-            self.statusBar().showMessage(f"Tournament saved to {self._current_filepath}")
-            self.update_history_log(f"--- Tournament saved to {QFileInfo(self._current_filepath).fileName()} ---")
+            self.statusBar().showMessage(
+                f"Tournament saved to {self._current_filepath}"
+            )
+            self.update_history_log(
+                f"--- Tournament saved to {QFileInfo(self._current_filepath).fileName()} ---"
+            )
             return True
         except Exception as e:
             logging.exception("Error saving tournament:")
-            QtWidgets.QMessageBox.critical(self, "Save Error", f"Could not save tournament:\n{e}")
+            QtWidgets.QMessageBox.critical(
+                self, "Save Error", f"Could not save tournament:\n{e}"
+            )
             return False
 
     def load_tournament(self):
-        if not self.check_save_before_proceeding(): return
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load Tournament", "", "JSON Files (*.json)")
-        if not filename: return
+        if not self.check_save_before_proceeding():
+            return
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Load Tournament", "", "JSON Files (*.json)"
+        )
+        if not filename:
+            return
 
         try:
-            with open(filename, 'r', encoding='utf-8') as f:
+            with open(filename, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
+
             self.reset_tournament_state()
             self.tournament = Tournament.from_dict(data)
-            
-            gui_state = data.get('gui_state', {})
-            self.current_round_index = gui_state.get('current_round_index', 0)
-            self.last_recorded_results_data = gui_state.get('last_recorded_results_data', [])
+
+            gui_state = data.get("gui_state", {})
+            self.current_round_index = gui_state.get("current_round_index", 0)
+            self.last_recorded_results_data = gui_state.get(
+                "last_recorded_results_data", []
+            )
             self._current_filepath = filename
-            
+
             self._set_tournament_on_tabs()
-            
+
             # Refresh all views
             self.players_tab.refresh_player_list()
             self.standings_tab.update_standings_table_headers()
             self.standings_tab.update_standings_table()
             self.crosstable_tab.update_crosstable()
-            
+
             # Display pairings for the current round if they exist
-            if self.tournament and 0 <= self.current_round_index < len(self.tournament.rounds_pairings_ids):
-                pairings, bye_player = self.tournament.get_pairings_for_round(self.current_round_index)
+            if self.tournament and 0 <= self.current_round_index < len(
+                self.tournament.rounds_pairings_ids
+            ):
+                pairings, bye_player = self.tournament.get_pairings_for_round(
+                    self.current_round_index
+                )
                 self.tournament_tab.display_pairings_for_input(pairings, bye_player)
             else:
                 self.tournament_tab.clear_pairings_display()
 
             self.mark_clean()
-            self.update_history_log(f"--- Tournament loaded from {QFileInfo(filename).fileName()} ---")
+            self.update_history_log(
+                f"--- Tournament loaded from {QFileInfo(filename).fileName()} ---"
+            )
             self.statusBar().showMessage(f"Loaded tournament: {self.tournament.name}")
 
         except Exception as e:
             logging.exception("Error loading tournament:")
             self.reset_tournament_state()
-            QtWidgets.QMessageBox.critical(self, "Load Error", f"Could not load tournament file:\n{e}")
-        
+            QtWidgets.QMessageBox.critical(
+                self, "Load Error", f"Could not load tournament file:\n{e}"
+            )
+
         self._update_ui_state()
 
     def check_save_before_proceeding(self) -> bool:
-        """Checks for unsaved changes and prompts the user to save."""
         if not self._dirty:
             return True
-        reply = QtWidgets.QMessageBox.question(self, "Unsaved Changes",
-                                     "You have unsaved changes. Do you want to save them?",
-                                     QtWidgets.QMessageBox.StandardButton.Save | QtWidgets.QMessageBox.StandardButton.Discard | QtWidgets.QMessageBox.StandardButton.Cancel)
-        if reply == QtWidgets.QMessageBox.StandardButton.Save:
+
+        msgbox = QtWidgets.QMessageBox(self)
+        msgbox.setWindowTitle("Unsaved Changes")
+        msgbox.setText("You have unsaved changes. Do you want to save them?")
+        msgbox.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+
+        # Create custom buttons
+        btn_save = QtWidgets.QPushButton("Save")
+        btn_discard = QtWidgets.QPushButton("Close without Saving")
+        btn_cancel = QtWidgets.QPushButton("Cancel")
+
+        # Add buttons to msgbox
+        msgbox.addButton(btn_save, QtWidgets.QMessageBox.ButtonRole.AcceptRole)
+        msgbox.addButton(btn_discard, QtWidgets.QMessageBox.ButtonRole.DestructiveRole)
+        msgbox.addButton(btn_cancel, QtWidgets.QMessageBox.ButtonRole.RejectRole)
+
+        # I do not know enough about pyQT but in line does not seem ideal
+        msgbox.setStyleSheet(
+            """
+            QPushButton {
+                padding: 6px 14px;
+                font-size: 10pt;
+                min-width: 140px;
+            }
+        """
+        )
+
+        msgbox.exec()
+        clicked = msgbox.clickedButton()
+
+        if clicked == btn_save:
             return self.save_tournament()
-        return reply != QtWidgets.QMessageBox.StandardButton.Cancel
+        elif clicked == btn_discard:
+            return True
+        else:
+            return False
 
     def show_about_dialog(self):
         """Show the About dialog with app info and about.webp image."""
@@ -483,7 +657,9 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 layout.addWidget(img_label)
         # Add app info text
-        info_label = QLabel(f"<b>{APP_NAME} v{APP_VERSION}</b><br>\nSwiss Tournament Manager\n<br>Copyright © 2025\n<br>Developed by Chickaboo and Nic\n<br><br>For help, join the <a href=\"https://discord.gg/eEnnetMDfr\">Discord</a> or contact <a href=\"https://www.chickaboo.net/contact\">support</a>.")
+        info_label = QLabel(
+            f'<b>{APP_NAME} v{APP_VERSION}</b><br>\nSwiss Tournament Manager\n<br>Copyright © 2025\n<br>Developed by Chickaboo and Nic\n<br><br>For help, join the <a href="https://discord.gg/eEnnetMDfr">Discord</a> or contact <a href="https://www.chickaboo.net/contact">support</a>.'
+        )
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setOpenExternalLinks(True)
         layout.addWidget(info_label)
@@ -509,37 +685,50 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """Checks for a previously downloaded update and asks to install it."""
         if not self.updater:
             return False
-        
+
         pending_path = self.updater.get_pending_update_path()
         if pending_path:
-            reply = QtWidgets.QMessageBox.question(self, "Update Ready to Install",
+            reply = QtWidgets.QMessageBox.question(
+                self,
+                "Update Ready to Install",
                 "A downloaded update is ready. This will restart the application.\n\nInstall now?",
-                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
-            
+                QtWidgets.QMessageBox.StandardButton.Yes
+                | QtWidgets.QMessageBox.StandardButton.No,
+            )
+
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 self.is_updating = True
                 self.statusBar().showMessage("Restarting to apply update...")
                 self.updater.apply_update(pending_path)
-                QtCore.QTimer.singleShot(100, self.close) 
-                return True # Update is being applied
+                QtCore.QTimer.singleShot(100, self.close)
+                return True  # Update is being applied
             else:
                 # User chose not to install. Let's ask if they want to discard it.
-                discard_reply = QtWidgets.QMessageBox.question(self, "Discard Update?",
+                discard_reply = QtWidgets.QMessageBox.question(
+                    self,
+                    "Discard Update?",
                     "Do you want to discard the downloaded update? If not, you will be asked again on the next launch.",
-                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                    QtWidgets.QMessageBox.StandardButton.Yes
+                    | QtWidgets.QMessageBox.StandardButton.No,
+                )
                 if discard_reply == QtWidgets.QMessageBox.StandardButton.Yes:
                     self.updater.cleanup_pending_update()
         return False
 
     def check_for_updates_manual(self):
         """Manually checks for updates and notifies the user of the result."""
-        if not getattr(sys, 'frozen', False):
-            QtWidgets.QMessageBox.information(self, "Update Check",
+        if not getattr(sys, "frozen", False):
+            QtWidgets.QMessageBox.information(
+                self,
+                "Update Check",
                 "Automatic updates are only available in packaged releases.\n\n"
-                "If you installed from source, please update using git or your package manager.")
+                "If you installed from source, please update using git or your package manager.",
+            )
             return
         if not self.updater:
-            QtWidgets.QMessageBox.information(self, "Update Check", "The update checker is not configured.")
+            QtWidgets.QMessageBox.information(
+                self, "Update Check", "The update checker is not configured."
+            )
             return
 
         self.statusBar().showMessage("Checking for updates...")
@@ -548,11 +737,15 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             self.prompt_update()
         else:
             self.statusBar().showMessage("No new updates available.")
-            QtWidgets.QMessageBox.information(self, "Update Check", f"You are using the latest version of {APP_NAME} ({APP_VERSION}).")
+            QtWidgets.QMessageBox.information(
+                self,
+                "Update Check",
+                f"You are using the latest version of {APP_NAME} ({APP_VERSION}).",
+            )
 
     def check_for_updates_auto(self):
         """Automatically checks for updates in the background."""
-        if not getattr(sys, 'frozen', False):
+        if not getattr(sys, "frozen", False):
             return
         if not self.updater:
             return
@@ -568,16 +761,18 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         release_notes = self.updater.get_release_notes()
 
         if not all([latest_version, release_notes]):
-            QtWidgets.QMessageBox.warning(self, "Update Error", "Could not retrieve complete update information.")
+            QtWidgets.QMessageBox.warning(
+                self, "Update Error", "Could not retrieve complete update information."
+            )
             return
 
         dialog = UpdatePromptDialog(
             new_version=latest_version,
             current_version=APP_VERSION,
             release_notes=release_notes,
-            parent=self
+            parent=self,
         )
-        
+
         if dialog.exec():
             self.start_update_download()
 
@@ -614,7 +809,9 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             self.download_dialog.show_complete()
             # Connect restart button to restart logic
             self.download_dialog.restart_btn.clicked.disconnect()
-            self.download_dialog.restart_btn.clicked.connect(lambda: self._restart_with_update(message))
+            self.download_dialog.restart_btn.clicked.connect(
+                lambda: self._restart_with_update(message)
+            )
         else:
             self.download_dialog.show_error(message)
             self.download_dialog.close_btn.clicked.disconnect()
@@ -650,36 +847,40 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
     def show_legacy_gui_restart_dialog(self, checked):
         """Show confirmation dialog for legacy GUI mode change requiring restart."""
         from PyQt6.QtWidgets import QMessageBox
-        
+
         current_mode = style_manager.load_legacy_setting()
         new_mode = checked
-        
+
         # If no change, just return
         if current_mode == new_mode:
             return
-            
+
         # Determine the mode we're switching to
         mode_name = "Legacy GUI" if new_mode else "Modern GUI"
-        
+
         # Create confirmation dialog
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle("Restart Required")
         msg_box.setIcon(QMessageBox.Icon.Question)
-        
-        msg_box.setText(f"Switching to {mode_name} mode requires restarting the application.")
+
+        msg_box.setText(
+            f"Switching to {mode_name} mode requires restarting the application."
+        )
         msg_box.setInformativeText("Do you want to restart now to apply the changes?")
-        
+
         # Add custom buttons
-        restart_btn = msg_box.addButton("Restart Now", QMessageBox.ButtonRole.AcceptRole)
+        restart_btn = msg_box.addButton(
+            "Restart Now", QMessageBox.ButtonRole.AcceptRole
+        )
         later_btn = msg_box.addButton("Later", QMessageBox.ButtonRole.RejectRole)
         cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.DestructiveRole)
-        
+
         msg_box.setDefaultButton(restart_btn)
-        
+
         # Show dialog and handle response
         msg_box.exec()
         clicked = msg_box.clickedButton()
-        
+
         if clicked == restart_btn:
             # Save the setting and restart
             style_manager._store_legacy_setting(new_mode)
@@ -692,13 +893,16 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             info_msg.setWindowTitle("Setting Saved")
             info_msg.setIcon(QMessageBox.Icon.Information)
             info_msg.setText(f"The {mode_name} setting has been saved.")
-            info_msg.setInformativeText("The changes will take effect when you restart the application.")
+            info_msg.setInformativeText(
+                "The changes will take effect when you restart the application."
+            )
             info_msg.exec()
         else:
             # Cancel - revert the checkbox state
             self.legacy_gui_action.setChecked(current_mode)
-    
+
     def restart_application(self):
         """Restart the application cleanly."""
         from core.utils import restart_application
+
         restart_application()
