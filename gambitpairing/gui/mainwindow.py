@@ -483,7 +483,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 layout.addWidget(img_label)
         # Add app info text
-        info_label = QLabel(f"<b>{APP_NAME} v{APP_VERSION}</b><br>\nSwiss Tournament Manager\n<br>Copyright © 2025\n<br>Developed by Chickaboo\n<br><br>For help, join the <a href=\"https://discord.gg/eEnnetMDfr\">Discord</a> or contact <a href=\"https://www.chickaboo.net/contact\">support</a>.")
+        info_label = QLabel(f"<b>{APP_NAME} v{APP_VERSION}</b><br>\nSwiss Tournament Manager\n<br>Copyright © 2025\n<br>Developed by Chickaboo and Nic\n<br><br>For help, join the <a href=\"https://discord.gg/eEnnetMDfr\">Discord</a> or contact <a href=\"https://www.chickaboo.net/contact\">support</a>.")
         info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_label.setOpenExternalLinks(True)
         layout.addWidget(info_label)

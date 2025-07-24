@@ -14,11 +14,12 @@ build_exe_options = {
         "styles.qss",
         ("resources/icons/icon.ico", "icon.ico"),
         "LICENSE",
-        "core/",
-        "gui/",
+        "gambitpairing/core/",
+        "gambitpairing/gui/",
         "resources/",
         "license.rtf",
-        "icon.png"
+        # Only include the icon in its correct location
+        "resources/icons/icon.png"
     ],
 }
 
@@ -45,14 +46,14 @@ else:
         "name": "GambitPairing",
         "requires": ["python3"],
         "license": "LICENSE",
-        "icon": "icon.png",
+        "icon": "resources/icons/icon.png",
         'debug': False
     }
     options["bdist_deb"] = {
         "name": "GambitPairing",
         "requires": ["python3"],
         "license": "LICENSE",
-        "icon": "icon.png",
+        "icon": "resources/icons/icon.png",
     }
 
 executables = [
