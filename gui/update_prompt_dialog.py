@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
 from core.constants import APP_NAME
+from core.utils import apply_stylesheet
 
 class UpdatePromptDialog(QtWidgets.QDialog):
     """A modern dialog to prompt the user for an update."""
@@ -7,7 +8,7 @@ class UpdatePromptDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.setWindowTitle("Update Available")
         self.setMinimumWidth(500)
-        self.setStyleSheet('''
+        apply_stylesheet(self, '''
             QDialog {
                 background-color: #f9fafb;
             }

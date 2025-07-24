@@ -7,6 +7,7 @@ from typing import Optional
 import csv
 import logging
 from datetime import datetime
+from core.utils import apply_stylesheet
 
 class NumericTableWidgetItem(QtWidgets.QTableWidgetItem):
     """Custom QTableWidgetItem for numerical sorting."""
@@ -57,7 +58,7 @@ class PlayersTab(QtWidgets.QWidget):
         self.table_players.setColumnWidth(2, 90)   # Age
         self.table_players.setColumnWidth(3, 130)  # Status
         # Add extra margin/padding to headers and cells, polish header style, and animate sort arrow
-        self.table_players.setStyleSheet('''
+        apply_stylesheet(self.table_players, '''
 /* === Header Section === */
 QHeaderView::section {
     padding: 10px 24px;

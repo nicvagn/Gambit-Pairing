@@ -3,6 +3,7 @@ from PyQt6.QtCore import Qt
 from typing import List, Optional, Tuple, Dict, Any
 from core.player import Player
 from core.constants import TIEBREAK_NAMES, DEFAULT_TIEBREAK_SORT_ORDER
+from core.utils import apply_stylesheet
 
 # --- GUI Dialogs ---
 # (No changes to PlayerEditDialog, PlayerDetailDialog, SettingsDialog, ManualPairDialog unless behaviorally impacted by core changes)
@@ -134,7 +135,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         # Sidebar (Table of Contents)
         toc = QtWidgets.QListWidget()
         toc.setMaximumWidth(200)
-        toc.setStyleSheet("font-size: 11pt;")
+        apply_stylesheet(toc, "font-size: 11pt;")
         toc.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         keys = list(info.keys())
         for k in keys:
@@ -146,13 +147,13 @@ class NewTournamentDialog(QtWidgets.QDialog):
         details_widget = QtWidgets.QWidget()
         details_layout = QtWidgets.QVBoxLayout(details_widget)
         title_label = QtWidgets.QLabel()
-        title_label.setStyleSheet("font-size: 15pt; font-weight: bold; margin-bottom: 6px;")
+        apply_stylesheet(title_label, "font-size: 15pt; font-weight: bold; margin-bottom: 6px;")
         desc_label = QtWidgets.QLabel()
         desc_label.setWordWrap(True)
-        desc_label.setStyleSheet("font-size: 11pt; margin-bottom: 8px;")
+        apply_stylesheet(desc_label, "font-size: 11pt; margin-bottom: 8px;")
         html_details = QtWidgets.QTextBrowser()
         html_details.setOpenExternalLinks(True)
-        html_details.setStyleSheet("background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; font-size: 10.5pt;")
+        apply_stylesheet(html_details, "background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; font-size: 10.5pt;")
         details_layout.addWidget(title_label)
         details_layout.addWidget(desc_label)
         details_layout.addWidget(html_details)
@@ -248,7 +249,7 @@ class PlayerDetailDialog(QtWidgets.QDialog):
         self.rating_spin.setValue(1000) # Default if new
 
         # --- Make QSpinBox arrows black ---
-        self.rating_spin.setStyleSheet("""
+        apply_stylesheet(self.rating_spin, """
             QAbstractSpinBox::up-button, QAbstractSpinBox::down-button,
             QAbstractSpinBox::up-arrow, QAbstractSpinBox::down-arrow {
                 qproperty-iconColor: #111;
@@ -270,7 +271,7 @@ class PlayerDetailDialog(QtWidgets.QDialog):
         self.dob_edit.setToolTip("Select date of birth (optional)")
 
         # --- Make QDateEdit calendar button black ---
-        self.dob_edit.setStyleSheet("""
+        apply_stylesheet(self.dob_edit, """
             QDateEdit::drop-down, QDateEdit::down-arrow, QDateEdit::calendarButton {
                 qproperty-iconColor: #111;
             }
@@ -367,7 +368,7 @@ class PlayerDetailDialog(QtWidgets.QDialog):
         if hasattr(self, '_copy_notification') and self._copy_notification:
             self._copy_notification.close()
         self._copy_notification = QtWidgets.QLabel("Copied to clipboard!", self)
-        self._copy_notification.setStyleSheet("""
+        apply_stylesheet(self._copy_notification, """
             QLabel {
                 background: rgba(30,30,30,220);
                 color: black;

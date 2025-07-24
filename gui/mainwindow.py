@@ -10,6 +10,7 @@ import json
 from core.tournament import Tournament
 from core.player import Player
 from core.constants import *
+from core.utils import style_manager, apply_stylesheet
 
 from gui.dialogs import SettingsDialog, NewTournamentDialog
 from gui.players_tab import PlayersTab
@@ -150,9 +151,10 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         # Add Legacy GUI toggle
         self.legacy_gui_action = QtGui.QAction("Legacy GUI", self)
         self.legacy_gui_action.setCheckable(True)
-        self.legacy_gui_action.setChecked(False)
-        self.legacy_gui_action.setToolTip("Disable the modern stylesheet and use the default system look.")
-        self.legacy_gui_action.triggered.connect(self.toggle_legacy_gui)
+        # Load saved state
+        self.legacy_gui_action.setChecked(style_manager.load_legacy_setting())
+        self.legacy_gui_action.setToolTip("Disable modern styling and use system default appearance. Requires application restart.")
+        self.legacy_gui_action.triggered.connect(self.show_legacy_gui_restart_dialog)
         view_menu.addAction(self.legacy_gui_action)
 
         # Help Menu
@@ -186,7 +188,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """
         toolbar = self.addToolBar("Main Toolbar")
         toolbar.setIconSize(QtCore.QSize(24, 24))
-        toolbar.setStyleSheet("""
+        apply_stylesheet(toolbar, """
             QToolBar {
                 background: #f9fafb;
                 border-bottom: 1px solid #bbb;
@@ -645,14 +647,58 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """Store a reference to the QApplication instance for stylesheet control."""
         self._app_instance = app
 
-    def toggle_legacy_gui(self, checked):
-        """Enable or disable the stylesheet at runtime."""
-        if hasattr(self, '_app_instance') and self._app_instance:
-            if checked:
-                self._app_instance.setStyleSheet("")
-            else:
-                try:
-                    with open("styles.qss", "r", encoding="utf-8") as f:
-                        self._app_instance.setStyleSheet(f.read())
-                except Exception as e:
-                    logging.error(f"Could not reload stylesheet: {e}")
+    def show_legacy_gui_restart_dialog(self, checked):
+        """Show confirmation dialog for legacy GUI mode change requiring restart."""
+        from PyQt6.QtWidgets import QMessageBox
+        
+        current_mode = style_manager.load_legacy_setting()
+        new_mode = checked
+        
+        # If no change, just return
+        if current_mode == new_mode:
+            return
+            
+        # Determine the mode we're switching to
+        mode_name = "Legacy GUI" if new_mode else "Modern GUI"
+        
+        # Create confirmation dialog
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Restart Required")
+        msg_box.setIcon(QMessageBox.Icon.Question)
+        
+        msg_box.setText(f"Switching to {mode_name} mode requires restarting the application.")
+        msg_box.setInformativeText("Do you want to restart now to apply the changes?")
+        
+        # Add custom buttons
+        restart_btn = msg_box.addButton("Restart Now", QMessageBox.ButtonRole.AcceptRole)
+        later_btn = msg_box.addButton("Later", QMessageBox.ButtonRole.RejectRole)
+        cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.DestructiveRole)
+        
+        msg_box.setDefaultButton(restart_btn)
+        
+        # Show dialog and handle response
+        msg_box.exec()
+        clicked = msg_box.clickedButton()
+        
+        if clicked == restart_btn:
+            # Save the setting and restart
+            style_manager._store_legacy_setting(new_mode)
+            self.restart_application()
+        elif clicked == later_btn:
+            # Save the setting but don't restart yet
+            style_manager._store_legacy_setting(new_mode)
+            # Show info message
+            info_msg = QMessageBox(self)
+            info_msg.setWindowTitle("Setting Saved")
+            info_msg.setIcon(QMessageBox.Icon.Information)
+            info_msg.setText(f"The {mode_name} setting has been saved.")
+            info_msg.setInformativeText("The changes will take effect when you restart the application.")
+            info_msg.exec()
+        else:
+            # Cancel - revert the checkbox state
+            self.legacy_gui_action.setChecked(current_mode)
+    
+    def restart_application(self):
+        """Restart the application cleanly."""
+        from core.utils import restart_application
+        restart_application()

@@ -5,6 +5,7 @@ from typing import List, Tuple, Optional
 from core.player import Player
 from core.constants import RESULT_WHITE_WIN, RESULT_DRAW, RESULT_BLACK_WIN, WIN_SCORE, DRAW_SCORE, LOSS_SCORE, BYE_SCORE
 from .dialogs import ManualPairDialog
+from core.utils import apply_stylesheet
 import logging
 
 
@@ -108,7 +109,7 @@ class TournamentTab(QtWidgets.QWidget):
         self.btn_print_pairings = QtWidgets.QPushButton(" Print Pairings")
         self.btn_print_pairings.setIcon(QtGui.QIcon.fromTheme("document-print"))
         self.btn_print_pairings.setToolTip("Print the current round\'s pairings")
-        self.btn_print_pairings.setStyleSheet("padding: 5px;")
+        apply_stylesheet(self.btn_print_pairings, "padding: 5px;")
         header_layout.addWidget(self.btn_print_pairings)
         self.main_layout.addLayout(header_layout)        # Pairings Table - Reduced to 3 columns
         self.table_pairings = QtWidgets.QTableWidget(0, 3)

@@ -1,9 +1,10 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
+from core.utils import apply_stylesheet
 
 def show_notification(parent, message: str, duration: int = 1500):
     """Show a floating notification label with fade-in/out animation over the parent widget."""
     notif = QtWidgets.QLabel(message, parent)
-    notif.setStyleSheet("""
+    apply_stylesheet(notif, """
         QLabel {
             background: rgba(30,30,30,220);
             color: white;
