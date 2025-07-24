@@ -1,50 +1,77 @@
 import sys
-from cx_Freeze import setup, Executable
 
-# GUI vs console base
-base = "Win32GUI" if sys.platform == "win32" else None
+from cx_Freeze import Executable, setup
 
-# Include entire folders along with other files
+# Platform-specific base
+if sys.platform == "win32":
+    base = "Win32GUI"
+elif sys.platform == "darwin":
+    base = "MacOSX"
+else:
+    base = None
+
 build_exe_options = {
     "include_files": [
         "styles.qss",
         ("resources/icons/icon.ico", "icon.ico"),
         "LICENSE",
-        "core/",       # include entire core folder
-        "gui/",        # include entire gui folder
-        "resources/",  # include entire resources folder
+        "core/",
+        "gui/",
+        "resources/",
+        "license.rtf",
+        "icon.png"
     ],
 }
 
-# MSI installer options
-bdist_msi_options = {
-    "upgrade_code": "{E7CDA630-CB74-4A99-BDB4-F09CB777D3F8}",
-    "add_to_path": False,
-    "initial_target_dir": r"[ProgramFilesFolder]\Gambit Pairing",
-    "install_icon": "icon.ico", # This now correctly points to the included icon
-    "launch_on_finish": True,
-    "license_file": "license.rtf",
-}
+# Platform-specific options
+options = {"build_exe": build_exe_options}
+
+if sys.platform == "win32":
+    options["bdist_msi"] = {
+        "upgrade_code": "{E7CDA630-CB74-4A99-BDB4-F09CB777D3F8}",
+        "add_to_path": False,
+        "initial_target_dir": r"[ProgramFilesFolder]\Gambit Pairing",
+        "install_icon": "icon.ico",
+        "launch_on_finish": True,
+        "license_file": "license.rtf",
+    }
+elif sys.platform == "darwin":
+    options["bdist_mac"] = {
+        "bundle_name": "Gambit Pairing",
+        "iconfile": "icon.ico",
+        "license": "license.rtf",
+    }
+else:
+    options["bdist_rpm"] = {
+        "name": "GambitPairing",
+        "requires": ["python3"],
+        "license": "LICENSE",
+        "icon": "icon.png",
+        'debug': False
+    }
+    options["bdist_deb"] = {
+        "name": "GambitPairing",
+        "requires": ["python3"],
+        "license": "LICENSE",
+        "icon": "icon.png",
+    }
 
 executables = [
     Executable(
         script="main.py",
         base=base,
         icon="icon.ico",
-        target_name="GambitPairing.exe",
-        shortcut_name="Gambit Pairing",
-        shortcut_dir="DesktopFolder"
+        target_name="GambitPairing.exe" if sys.platform == "win32" else "GambitPairing",
+        shortcut_name="Gambit Pairing" if sys.platform == "win32" else None,
+        shortcut_dir="DesktopFolder" if sys.platform == "win32" else None
     )
 ]
 
 setup(
-    # name must be single token when building rpm package.
-    name="Gambit_Pairing",
+    name="Gambit Pairing" if sys.platform == "win32" else "GambitPairing",
     version="0.5.0",
     description="Gambit Pairing",
-    options={
-        "build_exe": build_exe_options,
-        "bdist_msi": bdist_msi_options
-    },
+    options=options,
     executables=executables
 )
+
