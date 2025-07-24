@@ -66,7 +66,7 @@ executables = [
 ]
 
 setup(
-    name="GambitPairing",
+    name="Gambit Pairing" if sys.platform == "win32" else "GambitPairing",
     version="0.5.0",
     description="Gambit Pairing",
     options=options,
