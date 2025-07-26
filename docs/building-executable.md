@@ -1,45 +1,11 @@
 # Building Executable
 
-## How to build an exectable with setup.py
+## We are in the process of moving to a setup.cfg and pyproject.toml based build system
 
-### Note:
-cx_freeze does not support building windows msi installer in python 3.13
+> :. We will need to fully understand what we have done before documenting it
 
-#### Install python requirements
-1. `pip install -r requirements.txt`
-2. `pip install cx_freeze`
-3. Use the build commands for your operating system
+## but here are some hints:
 
----
+`python -m pip install .` in the root of the cloned repo should install Gambit-Pairing
 
-## All cx_Freeze build commands supported by this setup.py
-
-### Windows
-- Build executable:
-  ```
-  python setup.py build
-  ```
-- Build MSI installer:
-  ```
-  python setup.py bdist_msi
-  ```
-
-### macOS
-- Build macOS app bundle:
-  ```
-  python setup.py bdist_mac
-  ```
-
-### Linux
-- Build RPM package:
-  ```
-  python setup.py bdist_rpm
-  ```
-- Build DEB package:
-  ```
-  python setup.py bdist_deb
-  ```
-
----
-
-> Run these commands on the appropriate operating system for the desired output.
+we hope...
