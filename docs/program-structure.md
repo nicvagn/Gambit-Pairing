@@ -1,25 +1,11 @@
 # Program structure of Gambit-Pairing
 
-- is an implicit namespace package. See PEP 420
-> like:
-"""
-mynamespace-subpackage-a/
-    pyproject.toml # AND/OR setup.py, setup.cfg
-    src/
-        mynamespace/ # namespace package
-            # No __init__.py here.
-            subpackage_a/
-                # Regular import packages have an __init__.py.
-                __init__.py
-                module.py
-"""
-
 - uses a src  layout, see:
 https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/#src-layout-vs-flat-layout
 
 # in the gambitpairing module:
 
-## __main.py__ -- entry point
+## app.py -- entry point
 - Creates the main window. Handles various OS'.
 - `from gui.mainwindow import SwissTournamentApp` imports app
 
