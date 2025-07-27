@@ -5,7 +5,7 @@
 
 import httpx
 
-from .utils import root_logger
+from gambitpairing.utils import root_logger
 
 URL_STUB = "https://server.chess.ca"
 
