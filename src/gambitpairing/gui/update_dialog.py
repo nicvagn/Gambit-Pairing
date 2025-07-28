@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets, QtCore
-from core.utils import apply_stylesheet
+from gambitpairing.core.utils import apply_stylesheet
 
 class UpdateDownloadDialog(QtWidgets.QDialog):
     """Dialog to show download progress, completion, and errors with a modern look."""

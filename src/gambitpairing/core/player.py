@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Dict, Any, Tuple
-from core.utils import generate_id
-from core.constants import *
+from gambitpairing.core.utils import generate_id
+from gambitpairing.core.constants import B, W
 
 class Player:
     """Represents a player in the tournament."""
@@ -82,7 +82,7 @@ class Player:
         opponent_id = opponent.id if opponent else None
         self.opponent_ids.append(opponent_id)
         self.results.append(result)
-        
+
         # Record match details for both players before updating scores
         player_score_before_round = self.score
         opponent_score_before_round = opponent.score if opponent else 0.0

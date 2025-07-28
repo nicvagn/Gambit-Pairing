@@ -1,3 +1,5 @@
+from pyQT import QtWidgets, QPrinter, QPrintPreviewDialog, QtGui
+
 def print_pairings(self):
         """Print the current round's pairings table in a clean, ink-friendly, professional format (no input widgets)."""
         if self.table_pairings.rowCount() == 0:

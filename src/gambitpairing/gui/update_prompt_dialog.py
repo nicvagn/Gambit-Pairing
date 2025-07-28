@@ -1,6 +1,6 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
-from core.constants import APP_NAME
-from core.utils import apply_stylesheet
+from gambitpairing.core.constants import APP_NAME
+from gambitpairing.core.utils import apply_stylesheet
 
 class UpdatePromptDialog(QtWidgets.QDialog):
     """A modern dialog to prompt the user for an update."""
@@ -50,22 +50,22 @@ class UpdatePromptDialog(QtWidgets.QDialog):
         # Release Notes
         notes_group = QtWidgets.QGroupBox("Release Notes")
         notes_layout = QtWidgets.QVBoxLayout(notes_group)
-        
+
         self.release_notes_text = QtWidgets.QTextBrowser()
         self.release_notes_text.setOpenExternalLinks(True)
         self.release_notes_text.setMarkdown(release_notes)
         notes_layout.addWidget(self.release_notes_text)
-        
+
         self.main_layout.addWidget(notes_group)
 
         # Buttons
         self.button_box = QtWidgets.QDialogButtonBox()
         self.download_button = self.button_box.addButton("Download", QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole)
         self.later_button = self.button_box.addButton("Later", QtWidgets.QDialogButtonBox.ButtonRole.RejectRole)
-        
+
         self.download_button.setDefault(True)
 
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
-        
+
         self.main_layout.addWidget(self.button_box)

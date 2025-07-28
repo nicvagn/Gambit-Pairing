@@ -1,13 +1,15 @@
-from PyQt6 import QtWidgets, QtCore, QtGui
-from PyQt6.QtCore import Qt, pyqtSignal
-from core.player import Player
-from core.tournament import Tournament
-from gui.dialogs import PlayerDetailDialog
-from typing import Optional
 import csv
 import logging
 from datetime import datetime
-from core.utils import apply_stylesheet
+from typing import Optional
+
+from gambitpairing.core.player import Player
+from gambitpairing.core.utils import apply_stylesheet
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtCore import Qt, pyqtSignal
+
+from .dialogs import PlayerDetailDialog
+
 
 class NumericTableWidgetItem(QtWidgets.QTableWidgetItem):
     """Custom QTableWidgetItem for numerical sorting."""
@@ -47,7 +49,7 @@ class PlayersTab(QtWidgets.QWidget):
         self.table_players.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_players.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table_players.setSortingEnabled(True)
-        
+
         # Resize columns
         header = self.table_players.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
@@ -116,7 +118,7 @@ QTableWidget {
             pass
 
         player_group_layout.addWidget(self.table_players)
-        
+
         self.btn_add_player_detail = QtWidgets.QPushButton(" Add New Player...")
         self.btn_add_player_detail.setToolTip("Open dialog to add a new player with full details.")
         self.btn_add_player_detail.clicked.connect(self.add_player_detailed)
@@ -149,7 +151,7 @@ QTableWidget {
         row = self.table_players.rowAt(point.y())
         if row < 0 or not self.tournament:
             return
-        
+
         player_id_item = self.table_players.item(row, 0)
         if not player_id_item: return
 
@@ -181,7 +183,7 @@ QTableWidget {
                 if data['name'] != player.name and any(p.name == data['name'] for p in self.tournament.players.values()):
                      QtWidgets.QMessageBox.warning(self, "Edit Error", f"Another player named '{data['name']}' already exists.")
                      return
-                
+
                 player.name = data['name']
                 player.rating = data['rating']
                 player.gender = data.get('gender')
@@ -190,7 +192,7 @@ QTableWidget {
                 player.email = data.get('email')
                 player.club = data.get('club')
                 player.federation = data.get('federation')
-                
+
                 self.update_player_table_row(player)
                 self.history_message.emit(f"Player '{player.name}' details updated.")
                 self.dirty.emit()
@@ -253,11 +255,11 @@ QTableWidget {
             if item and item.data(Qt.ItemDataRole.UserRole) == player.id:
                 # Update Name
                 item.setText(player.name)
-                
+
                 # Update Rating
                 rating_item = self.table_players.item(i, 1)
                 rating_item.setText(str(player.rating or ''))
-                
+
                 # Update Age
                 age_item = self.table_players.item(i, 2)
                 age = self._calculate_age(player.dob)
@@ -267,7 +269,7 @@ QTableWidget {
                 status_item = self.table_players.item(i, 3)
                 status_text = "Active" if player.is_active else "Inactive"
                 status_item.setText(status_text)
-                
+
                 # Update row color
                 color = QtGui.QColor("gray") if not player.is_active else self.table_players.palette().color(QtGui.QPalette.ColorRole.Text)
                 item.setForeground(color)
@@ -287,7 +289,7 @@ QTableWidget {
 
         # Rating Item
         rating_item = NumericTableWidgetItem(str(player.rating or ''))
-        
+
         # Age Item
         age = self._calculate_age(player.dob)
         age_item = NumericTableWidgetItem(str(age) if age is not None else '' )
@@ -322,7 +324,7 @@ QTableWidget {
         self.table_players.setItem(row_position, 1, rating_item)
         self.table_players.setItem(row_position, 2, age_item)
         self.table_players.setItem(row_position, 3, status_item)
-        
+
         self.table_players.setSortingEnabled(True)
 
     def import_players_csv(self):

@@ -1,6 +1,8 @@
-from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import QDateTime
 import logging
+
+from PyQt6 import QtGui, QtWidgets
+from PyQt6.QtCore import QDateTime
+
 
 class HistoryTab(QtWidgets.QWidget):
     def __init__(self, parent=None):

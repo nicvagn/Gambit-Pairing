@@ -1,10 +1,10 @@
 from typing import List, Tuple, Optional
 from logging import getLogger
 
-from core.utils import root_logger
-from core.player import Player
-from core.constants import W, B
-from core.exceptions import PairingException
+from gambitpairing.core.utils import root_logger
+from gambitpairing.core.player import Player
+from gambitpairing.core.constants import W, B
+from gambitpairing.core.exceptions import PairingException
 
 
 # test toy player for isolated testing as just a module

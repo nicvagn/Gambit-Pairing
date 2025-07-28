@@ -1,12 +1,9 @@
 from typing import List, Tuple, Optional, Set, Dict, Any
 from enum import Enum
-import copy
 from itertools import permutations
-import networkx as nx
 from gambitpairing.core.constants import W, B
 from gambitpairing.core.player import Player
 
-import math
 
 def _is_topscorer(player: Player, current_round: int, total_rounds: int) -> bool:
     """
@@ -250,8 +247,6 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
 
     return weight
 
-from core.player import Player
-from core.constants import W, B
 
 class FloatType(Enum):
     """Types of floaters based on C++ implementation"""

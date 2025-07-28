@@ -5,23 +5,21 @@ from typing import List, Tuple, Optional
 from pathlib import Path
 import sys
 import os
-from core.updater import Updater
+from gambitpairing.core.updater import Updater
 import json
-from core.tournament import Tournament
-from core.player import Player
-from core.constants import *
-from core.utils import style_manager, apply_stylesheet
+from gambitpairing.core.tournament import Tournament
+from gambitpairing.core.constants import APP_NAME, APP_VERSION
+from gambitpairing.core.utils import style_manager, apply_stylesheet
 
-from gui.dialogs import SettingsDialog, NewTournamentDialog
-from gui.players_tab import PlayersTab
-from gui.tournament_tab import TournamentTab
-from gui.standings_tab import StandingsTab
-from gui.crosstable_tab import CrosstableTab
-from gui.history_tab import HistoryTab
-from gui.update_dialog import UpdateDownloadDialog
-from gui.update_prompt_dialog import UpdatePromptDialog
-from gui.update_worker import UpdateWorker
-import subprocess
+from .dialogs import SettingsDialog, NewTournamentDialog
+from .players_tab import PlayersTab
+from .tournament_tab import TournamentTab
+from .standings_tab import StandingsTab
+from .crosstable_tab import CrosstableTab
+from .history_tab import HistoryTab
+from .update_dialog import UpdateDownloadDialog
+from .update_prompt_dialog import UpdatePromptDialog
+from .update_worker import UpdateWorker
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
 from PyQt6.QtGui import QPixmap
 import logging

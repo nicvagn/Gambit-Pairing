@@ -1,12 +1,15 @@
-from PyQt6 import QtWidgets, QtCore, QtGui
-from PyQt6.QtCore import Qt, pyqtSignal
-from typing import List, Tuple, Optional
-
-from core.player import Player
-from core.constants import RESULT_WHITE_WIN, RESULT_DRAW, RESULT_BLACK_WIN, WIN_SCORE, DRAW_SCORE, LOSS_SCORE, BYE_SCORE
-from .dialogs import ManualPairDialog
-from core.utils import apply_stylesheet
 import logging
+from typing import List, Optional, Tuple
+
+from gambitpairing.core.constants import (BYE_SCORE, DRAW_SCORE, LOSS_SCORE,
+                                          RESULT_BLACK_WIN, RESULT_DRAW,
+                                          RESULT_WHITE_WIN, WIN_SCORE)
+from gambitpairing.core.player import Player
+from gambitpairing.core.utils import apply_stylesheet
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtCore import Qt, pyqtSignal
+
+from .dialogs import ManualPairDialog
 
 
 class CheckableButton(QtWidgets.QPushButton):
@@ -21,14 +24,14 @@ class CheckableButton(QtWidgets.QPushButton):
         if self.isChecked():
             painter = QtGui.QPainter(self)
             painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-            
+
             # Draw checkmark in the top-right corner
             painter.setPen(QtGui.QPen(QtGui.QColor("white"), 2))
             font = QtGui.QFont(painter.font())
             font.setPointSize(10)
             font.setBold(True)
             painter.setFont(font)
-            
+
             rect = self.rect()
             checkmark_rect = QtCore.QRect(rect.right() - 15, rect.top() + 2, 12, 12)
             painter.drawText(checkmark_rect, Qt.AlignmentFlag.AlignCenter, self.check_char)
@@ -61,7 +64,7 @@ class ResultSelector(QtWidgets.QWidget):
         for btn in buttons:
             self.button_group.addButton(btn)
             layout.addWidget(btn)
-        
+
         layout.addStretch()  # Add stretch to prevent buttons from expanding too much
 
     def selectedResult(self) -> str:
@@ -92,7 +95,7 @@ class TournamentTab(QtWidgets.QWidget):
         super().__init__(parent)
         self.tournament = None
         self.current_round_index = 0
-        
+
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.main_layout.setContentsMargins(10, 10, 10, 10)
         self.main_layout.setSpacing(10)
@@ -121,7 +124,7 @@ class TournamentTab(QtWidgets.QWidget):
         self.table_pairings.verticalHeader().setVisible(False)
         self.table_pairings.setAlternatingRowColors(True)
         self.table_pairings.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
-        
+
         # Add context menu for manual adjustments
         self.table_pairings.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_pairings.customContextMenuRequested.connect(self.show_pairing_context_menu)
@@ -178,7 +181,7 @@ class TournamentTab(QtWidgets.QWidget):
         if self.current_round_index >= self.tournament.num_rounds:
              QtWidgets.QMessageBox.information(self,"Tournament End", "All tournament rounds have been generated and processed.")
              self.update_ui_state(); return
-        
+
         # Check if pairings for the current round already exist
         if self.current_round_index < len(self.tournament.rounds_pairings_ids):
             reply = QtWidgets.QMessageBox.question(self, "Re-Prepare Round?",
@@ -191,7 +194,7 @@ class TournamentTab(QtWidgets.QWidget):
                 self.tournament.rounds_pairings_ids = self.tournament.rounds_pairings_ids[:self.current_round_index]
                 self.tournament.rounds_byes_ids = self.tournament.rounds_byes_ids[:self.current_round_index]
                 self.history_message.emit(f"--- Re-preparing pairings for Round {self.current_round_index + 1} ---")
-            else: 
+            else:
                 # Just display existing pairings
                 display_round_num = self.current_round_index + 1
                 pairings_ids = self.tournament.rounds_pairings_ids[self.current_round_index]
@@ -200,7 +203,7 @@ class TournamentTab(QtWidgets.QWidget):
                 for w_id, b_id in pairings_ids:
                     w = self.tournament.players.get(w_id); b = self.tournament.players.get(b_id)
                     if w and b: pairings.append((w,b))
-            
+
                 bye_player = self.tournament.players.get(bye_id) if bye_id else None
                 self.lbl_round_title.setText(f"Round {display_round_num} Pairings & Results")
                 self.display_pairings_for_input(pairings, bye_player)
@@ -217,7 +220,7 @@ class TournamentTab(QtWidgets.QWidget):
                 display_round_number,
                 allow_repeat_pairing_callback=self.prompt_repeat_pairing
             )
-            
+
             if not pairings and len(self.tournament._get_active_players()) > 1 and not bye_player : # Handle cases where pairing might fail
                 if len(self.tournament._get_active_players()) % 2 == 0 : # Even players, no bye expected, but no pairings
                      QtWidgets.QMessageBox.critical(self, "Pairing Error", f"Pairing generation failed for Round {display_round_number}. No pairings returned. Check logs and player statuses.")
@@ -256,13 +259,13 @@ class TournamentTab(QtWidgets.QWidget):
         # If current_round_index points to the round WHOSE PAIRINGS ARE SHOWN, then current_round_index = completed_rounds.
         # For example, after R1 results recorded, current_round_index becomes 1. Completed rounds = 1.
         # Pairings for R2 (index 1) are then generated. So pairings_generated_for_rounds = 2.
-        
-        round_to_prepare_idx = self.current_round_index 
-        
+
+        round_to_prepare_idx = self.current_round_index
+
         if round_to_prepare_idx >= self.tournament.num_rounds:
              QtWidgets.QMessageBox.information(self,"Tournament End", "All tournament rounds have been generated and processed.")
              self.update_ui_state(); return
-        
+
         # Check if pairings for this round_to_prepare_idx already exist
         # This happens if "Prepare Next Round" is clicked again without "Record Results"
         if round_to_prepare_idx < len(self.tournament.rounds_pairings_ids):
@@ -289,7 +292,7 @@ class TournamentTab(QtWidgets.QWidget):
                 for w_id, b_id in pairings_ids:
                     w = self.tournament.players.get(w_id); b = self.tournament.players.get(b_id)
                     if w and b: pairings.append((w,b))
-            
+
                 bye_player = self.tournament.players.get(bye_id) if bye_id else None
                 self.lbl_round_title.setText(f"Round {display_round_num} Pairings & Results")
                 self.display_pairings_for_input(pairings, bye_player)
@@ -307,7 +310,7 @@ class TournamentTab(QtWidgets.QWidget):
                 display_round_number,
                 allow_repeat_pairing_callback=self.prompt_repeat_pairing
             )
-            
+
             if not pairings and len(self.tournament._get_active_players()) > 1 and not bye_player : # Handle cases where pairing might fail
                 if len(self.tournament._get_active_players()) % 2 == 0 : # Even players, no bye expected, but no pairings
                      QtWidgets.QMessageBox.critical(self, "Pairing Error", f"Pairing generation failed for Round {display_round_number}. No pairings returned. Check logs and player statuses.")
@@ -402,7 +405,7 @@ class TournamentTab(QtWidgets.QWidget):
                 result_selector.setResult(RESULT_BLACK_WIN) # Black wins by forfeit
             elif not black.is_active:
                 result_selector.setResult(RESULT_WHITE_WIN) # White wins by forfeit
-            
+
             self.table_pairings.setCellWidget(row, 2, result_selector)
 
         if bye_player:
@@ -440,7 +443,7 @@ class TournamentTab(QtWidgets.QWidget):
 
         menu = QtWidgets.QMenu(self)
         adjust_action = menu.addAction("Manually Adjust Pairing...")
-        
+
         # Only allow adjustment for the current round before results are recorded
         can_adjust = self.current_round_index < len(self.tournament.rounds_pairings_ids)
         adjust_action.setEnabled(can_adjust)
@@ -465,7 +468,7 @@ class TournamentTab(QtWidgets.QWidget):
          # If record_and_advance was called, current_round_index would have incremented.
          # For now, assume if adjust button is clickable, it's for the current "inputtable" round.
 
-         player_to_adjust = self.tournament.players.get(white_id) 
+         player_to_adjust = self.tournament.players.get(white_id)
          current_opponent = self.tournament.players.get(black_id)
          if not player_to_adjust or not current_opponent:
               QtWidgets.QMessageBox.critical(self, "Adjust Error", "Could not find players for this pairing.")
@@ -473,7 +476,7 @@ class TournamentTab(QtWidgets.QWidget):
 
          available_opponents = [p for p_id, p in self.tournament.players.items()
                                 if p.is_active and p_id != white_id and p_id != black_id]
-         
+
          # Also consider current bye player as a potential opponent IF a bye exists for this round.
          current_bye_id_for_round = self.tournament.rounds_byes_ids[self.current_round_index]
          if current_bye_id_for_round and current_bye_id_for_round not in [white_id, black_id]:
@@ -489,7 +492,7 @@ class TournamentTab(QtWidgets.QWidget):
               new_opponent_id = dialog.get_selected_opponent_id()
               if new_opponent_id:
                    new_opp_player = self.tournament.players.get(new_opponent_id)
-                   if not new_opp_player: 
+                   if not new_opp_player:
                        QtWidgets.QMessageBox.critical(self, "Adjust Error", "Selected new opponent not found.")
                        return
 
@@ -518,10 +521,10 @@ class TournamentTab(QtWidgets.QWidget):
 
     def record_and_advance(self) -> None:
         if not self.tournament: return
-        
+
         # Results are for the round currently displayed, which is self.current_round_index
         round_index_to_record = self.current_round_index
-        
+
         if round_index_to_record >= len(self.tournament.rounds_pairings_ids):
              QtWidgets.QMessageBox.warning(self, "Record Error", "No pairings available to record results for this round index.")
              return
@@ -530,14 +533,14 @@ class TournamentTab(QtWidgets.QWidget):
         if not all_entered:
             QtWidgets.QMessageBox.warning(self, "Incomplete Results", "Please enter a result for all pairings.")
             return
-        if results_data is None: 
+        if results_data is None:
              QtWidgets.QMessageBox.critical(self, "Input Error", "Error retrieving results from table. Cannot proceed.")
              return
 
         try:
             if self.tournament.record_results(round_index_to_record, results_data):
                 self.last_recorded_results_data = list(results_data) # Store deep copy for undo
-                
+
                 display_round_number = round_index_to_record + 1
                 self.history_message.emit(f"--- Round {display_round_number} Results Recorded ---")
                 self.log_results_details(results_data, round_index_to_record)
@@ -548,7 +551,7 @@ class TournamentTab(QtWidgets.QWidget):
                 self.round_completed.emit(self.current_round_index)
 
                 self.standings_update_requested.emit()
-                
+
                 if self.current_round_index >= self.tournament.num_rounds:
                     self.status_message.emit(f"Tournament finished after {self.tournament.num_rounds} rounds.")
                     self.history_message.emit(f"--- Tournament Finished ({self.tournament.num_rounds} Rounds) ---")
@@ -577,9 +580,9 @@ class TournamentTab(QtWidgets.QWidget):
 
     def print_pairings(self):
         # Print the current round's pairings table in a clean, ink-friendly, professional format (no input widgets).
-        from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
-        from PyQt6.QtGui import QTextDocument
         from PyQt6.QtCore import QDateTime
+        from PyQt6.QtGui import QTextDocument
+        from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
         if self.table_pairings.rowCount() == 0:
             QtWidgets.QMessageBox.information(self, "Print Pairings", "No pairings to print.")
             return
@@ -647,21 +650,21 @@ class TournamentTab(QtWidgets.QWidget):
 
                   if not result_const:
                       all_entered = False
-                      break 
+                      break
 
                   white_score = -1.0
                   if result_const == RESULT_WHITE_WIN: white_score = WIN_SCORE
                   elif result_const == RESULT_DRAW: white_score = DRAW_SCORE
                   elif result_const == RESULT_BLACK_WIN: white_score = LOSS_SCORE
-                  
-                  if white_score >= 0 and white_id and black_id: 
+
+                  if white_score >= 0 and white_id and black_id:
                        results_data.append((white_id, black_id, white_score))
-                  else: 
+                  else:
                        logging.error(f"Invalid result data in table row {row}: Result='{result_const}', W_ID='{white_id}', B_ID='{black_id}'")
-                       if not white_id or not black_id: return None, False 
+                       if not white_id or not black_id: return None, False
                        all_entered = False
                        break
-              else: 
+              else:
                   logging.error(f"Missing ResultSelector in pairings table, row {row}. Table improperly configured.")
                   return None, False
          return results_data, all_entered
@@ -674,7 +677,7 @@ class TournamentTab(QtWidgets.QWidget):
               b = self.tournament.players.get(b_id)
               score_b_display = f"{WIN_SCORE - score_w:.1f}" # Calculate display for black's score
               self.history_message.emit(f"  {w.name if w else w_id} ({score_w:.1f}) - {b.name if b else b_id} ({score_b_display})")
-         
+
          # Log bye if one was assigned for the undone round
         if round_index_recorded < len(self.tournament.rounds_byes_ids):
             bye_id = self.tournament.rounds_byes_ids[round_index_recorded]
@@ -695,8 +698,8 @@ class TournamentTab(QtWidgets.QWidget):
             QtWidgets.QMessageBox.warning(self, "Undo Error", "No results from a completed round are available to undo."); return
 
         round_to_undo_display_num = self.current_round_index # e.g. if current_round_index is 1, we undo R1 results.
-        
-        reply = QtWidgets.QMessageBox.question(self,"Undo Results", 
+
+        reply = QtWidgets.QMessageBox.question(self,"Undo Results",
                                              f"Undo results from Round {round_to_undo_display_num} and revert to its pairing stage?",
                                              QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
                                              QtWidgets.QMessageBox.StandardButton.No)
@@ -705,14 +708,14 @@ class TournamentTab(QtWidgets.QWidget):
         try:
             # The round whose results are being undone (0-indexed)
             round_index_being_undone = self.current_round_index - 1
-            
+
             # Revert player stats for each game in last_recorded_results_data
             for white_id, black_id, _ in self.last_recorded_results_data:
                 p_white = self.tournament.players.get(white_id)
                 p_black = self.tournament.players.get(black_id)
                 if p_white: self._revert_player_round_data(p_white)
                 if p_black: self._revert_player_round_data(p_black)
-            
+
             # Revert bye player stats if a bye was given in the undone round
             if round_index_being_undone < len(self.tournament.rounds_byes_ids):
                 bye_player_id_undone_round = self.tournament.rounds_byes_ids[round_index_being_undone]
@@ -724,7 +727,7 @@ class TournamentTab(QtWidgets.QWidget):
             # These store the historical pairings. Undoing results means we are going back to the
             # state *before* these results were entered for that specific round's pairings.
             # The pairings themselves remain.
-            
+
             # If manual pairings were made for the round being undone, they are part of its history.
             # They are not automatically "undone" unless the user manually re-pairs.
             if round_index_being_undone in self.tournament.manual_pairings:
@@ -736,19 +739,19 @@ class TournamentTab(QtWidgets.QWidget):
             # --- Update UI ---
             # Re-display pairings for the round being "re-opened" for input
             self.lbl_round_title.setText(f"Round {self.current_round_index + 1} Pairings & Results (Re-entry)")
-            
+
             pairings_ids_to_redisplay = self.tournament.rounds_pairings_ids[self.current_round_index]
             bye_id_to_redisplay = self.tournament.rounds_byes_ids[self.current_round_index]
-            
+
             pairings_to_redisplay = []
             for w_id, b_id in pairings_ids_to_redisplay:
                  w = self.tournament.players.get(w_id)
                  b = self.tournament.players.get(b_id)
                  if w and b: pairings_to_redisplay.append((w,b))
                  else: logging.warning(f"Load: Missing player for pairing ({w_id} vs {b_id}) in loaded round {self.current_round_index + 1}")
-            
+
             bye_player_to_redisplay = self.tournament.players.get(bye_id_to_redisplay) if bye_id_to_redisplay else None
-            
+
             self.display_pairings_for_input(pairings_to_redisplay, bye_player_to_redisplay)
             self.tabs.setCurrentWidget(self.tournament_tab)
 
@@ -767,18 +770,18 @@ class TournamentTab(QtWidgets.QWidget):
     def _revert_player_round_data(self, player: Player):
          """Helper to remove the last round's data from a player object's history lists."""
          if not player.results: return # No results to revert
-         
+
          last_result = player.results.pop()
          # Score is recalculated from scratch or by subtracting. Subtracting is simpler here.
          if last_result is not None: player.score = round(player.score - last_result, 1) # round to handle float issues
 
          if player.running_scores: player.running_scores.pop()
-         
+
          last_opponent_id = player.opponent_ids.pop() if player.opponent_ids else None
          last_color = player.color_history.pop() if player.color_history else None
-         
+
          if last_color == "Black": player.num_black_games = max(0, player.num_black_games -  1)
-         
+
          if last_opponent_id is None: # Means the undone round was a bye for this player
              # Check if they *still* have other byes in their history.
              # If not, has_received_bye becomes False.

@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets, QtGui
-from core.constants import TIEBREAK_NAMES, TB_MEDIAN, TB_SOLKOFF, TB_CUMULATIVE, TB_CUMULATIVE_OPP, TB_SONNENBORN_BERGER, TB_MOST_BLACKS, CSV_FILTER
+from gambitpairing.core.constants import TIEBREAK_NAMES, TB_MEDIAN, TB_SOLKOFF, TB_CUMULATIVE, TB_CUMULATIVE_OPP, TB_SONNENBORN_BERGER, TB_MOST_BLACKS, CSV_FILTER
 from PyQt6.QtCore import Qt, QDateTime
 from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 import csv
@@ -48,7 +48,7 @@ class StandingsTab(QtWidgets.QWidget):
                       header_item.setToolTip(tip)
 
     def update_standings_table(self) -> None:
-        if not self.tournament: 
+        if not self.tournament:
             self.table_standings.setRowCount(0)
             return
 
@@ -69,9 +69,9 @@ class StandingsTab(QtWidgets.QWidget):
 
              self.table_standings.setRowCount(len(standings))
 
-             tb_formats = { 
+             tb_formats = {
                  TB_MEDIAN: '.2f', TB_SOLKOFF: '.2f', TB_CUMULATIVE: '.1f', # Using .2f for Median/Solkoff for finer detail
-                 TB_CUMULATIVE_OPP: '.1f', TB_SONNENBORN_BERGER: '.2f', TB_MOST_BLACKS: '.0f' 
+                 TB_CUMULATIVE_OPP: '.1f', TB_SONNENBORN_BERGER: '.2f', TB_MOST_BLACKS: '.0f'
              }
 
              for rank, player in enumerate(standings):
@@ -79,18 +79,18 @@ class StandingsTab(QtWidgets.QWidget):
                   rank_str = str(rank + 1)
                   status_str = "" # Standings usually only show active players from get_standings()
                   # If inactive players were included in `standings`:
-                  # status_str = "" if player.is_active else " (I)" 
-                  
+                  # status_str = "" if player.is_active else " (I)"
+
                   item_rank = QtWidgets.QTableWidgetItem(rank_str)
                   item_player = QtWidgets.QTableWidgetItem(f"{player.name} ({player.rating or 'NR'})" + status_str) # NR for No Rating
                   item_score = QtWidgets.QTableWidgetItem(f"{player.score:.1f}")
-                  
+
                   item_rank.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                   item_score.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
                   row_color = self.table_standings.palette().color(QtGui.QPalette.ColorRole.Text)
                   # if not player.is_active: row_color = QtGui.QColor("gray") # If showing inactive
-                  
+
                   item_rank.setForeground(row_color)
                   item_player.setForeground(row_color)
                   item_score.setForeground(row_color)
@@ -129,24 +129,24 @@ class StandingsTab(QtWidgets.QWidget):
                 delimiter = "," if is_csv else "\t"
                 writer = csv.writer(f, delimiter=delimiter) if is_csv else None
 
-                header = [self.table_standings.horizontalHeaderItem(i).text() 
+                header = [self.table_standings.horizontalHeaderItem(i).text()
                           for i in range(self.table_standings.columnCount())]
                 if writer: writer.writerow(header)
                 else: f.write(delimiter.join(header) + "\n")
 
-                tb_formats = { 
+                tb_formats = {
                     TB_MEDIAN: '.2f', TB_SOLKOFF: '.2f', TB_CUMULATIVE: '.1f',
-                    TB_CUMULATIVE_OPP: '.1f', TB_SONNENBORN_BERGER: '.2f', TB_MOST_BLACKS: '.0f' 
+                    TB_CUMULATIVE_OPP: '.1f', TB_SONNENBORN_BERGER: '.2f', TB_MOST_BLACKS: '.0f'
                 }
 
                 for rank, player in enumerate(standings):
                     rank_str = str(rank + 1)
-                    player_str = f"{player.name} ({player.rating or 'NR'})" 
+                    player_str = f"{player.name} ({player.rating or 'NR'})"
                     # If exporting all players, including inactive:
                     # player_str += (" (I)" if not player.is_active else "")
                     score_str = f"{player.score:.1f}"
                     data_row = [rank_str, player_str, score_str]
-                    
+
                     for tb_key in self.tournament.tiebreak_order:
                          value = player.tiebreakers.get(tb_key, 0.0)
                          format_spec = tb_formats.get(tb_key, '.2f')

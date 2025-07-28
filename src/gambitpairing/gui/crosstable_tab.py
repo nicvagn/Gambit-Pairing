@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt
 import functools
-from core.constants import WIN_SCORE, DRAW_SCORE, LOSS_SCORE
+from gambitpairing.core.constants import WIN_SCORE, DRAW_SCORE, LOSS_SCORE
 
 class CrosstableTab(QtWidgets.QWidget):
     def __init__(self, parent=None):

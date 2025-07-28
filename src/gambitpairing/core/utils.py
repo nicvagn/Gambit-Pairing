@@ -3,7 +3,6 @@ import sys
 import random
 from PyQt6 import QtCore
 from PyQt6.QtCore import QDateTime
-from core.constants import APP_NAME
 
 # --- Logging Setup ---
 # Setup logging to file and console
@@ -40,24 +39,23 @@ def restart_application():
     import sys
     import os
     from PyQt6.QtWidgets import QApplication
-    from PyQt6.QtCore import QTimer
-    
+
     # Get the current application instance
     app = QApplication.instance()
     if app is None:
         return False
-    
+
     # Get command line arguments for restart
     args = sys.argv[:]
-    
+
     # Close all windows and quit the application
     app.closeAllWindows()
     app.quit()
-    
+
     # Small delay to ensure cleanup
     import time
     time.sleep(0.1)
-    
+
     # Restart the application
     try:
         if sys.platform == "win32":
@@ -75,18 +73,18 @@ def restart_application():
 class StyleManager:
     """Centralized style management for legacy GUI support."""
     _instance = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
-    
+
     def __init__(self):
         if not self._initialized:
             self.legacy_mode = False
             self._initialized = True
-    
+
     def apply_style(self, widget, style_sheet: str):
         """Apply a stylesheet to a widget and track it for legacy mode."""
         # Only apply style if not in legacy mode
@@ -113,7 +111,7 @@ class StyleManager:
                     app.setStyle("WindowsVista")
             except Exception:
                 pass
-    
+
     def _store_legacy_setting(self, enabled: bool):
         """Store legacy GUI setting for persistence across restarts."""
         try:
@@ -123,7 +121,7 @@ class StyleManager:
             settings.sync()
         except Exception as e:
             root_logger.warning(f"Could not store legacy GUI setting: {e}")
-    
+
     def load_legacy_setting(self) -> bool:
         """Load legacy GUI setting from persistent storage."""
         try:
