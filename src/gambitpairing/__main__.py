@@ -47,7 +47,7 @@ def run_app():
     try:
         # Try to apply a modern style if available
         available_styles = QtWidgets.QStyleFactory.keys()
-        if "Fusion" in available_styles:
+        if "WindowsVista" in available_styles:
             app.setStyle("WindowsVista")
     except Exception as e:
         logging.warning(f"Could not set preferred application style: {e}")
