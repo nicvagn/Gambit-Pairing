@@ -8,6 +8,8 @@ from PyQt6.QtGui import QIcon
 from gambitpairing.gui.mainwindow import SwissTournamentApp
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
 def main():
     """Entry point"""
     logging.basicConfig(level=logging.INFO,
@@ -18,7 +20,7 @@ def main():
 
 
 def get_icon_path():
-    icon_folder = os.path.join(BASE_DIR, "..", "resources", "icons")
+    icon_folder = os.path.join(BASE_DIR, "resources", "icons")
     ico_path = os.path.join(icon_folder, "icon.ico")
     png_path = os.path.join(icon_folder, "icon.png")
     if os.path.exists(ico_path):
@@ -37,7 +39,7 @@ def run_app():
         logging.warning("App icon not found in resources/icons.")
     # load stylesheet
     try:
-        styles_qss = os.path.join(BASE_DIR, "..", "resources", "styles.qss")
+        styles_qss = os.path.join(BASE_DIR, "resources", "styles.qss")
         with open(styles_qss, "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
     except Exception as e:
