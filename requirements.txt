@@ -1,8 +1,0 @@
-PyQt6
-requests
-logging
-typing
-pathlib
-sys
-subprocess
-json
