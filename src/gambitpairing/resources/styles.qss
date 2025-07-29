@@ -317,11 +317,11 @@ QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow {
 }
 
 QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
-    image: url(resources/icons/arrow-up.svg);
+    image: url(src/gambitpairing/resources/icons/arrow-up.svg);
 }
 
 QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
-    image: url(resources/icons/arrow-down.svg);
+    image: url(src/gambitpairing/resources/icons/arrow-down.svg);
 }
 
 QSpinBox::up-arrow:disabled, QSpinBox::down-arrow:disabled,

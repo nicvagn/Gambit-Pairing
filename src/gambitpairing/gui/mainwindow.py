@@ -646,7 +646,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         dialog.setWindowTitle(f"About {APP_NAME}")
         layout = QVBoxLayout(dialog)
         # Add about.webp image
-        image_path = resource_path("../resources/about.webp")
+        image_path = resource_path("../resources/icons/about.webp")
         if os.path.exists(image_path):
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
