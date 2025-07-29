@@ -1,41 +1,42 @@
 ```
-
- $$$$$$\                       $$\      $$\  $$\
-$$  __$$\                      $$ |     \__| $$ |
-$$ /  \__|$$$$$$\ $$$$$$\$$$$\ $$$$$$$\ $$\$$$$$$\
-$$ |$$$$\ \____$$\$$  _$$  _$$\$$  __$$\$$ \_$$  _|
-$$ |\_$$ |$$$$$$$ $$ / $$ / $$ $$ |  $$ $$ | $$ |
-$$ |  $$ $$  __$$ $$ | $$ | $$ $$ |  $$ $$ | $$ |$$\
-\$$$$$$  \$$$$$$$ $$ | $$ | $$ $$$$$$$  $$ | \$$$$  |
- \______/ \_______\__| \__| \__\_______/\__|  \____/
-$$$$$$$\         $$\         $$\
-$$  __$$\        \__|        \__|
-$$ |  $$ $$$$$$\ $$\ $$$$$$\ $$\$$$$$$$\  $$$$$$\
-$$$$$$$  \____$$\$$ $$  __$$\$$ $$  __$$\$$  __$$\
-$$  ____/$$$$$$$ $$ $$ |  \__$$ $$ |  $$ $$ /  $$ |
-$$ |    $$  __$$ $$ $$ |     $$ $$ |  $$ $$ |  $$ |
-$$ |    \$$$$$$$ $$ $$ |     $$ $$ |  $$ \$$$$$$$ |
-\__|     \_______\__\__|     \__\__|  \__|\____$$ |
-                                         $$\   $$ |
-                                         \$$$$$$  |
-                                          \______/
-
-
-  ___     ___       __      .______    __    __       ___           ___       _  _       __  ___
- /  /    /   \     |  |     |   _  \  |  |  |  |     /   \         / _ \     | || |     /_ | \  \
-|  |    /  ^  \    |  |     |  |_)  | |  |__|  |    /  ^  \       | | | |    | || |_     | |  |  |
-|  |   /  /_\  \   |  |     |   ___/  |   __   |   /  /_\  \      | | | |    |__   _|    | |  |  |
-|  |  /  _____  \  |  `----.|  |      |  |  |  |  /  _____  \     | |_| |  __   | |    __| |  |  |
-|  | /__/     \__\ |_______|| _|      |__|  |__| /__/     \__\     \___/  (__)  |_|   (__)_|  |  |
- \__\                                                                                        /__/
-
+                                  $$\       $$\   $$\     
+                                  $$ |      \__|  $$ |    
+ $$$$$$\   $$$$$$\  $$$$$$\$$$$\  $$$$$$$\  $$\ $$$$$$\   
+$$  __$$\  \____$$\ $$  _$$  _$$\ $$  __$$\ $$ |\_$$  _|  
+$$ /  $$ | $$$$$$$ |$$ / $$ / $$ |$$ |  $$ |$$ |  $$ |    
+$$ |  $$ |$$  __$$ |$$ | $$ | $$ |$$ |  $$ |$$ |  $$ |$$\ 
+\$$$$$$$ |\$$$$$$$ |$$ | $$ | $$ |$$$$$$$  |$$ |  \$$$$  |
+ \____$$ | \_______|\__| \__| \__|\_______/ \__|   \____/ 
+$$\   $$ |                                                
+\$$$$$$  |                                                
+ \______/                                                 
+                    $$\           $$\                     
+                    \__|          \__|                    
+ $$$$$$\   $$$$$$\  $$\  $$$$$$\  $$\ $$$$$$$\   $$$$$$\  
+$$  __$$\  \____$$\ $$ |$$  __$$\ $$ |$$  __$$\ $$  __$$\ 
+$$ /  $$ | $$$$$$$ |$$ |$$ |  \__|$$ |$$ |  $$ |$$ /  $$ |
+$$ |  $$ |$$  __$$ |$$ |$$ |      $$ |$$ |  $$ |$$ |  $$ |
+$$$$$$$  |\$$$$$$$ |$$ |$$ |      $$ |$$ |  $$ |\$$$$$$$ |
+$$  ____/  \_______|\__|\__|      \__|\__|  \__| \____$$ |
+$$ |                                            $$\   $$ |
+$$ |                                            \$$$$$$  |
+\__|                                             \______/ 
+                                                          
+  __     _       _             _____  _____  _______  
+ / /    | |     | |           |  _  ||  ___||  _  \ \ 
+| | __ _| |_ __ | |__   __ _  | |/' ||___ \ | |/' || |
+| |/ _` | | '_ \| '_ \ / _` | |  /| |    \ \|  /| || |
+| | (_| | | |_) | | | | (_| | \ |_/ //\__/ /\ |_/ /| |
+| |\__,_|_| .__/|_| |_|\__,_|  \___(_)____(_)\___/ | |
+ \_\      | |                                     /_/ 
+          |_|                                         
 ```
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 
-**Important:** Gambit Pairing is in alpha development (version 0.4.1). Features and stability are not guaranteed.
+**Important:** Gambit Pairing is in alpha development (version 0.5.0). Features and stability are not guaranteed.
 
 [Join our Discord](https://discord.gg/eEnnetMDfr)
 
@@ -150,7 +151,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 - Tiebreak order is fully configurable and reflected in the standings and printouts.
 - Manual pairing adjustments are logged and cannot be undone automatically.
 - Tournament data is saved in `.json` files (JSON format).
-- This is an alpha version (0.4.1); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
+- This is an alpha version (0.5.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
 
 ## License
 
