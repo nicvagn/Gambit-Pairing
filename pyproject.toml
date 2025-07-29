@@ -1,3 +1,45 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "gambit-pairing"
+version = "0.5.0a0"
+dependencies = [
+    "PyQt6",
+    "requests",
+    "httpx",
+    "packaging",]
+description = "Fast, fair, and modern tournament management. Open source and cross-platform."
+readme = "README.md"
+requires-python = ">= 3.8"
+license = "MIT"
+license-files = ["LICENSE", "license.rtf"]
+authors = [{name = "Chickaboo", email="support@chickaboo.net"}, {name="Nic"}]
+maintainers = [{name = "Chickaboo", email="support@chickaboo.net"}, {name="Nic"}]
+keywords = ["Gambit", "Open Source", "Pairing", "Chess"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+    "Operating System :: OS Independent"]
+
+[project.urls]
+Homepage = "https://www.chickaboo.net/gambit-pairing/"
+Repository = "https://github.com/Chickaboo/gambit-pairing"
+Issues = "https://github.com/Chickaboo/gambit-pairing/issues"
+
+[project.optional-dependencies]
+dev = [
+  "build",
+]
+
+[project.gui-scripts]
+gambit-pairing = "gambitpairing:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+gambitpairing = ["resources/*.qss", "resources/icons/*.png", "resources/icons/*.ico"
+]
