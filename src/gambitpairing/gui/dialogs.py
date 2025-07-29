@@ -125,10 +125,10 @@ class NewTournamentDialog(QtWidgets.QDialog):
         info = {
             "dutch_swiss": {
                 "title": "Dutch System",
-                "desc": "The most widely used Swiss system: players are grouped by score, then paired top-half vs bottom-half within each group, avoiding repeats and balancing colors. Used in FIDE and USCF events.",
+                "desc": "The most widely used Swiss system: players are grouped by score, then paired top-half vs bottom-half within each group, avoiding repeats and balancing colors. Used in FIDE and USCF events. <b>Note:</b> This system is still being developed in Gambit Pairing.",
                 "fide": True,
                 "uscf": True,
-                "details": "<ul><li><b>Pairing Logic:</b> Players are sorted by score, then paired top vs bottom within each score group, avoiding previous opponents and balancing colors.</li><li><b>Best For:</b> Most open tournaments, FIDE/USCF events.</li><li><b>Notes:</b> This is the standard Swiss system for rated events.</li></ul>",
+                "details": "<ul><li><b>Pairing Logic:</b> Players are sorted by score, then paired top vs bottom within each score group, avoiding previous opponents and balancing colors.</li><li><b>Best For:</b> Most open tournaments, FIDE/USCF events.</li><li><b>Notes:</b> This is the standard Swiss system for rated events. <b>Note:</b> This system is still being developed in Gambit Pairing.</li></ul>",
             },
             "round_robin": {
                 "title": "Round Robin",
