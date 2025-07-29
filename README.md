@@ -36,7 +36,7 @@ $$ |                                            \$$$$$$  |
 [![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 
-**Important:** Gambit Pairing is in alpha development (version 0.4.1). Features and stability are not guaranteed.
+**Important:** Gambit Pairing is in alpha development (version 0.5.0). Features and stability are not guaranteed.
 
 [Join our Discord](https://discord.gg/eEnnetMDfr)
 
@@ -151,7 +151,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 - Tiebreak order is fully configurable and reflected in the standings and printouts.
 - Manual pairing adjustments are logged and cannot be undone automatically.
 - Tournament data is saved in `.json` files (JSON format).
-- This is an alpha version (0.4.1); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
+- This is an alpha version (0.5.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
 
 ## License
 
