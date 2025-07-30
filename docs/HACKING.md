@@ -24,3 +24,5 @@
     ```bash
     $ pip install --editable .
     ```
+
+Then load the tournament defined in /test_data/tournaments/test_32_player***

@@ -93,23 +93,13 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 
 ## Requirements
 > see pyproject.toml
-## Installation
+ie:
 
-1. Install Python 3.8 or higher.
-2. Download or clone this repository.
-3. if bash is on your $PATH run install.sh
-   >else:
-   >install the pip package defined by the pyproject.toml and setup.cfg.
-   >from the root dir with pyproject.toml
-   >```bash
-   >pip install .
-   >```
-
-## just build wheel
-- install all the dependancies
-- from git root
-``` bash
-bash build.sh
+``` toml
+[project]
+name = "gambit-pairing"
+version = "x.x.xxx"
+dependencies = [ HERE ]
 ```
 
 ## Usage
