@@ -9,7 +9,7 @@ from gambitpairing.core.updater import Updater
 import json
 from gambitpairing.core.tournament import Tournament
 from gambitpairing.core.constants import APP_NAME, APP_VERSION
-from gambitpairing.core.utils import style_manager, apply_stylesheet
+from gambitpairing.core import utils
 
 from .dialogs import SettingsDialog, NewTournamentDialog
 from .players_tab import PlayersTab
@@ -205,17 +205,6 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         view_menu.addAction(
             "History Log", lambda: self.tabs.setCurrentWidget(self.history_tab)
         )
-        view_menu.addSeparator()
-        # Add Legacy GUI toggle
-        self.legacy_gui_action = QtGui.QAction("Legacy GUI", self)
-        self.legacy_gui_action.setCheckable(True)
-        # Load saved state
-        self.legacy_gui_action.setChecked(style_manager.load_legacy_setting())
-        self.legacy_gui_action.setToolTip(
-            "Disable modern styling and use system default appearance. Requires application restart."
-        )
-        self.legacy_gui_action.triggered.connect(self.show_legacy_gui_restart_dialog)
-        view_menu.addAction(self.legacy_gui_action)
 
         # Help Menu
         help_menu = menu_bar.addMenu("&Help")
@@ -255,7 +244,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """
         toolbar = self.addToolBar("Main Toolbar")
         toolbar.setIconSize(QtCore.QSize(24, 24))
-        apply_stylesheet(
+        utils.apply_stylesheet(
             toolbar,
             """
             QToolBar {
@@ -842,65 +831,6 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """Store a reference to the QApplication instance for stylesheet control."""
         self._app_instance = app
 
-    def show_legacy_gui_restart_dialog(self, checked):
-        """Show confirmation dialog for legacy GUI mode change requiring restart."""
-        from PyQt6.QtWidgets import QMessageBox
-
-        current_mode = style_manager.load_legacy_setting()
-        new_mode = checked
-
-        # If no change, just return
-        if current_mode == new_mode:
-            return
-
-        # Determine the mode we're switching to
-        mode_name = "Legacy GUI" if new_mode else "Modern GUI"
-
-        # Create confirmation dialog
-        msg_box = QMessageBox(self)
-        msg_box.setWindowTitle("Restart Required")
-        msg_box.setIcon(QMessageBox.Icon.Question)
-
-        msg_box.setText(
-            f"Switching to {mode_name} mode requires restarting the application."
-        )
-        msg_box.setInformativeText("Do you want to restart now to apply the changes?")
-
-        # Add custom buttons
-        restart_btn = msg_box.addButton(
-            "Restart Now", QMessageBox.ButtonRole.AcceptRole
-        )
-        later_btn = msg_box.addButton("Later", QMessageBox.ButtonRole.RejectRole)
-        cancel_btn = msg_box.addButton("Cancel", QMessageBox.ButtonRole.DestructiveRole)
-
-        msg_box.setDefaultButton(restart_btn)
-
-        # Show dialog and handle response
-        msg_box.exec()
-        clicked = msg_box.clickedButton()
-
-        if clicked == restart_btn:
-            # Save the setting and restart
-            style_manager._store_legacy_setting(new_mode)
-            self.restart_application()
-        elif clicked == later_btn:
-            # Save the setting but don't restart yet
-            style_manager._store_legacy_setting(new_mode)
-            # Show info message
-            info_msg = QMessageBox(self)
-            info_msg.setWindowTitle("Setting Saved")
-            info_msg.setIcon(QMessageBox.Icon.Information)
-            info_msg.setText(f"The {mode_name} setting has been saved.")
-            info_msg.setInformativeText(
-                "The changes will take effect when you restart the application."
-            )
-            info_msg.exec()
-        else:
-            # Cancel - revert the checkbox state
-            self.legacy_gui_action.setChecked(current_mode)
-
     def restart_application(self):
         """Restart the application cleanly."""
-        from core.utils import restart_application
-
-        restart_application()
+        utils.restart_application()
