@@ -14,10 +14,10 @@ description = "Fast, fair, and modern tournament management. Open source and cro
 readme = "README.md"
 requires-python = ">= 3.8"
 license = "MIT"
-license-files = ["LICENSE", "license.rtf"]
+license-files = ["licenses/LICENSE", "licenses/license.rtf"]
 authors = [{name = "Chickaboo", email="support@chickaboo.net"}, {name="Nic"}]
 maintainers = [{name = "Chickaboo", email="support@chickaboo.net"}, {name="Nic"}]
-keywords = ["Gambit", "Open Source", "Pairing", "Chess"]
+keywords = ["Gambit", "Open", "Source", "Pairing", "Chess"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
