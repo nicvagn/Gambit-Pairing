@@ -14,36 +14,12 @@ from .dialogs import ManualPairDialog, ManualPairingDialog
 
 
 def get_icon(icon_name: str, fallback_theme_name: str = None) -> QtGui.QIcon:
-    """
-    Load an icon from the resources folder with fallback to theme icons.
-    
-    Args:
-        icon_name: Name of the icon file (without extension) in resources/icons/
-        fallback_theme_name: Fallback theme icon name if custom icon not found
-    
-    Returns:
-        QIcon object with the loaded icon or an empty icon if not found
-    """
-    # Get the correct base directory for the package
-    # Start from this file's directory and go up to find the resources folder
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Go up one level to gambitpairing package, then access resources
-    package_dir = os.path.dirname(current_dir)
-    icons_dir = os.path.join(package_dir, "resources", "icons")
-    
-    # Try SVG first, then PNG, then ICO
-    for ext in ['.svg', '.png', '.ico']:
-        icon_path = os.path.join(icons_dir, f"{icon_name}{ext}")
-        if os.path.exists(icon_path):
-            return QtGui.QIcon(icon_path)
-    
-    # Fallback to theme icon if available
+    """Load icon for print button."""
+    # Try theme icon first, then return empty icon if not found
     if fallback_theme_name:
         theme_icon = QtGui.QIcon.fromTheme(fallback_theme_name)
         if not theme_icon.isNull():
             return theme_icon
-    
-    # Return empty icon if nothing found
     return QtGui.QIcon()
 
 
@@ -146,8 +122,7 @@ class TournamentTab(QtWidgets.QWidget):
         header_layout.addStretch()
         
         # Edit Manual Pairings button (only shown for manual tournaments)
-        self.btn_edit_pairings = QtWidgets.QPushButton(" Edit All Pairings")
-        self.btn_edit_pairings.setIcon(get_icon("edit-pairs", "document-edit"))
+        self.btn_edit_pairings = QtWidgets.QPushButton("Edit Pairings")
         self.btn_edit_pairings.setToolTip("Open full pairing editor for this round")
         self.btn_edit_pairings.clicked.connect(self._edit_all_manual_pairings)
         apply_stylesheet(self.btn_edit_pairings, """
