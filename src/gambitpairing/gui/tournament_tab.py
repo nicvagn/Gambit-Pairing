@@ -514,7 +514,7 @@ class TournamentTab(QtWidgets.QWidget):
         
         # For manual pairing tournaments, offer option to edit all pairings
         if self.tournament.pairing_system == "manual":
-            edit_all_action = menu.addAction("Edit All Pairings...")
+            edit_all_action = menu.addAction("Edit Pairings...")
             menu.addSeparator()
         
         adjust_action = menu.addAction("Manually Adjust Pairing...")
