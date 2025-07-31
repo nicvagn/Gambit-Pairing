@@ -443,6 +443,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                     players=[],
                     num_rounds=num_rounds,
                     tiebreak_order=tiebreak_order,
+                    pairing_system=pairing_system,
                 )
                 # Store pairing_system as an attribute if needed:
                 self.pairing_system = pairing_system
@@ -634,8 +635,9 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         dialog = QDialog(self)
         dialog.setWindowTitle(f"About {APP_NAME}")
         layout = QVBoxLayout(dialog)
-        # Add about.webp image
-        image_path = resource_path("../resources/icons/about.webp")
+
+        # Load about.webp from resources/icons
+        image_path = resource_path(os.path.join("resources", "icons", "about.webp"))
         if os.path.exists(image_path):
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():

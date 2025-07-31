@@ -166,6 +166,43 @@ QPushButton[class="ResultSelectorButton"]:disabled {
     border-color: #f3f4f6;
 }
 
+/* --- Quick Edit Button --- */
+QPushButton[class="QuickEditButton"] {
+    background: #fff;
+    color: #111;
+    border: 1.5px solid #111;
+    border-radius: 7px;
+    padding: 5px 10px;
+    font-weight: 600;
+    font-size: 10pt;
+    outline: none;
+    min-height: 32px;
+    max-height: 32px;
+    min-width: 100px;
+    max-width: 100px;
+}
+QPushButton[class="QuickEditButton"]:hover {
+    background: #f5e9da;
+    color: #111;
+    border: 1.5px solid #111;
+}
+QPushButton[class="QuickEditButton"]:pressed {
+    background: #111;
+    color: #fff;
+    border: 1.5px solid #111;
+}
+QPushButton[class="QuickEditButton"]:checked {
+    background-color: #ffc107;
+    color: #212529;
+    border: 1.5px solid #e0a800;
+    font-weight: 700;
+}
+QPushButton[class="QuickEditButton"]:disabled {
+    background: #e5e7eb;
+    color: #a1a7b3;
+    border: 1.5px solid #e5e7eb;
+}
+
 /* Table Headers */
 QHeaderView::section {
     background: #f3f7fc;

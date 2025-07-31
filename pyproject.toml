@@ -42,5 +42,7 @@ gambit-pairing = "gambitpairing:main"
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-gambitpairing = ["resources/*.qss", "resources/icons/*.png", "resources/icons/*.ico"
+gambitpairing = [
+  "resources/*.qss",
+  "resources/icons/*",
 ]

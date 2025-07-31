@@ -91,6 +91,16 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
   - Modern dialogs for update prompts and progress.
   - Automatic and manual update checks.
 
+
+## Documentation
+
+- [Program Structure](docs/program-structure.md)
+- [Installation Guide](docs/installing.md)
+- [Running Without Install](docs/running-no-install.md)
+- [Building a Wheel](docs/building-wheel.md)
+- [Developer Hacking Guide](docs/HACKING.md)
+- [Manual Pairing Guide](docs/manual-pairing-guide.md)
+
 ## Requirements
 > see pyproject.toml
 ie:
