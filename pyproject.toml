@@ -43,11 +43,5 @@ package-dir = {"" = "src"}
 [tool.setuptools.package-data]
 gambitpairing = [
   "resources/*.qss",
-  "resources/icons/*.png",
-  "resources/icons/*.ico",
-  "resources/icons/about.webp"
-  "resources/icons/arrow-down.svg"
-  "resources/icons/arrow-up.svg"
-  "resources/icons/checkmark-white.svg"
-
+  "resources/icons/*",
 ]
