@@ -46,4 +46,8 @@ gambitpairing = [
   "resources/icons/*.png",
   "resources/icons/*.ico",
   "resources/icons/about.webp"
+  "resources/icons/arrow-down.svg"
+  "resources/icons/arrow-up.svg"
+  "resources/icons/checkmark-white.svg"
+
 ]
