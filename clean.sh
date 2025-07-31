@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(dirname "$0")
 
-echo $SCRIPT_DIR
+echo "script dir: $SCRIPT_DIR"
 rm -rf $SCRIPT_DIR/built/*
 rm -rf $SCRIPT_DIR/dist/*
 
