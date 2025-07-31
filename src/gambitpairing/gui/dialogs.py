@@ -1,9 +1,15 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QDockWidget
+from PyQt6.QtGui import QIcon
 from typing import List, Optional, Tuple, Dict, Any
+import json
 from gambitpairing.core.player import Player
 from gambitpairing.core.constants import TIEBREAK_NAMES, DEFAULT_TIEBREAK_SORT_ORDER
 from gambitpairing.core.utils import apply_stylesheet
+
+# Import the optimized ManualPairingDialog from separate module
+from .manual_pairing_dialog import ManualPairingDialog
 
 # --- GUI Dialogs ---
 # (No changes to PlayerEditDialog, PlayerDetailDialog, SettingsDialog, ManualPairDialog unless behaviorally impacted by core changes)
@@ -62,6 +68,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.pairing_combo = QtWidgets.QComboBox()
         self.pairing_combo.addItem("Dutch System (FIDE/USCF-style)", "dutch_swiss")
         self.pairing_combo.addItem("Round Robin (All-Play-All)", "round_robin")
+        self.pairing_combo.addItem("Manual Pairing", "manual")
         self.pairing_combo.setToolTip("Select the pairing system for this tournament.")
         pairing_layout.addWidget(self.pairing_combo)
         info_btn = QtWidgets.QPushButton("About Pairing Systems")
@@ -136,6 +143,13 @@ class NewTournamentDialog(QtWidgets.QDialog):
                 "fide": True,
                 "uscf": True,
                 "details": "<ul><li><b>Pairing Logic:</b> All-play-all, each player faces every other once.</li><li><b>Best For:</b> Small groups, title norm events, club championships.</li><li><b>Notes:</b> Number of rounds = number of players - 1.</li></ul>",
+            },
+            "manual": {
+                "title": "Manual Pairing",
+                "desc": "Complete manual control over all pairings. Tournament director creates all pairings by hand for each round.",
+                "fide": False,
+                "uscf": False,
+                "details": "<ul><li><b>Pairing Logic:</b> No automatic pairing. TD manually creates all matches each round.</li><li><b>Best For:</b> Special events, demonstration games, custom formats.</li><li><b>Features:</b> Full pairing editor with drag-and-drop, player pool, edit mode for swapping players.</li><li><b>Notes:</b> Maximum flexibility but requires manual work for every round.</li></ul>",
             },
         }
         # Modern dialog with sidebar

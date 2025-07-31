@@ -443,6 +443,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                     players=[],
                     num_rounds=num_rounds,
                     tiebreak_order=tiebreak_order,
+                    pairing_system=pairing_system,
                 )
                 # Store pairing_system as an attribute if needed:
                 self.pairing_system = pairing_system
