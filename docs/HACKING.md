@@ -27,5 +27,8 @@
     ```bash
     $ pip install --editable .
     ```
+    >A helper script in the git root called "install_editable_pip.sh" should automate this.
 
-Then load the tournament defined in /test_data/tournaments/test_32_players***
+# Then
+
+load the tournament defined in /test_data/tournaments/test_32_players***

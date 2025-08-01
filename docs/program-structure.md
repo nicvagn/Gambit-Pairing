@@ -1,11 +1,12 @@
 # Program structure of Gambit-Pairing
 
-- uses a src  layout, see:
-https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/#src-layout-vs-flat-layout
+- uses a src layout, see:
+  https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/#src-layout-vs-flat-layout
 
 # in the gambitpairing module:
 
-## app.py -- entry point
+## **main**.py -- entry point
+
 - Creates the main window. Handles various OS'.
 - `from gui.mainwindow import SwissTournamentApp` imports app
 
@@ -23,15 +24,16 @@ https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/#sr
 
 # core module -- contains the business logic
 
-## utils.py  -- logging and utility functions
+## utils.py -- logging and utility functions
 
-## updater.py --  Handles checking for and applying application updates from GitHub Releases.
+## updater.py -- Handles checking for and applying application updates from GitHub Releases.
 
-## player.py --  Represents a player in the tournament.
+## player.py -- Represents a player in the tournament.
 
 `class Player:`
 
 ## tournament.py -- Manages the tournament state, pairings, results, and tiebreakers.
+
 `class Tournament:`
 
 ## constants.py -- what you think
