@@ -11,5 +11,5 @@
 - install all the pip dependancies
 - from git root
 ``` bash
-bash build.sh
+pip install .
 ```
