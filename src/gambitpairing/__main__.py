@@ -12,15 +12,23 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def main():
     """Entry point"""
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
     exit_code = run_app()
     logging.info("run_app() exeted with code: %s", exit_code)
     sys.exit(exit_code)
 
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
 def get_icon_path():
-    icon_folder = os.path.join(BASE_DIR, "resources", "icons")
+    """Get the icon path. Works with PyInstaller and src tree"""
+    icon_folder = resource_path(os.path.join("resources", "icons"))
     ico_path = os.path.join(icon_folder, "icon.ico")
     png_path = os.path.join(icon_folder, "icon.png")
     if os.path.exists(ico_path):
