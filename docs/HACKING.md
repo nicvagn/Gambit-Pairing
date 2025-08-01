@@ -1,18 +1,21 @@
 # HACKING.md
 
 # to build:
-- requires on path:
-    - bash
-    - pip or pip3 (if so replace pip with pip3)
-    - python3.8 or newer
 
-    test building with `bash ./build.sh`
+- requires on path:
+
+  - bash
+  - pip or pip3 (if so replace pip with pip3)
+  - python3.8 or newer
+
+  test building with `python3 -m build .`
 
 # recommendations for developers:
+
     1. Install in a virtual environment
     IE:
     ```bash
-    $ cd your-python-project
+    $ cd Gambit-Pairing
     $ python -m venv .venv
     ```
 
@@ -25,4 +28,4 @@
     $ pip install --editable .
     ```
 
-Then load the tournament defined in /test_data/tournaments/test_32_player***
+Then load the tournament defined in /test_data/tournaments/test_32_players***

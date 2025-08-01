@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(dirname "$0")
 
-echo "script dir: $SCRIPT_DIR"
+echo "cleaning: $SCRIPT_DIR"
 rm -rf $SCRIPT_DIR/built/*
 rm -rf $SCRIPT_DIR/dist/*
 
