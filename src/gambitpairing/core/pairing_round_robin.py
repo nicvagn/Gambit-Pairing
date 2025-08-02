@@ -3,7 +3,6 @@ from collections.abc import Iterable
 from gambitpairing.core import Pairings, Players  # These are types
 from gambitpairing.core.utils import root_logger
 from gambitpairing.core.player import Player
-from gambitpairing.core.constants import W, B
 from gambitpairing.core.exceptions import PairingException
 
 
@@ -274,7 +273,14 @@ class RoundRobin:
                 )
             )
         bt = self.b_table[round_number]
-        print(bt)
+
+        root_logger.info(
+            "Berger table for round (%s): \n %s \n |----| \n", round_number, bt
+        )
+        n = 1
+        for p in self.players:
+            root_logger.info("%s: %s", n, p)
+            n = n + 1
         breakpoint()
 
     def get_round_pairings(self, rnd: int) -> Pairings:
