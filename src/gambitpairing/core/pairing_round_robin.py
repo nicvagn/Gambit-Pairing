@@ -207,7 +207,7 @@ class RoundRobin:
         # n_players is < 16 and > 3, so this will set the Berger table
         # to the correct val by starting from the top and decending
         if n_players > 14:
-            self.b_table = BERGER_TABLES["16-15"]
+            self.b_table = BERGER_TABLES["15-16"]
             root_logger.info("round robin created for 15-16 players")
         elif n_players > 12:
             self.b_table = BERGER_TABLES["13-14"]
