@@ -33,6 +33,7 @@ Issues = "https://github.com/Chickaboo/gambit-pairing/issues"
 dev = [
   "build",
   "pyinstaller",
+  "black",
 ]
 
 [project.gui-scripts]
