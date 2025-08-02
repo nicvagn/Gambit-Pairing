@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets, QtCore, QtGui
+from PyQt6 import QtWidgets, QtCore
 from core.utils import apply_stylesheet
 
 def show_notification(parent, message: str, duration: int = 1500):

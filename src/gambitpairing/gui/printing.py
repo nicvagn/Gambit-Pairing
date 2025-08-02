@@ -1,13 +1,18 @@
 from pyQT import QtWidgets, QPrinter, QPrintPreviewDialog, QtGui
 
+
 def print_pairings(self):
-        """Print the current round's pairings table in a clean, ink-friendly, professional format (no input widgets)."""
-        if self.table_pairings.rowCount() == 0:
-            QtWidgets.QMessageBox.information(self, "Print Pairings", "No pairings to print.")
-            return
-        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
-preview.setWindowTitle("Print Preview - Pairings")
+    """Print the current round's pairings table in a clean, ink-friendly, professional format (no input widgets)."""
+    if self.table_pairings.rowCount() == 0:
+        QtWidgets.QMessageBox.information(
+            self, "Print Pairings", "No pairings to print."
+        )
+        return
+    printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+    preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
+    preview.setWindowTitle("Print Preview - Pairings")
+
+
 def render_preview(printer_obj):
     doc = QtGui.QTextDocument()
     round_title = self.round_group.title() if hasattr(self, "round_group") else ""
@@ -87,7 +92,11 @@ def render_preview(printer_obj):
                 <td>{black}</td>
             </tr>
         """
-    if self.lbl_bye.isVisible() and self.lbl_bye.text() and self.lbl_bye.text() != "Bye: None":
+    if (
+        self.lbl_bye.isVisible()
+        and self.lbl_bye.text()
+        and self.lbl_bye.text() != "Bye: None"
+    ):
         html += f"""
         <tr class="bye-row">
             <td colspan="3">{self.lbl_bye.text()}</td>
@@ -103,26 +112,32 @@ def render_preview(printer_obj):
     """
     doc.setHtml(html)
     doc.print(printer_obj)
+
+
 preview.paintRequested.connect(render_preview)
 preview.exec()
 
+
 def print_standings(self):
-        """Print the current standings table in a clean, ink-friendly, professional format with a polished legend."""
-        if self.table_standings.rowCount() == 0:
-            QtWidgets.QMessageBox.information(self, "Print Standings", "No standings to print.")
-            return
-        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-        preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
-        preview.setWindowTitle("Print Preview - Standings")
-        def render_preview(printer_obj):
-            doc = QtGui.QTextDocument()
-            tb_keys = []
-            tb_legend = []
-            for i, tb_key in enumerate(self.tournament.tiebreak_order):
-                short = f"TB{i+1}"
-                tb_keys.append(short)
-                tb_legend.append((short, TIEBREAK_NAMES.get(tb_key, tb_key.title())))
-            html = f"""
+    """Print the current standings table in a clean, ink-friendly, professional format with a polished legend."""
+    if self.table_standings.rowCount() == 0:
+        QtWidgets.QMessageBox.information(
+            self, "Print Standings", "No standings to print."
+        )
+        return
+    printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+    preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
+    preview.setWindowTitle("Print Preview - Standings")
+
+    def render_preview(printer_obj):
+        doc = QtGui.QTextDocument()
+        tb_keys = []
+        tb_legend = []
+        for i, tb_key in enumerate(self.tournament.tiebreak_order):
+            short = f"TB{i+1}"
+            tb_keys.append(short)
+            tb_legend.append((short, TIEBREAK_NAMES.get(tb_key, tb_key.title())))
+        html = f"""
             <html>
             <head>
                 <style>
@@ -204,9 +219,9 @@ def print_standings(self):
                     <span class="legend-title">Tiebreaker Legend</span>
                     <table class="legend-table">
             """
-            for short, name in tb_legend:
-                html += f"<tr><td><b>{short}</b></td><td>{name}</td></tr>"
-            html += """
+        for short, name in tb_legend:
+            html += f"<tr><td><b>{short}</b></td><td>{name}</td></tr>"
+        html += """
                     </table>
                 </div>
                 <table class="standings">
@@ -215,22 +230,22 @@ def print_standings(self):
                         <th style="width:32%;">Player</th>
                         <th style="width:10%;">Score</th>
             """
-            for short in tb_keys:
-                html += f'<th style="width:7%;">{short}</th>'
+        for short in tb_keys:
+            html += f'<th style="width:7%;">{short}</th>'
+        html += "</tr>"
+        # --- Table Rows ---
+        for row in range(self.table_standings.rowCount()):
+            html += "<tr>"
+            for col in range(self.table_standings.columnCount()):
+                item = self.table_standings.item(row, col)
+                cell = item.text() if item else ""
+                # Rank and Score columns bold
+                if col == 0 or col == 2:
+                    html += f'<td style="font-weight:bold;">{cell}</td>'
+                else:
+                    html += f"<td>{cell}</td>"
             html += "</tr>"
-            # --- Table Rows ---
-            for row in range(self.table_standings.rowCount()):
-                html += "<tr>"
-                for col in range(self.table_standings.columnCount()):
-                    item = self.table_standings.item(row, col)
-                    cell = item.text() if item else ""
-                    # Rank and Score columns bold
-                    if col == 0 or col == 2:
-                        html += f'<td style="font-weight:bold;">{cell}</td>'
-                    else:
-                        html += f"<td>{cell}</td>"
-                html += "</tr>"
-            html += f"""
+        html += f"""
                 </table>
                 <div class="footer">
                     Printed by Gambit Pairing &mdash; {QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm")}
@@ -238,7 +253,8 @@ def print_standings(self):
             </body>
             </html>
             """
-            doc.setHtml(html)
-            doc.print(printer_obj)
-        preview.paintRequested.connect(render_preview)
-        preview.exec()
+        doc.setHtml(html)
+        doc.print(printer_obj)
+
+    preview.paintRequested.connect(render_preview)
+    preview.exec()

@@ -1,9 +1,6 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QDockWidget
-from PyQt6.QtGui import QIcon
 from typing import List, Optional, Tuple, Dict, Any
-import json
 from gambitpairing.core.player import Player
 from gambitpairing.core.constants import TIEBREAK_NAMES, DEFAULT_TIEBREAK_SORT_ORDER
 from gambitpairing.core.utils import apply_stylesheet
