@@ -102,27 +102,18 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 - [Manual Pairing Guide](docs/manual-pairing-guide.md)
 
 ## Requirements
-> see pyproject.toml
-ie:
+To install with pip, there is a helper sh script, ensure-all-dependancies.sh
 
-``` toml
-[project]
-name = "gambit-pairing"
-version = "x.x.xxx"
-dependencies = [ HERE ]
-```
+it will parse the pyproject.toml and install all the runtime and development dependancies.
 
 ## Usage
 
 1. Run the application:
-   from src directory (after dependancies are installed):
     ```bash
-    python ./gambitparing
+    ./install_editable_pip.sh
     ```
-    or if installed:
-    ```bash
-    gambit-pairing
-    ```
+    the script will tell you the rest
+
 2. **Create or Load a Tournament:**
     - Use "File > New Tournament..." or "File > Load Tournament..." to start.
     - Configure rounds and tiebreaks in "Settings".
