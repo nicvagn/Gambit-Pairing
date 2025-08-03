@@ -159,6 +159,8 @@ This project is open source and available under the [MIT License](https://mit-li
 
 > _Below are some example screenshots of Gambit Pairing in action._
 
+**About Dialog**
+![About Dialog](docs/screenshots/app.png)
 
 **Tournament Control Tab**
 ![Main Tournament Control](docs/screenshots/tournament.png)
@@ -178,14 +180,5 @@ This project is open source and available under the [MIT License](https://mit-li
 **Print Dialog**
 ![Print Dialog](docs/screenshots/print_dialog.png)
 
-**About Dialog**
-![About Dialog](docs/screenshots/app.png)
-
 **Manual Pairing Dialog**
 ![Manual Pairing Dialog](docs/screenshots/manual.png)
-
-**Tournament Pairings & Results**
-![Tournament Pairings & Results](docs/screenshots/tournament.png)
-
-**Print Preview Standings**
-![Print Preview Standings](docs/screenshots/standings.png)
