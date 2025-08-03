@@ -183,20 +183,40 @@ class TournamentTab(QtWidgets.QWidget):
         if not self.tournament:
             QtWidgets.QMessageBox.warning(self, "Start Error", "No tournament loaded.")
             return
-        if len(self.tournament.players) < 2:
-            QtWidgets.QMessageBox.warning(self, "Start Error", "Add at least two players.")
-            return
-        # New minimum players check based on the number of rounds
-        min_players = 2 ** self.tournament.num_rounds
-        if len(self.tournament.players) < min_players:
-            reply = QtWidgets.QMessageBox.warning(
-                self,
-                "Insufficient Players",
-                f"For a {self.tournament.num_rounds}-round tournament, a minimum of {min_players} players is recommended. The tournament may not work properly. Do you want to continue anyway?",
-                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
-                QtWidgets.QMessageBox.StandardButton.No
-            )
-            if reply == QtWidgets.QMessageBox.StandardButton.No:
+        pairing_system = getattr(self.tournament, "pairing_system", "dutch_swiss")
+        num_players = len(self.tournament.players)
+        # Minimum player checks for each system
+        if pairing_system == "round_robin":
+            if num_players < 3:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error",
+                    "Round Robin tournaments require at least three players.")
+                return
+        elif pairing_system == "dutch_swiss":
+            if num_players < 2:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error",
+                    "FIDE Dutch Swiss tournaments require at least two players.")
+                return
+            min_players = 2 ** self.tournament.num_rounds
+            if num_players < min_players:
+                reply = QtWidgets.QMessageBox.warning(
+                    self,
+                    "Insufficient Players",
+                    f"For a {self.tournament.num_rounds}-round FIDE Dutch Swiss tournament, a minimum of {min_players} players is recommended. The tournament may not work properly. Do you want to continue anyway?",
+                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+                    QtWidgets.QMessageBox.StandardButton.No
+                )
+                if reply == QtWidgets.QMessageBox.StandardButton.No:
+                    return
+        elif pairing_system == "manual":
+            if num_players < 2:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error",
+                    "Manual pairing tournaments require at least two players.")
                 return
         reply = QtWidgets.QMessageBox.question(
             self,
