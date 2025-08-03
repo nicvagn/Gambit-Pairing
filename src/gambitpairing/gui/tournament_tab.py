@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import List, Optional, Tuple
 
 from gambitpairing.core.constants import (BYE_SCORE, DRAW_SCORE, LOSS_SCORE,
@@ -120,7 +119,7 @@ class TournamentTab(QtWidgets.QWidget):
         self.lbl_round_title.setFont(font)
         header_layout.addWidget(self.lbl_round_title)
         header_layout.addStretch()
-        
+
         # Edit Manual Pairings button (only shown for manual tournaments)
         self.btn_edit_pairings = QtWidgets.QPushButton("Edit Pairings")
         self.btn_edit_pairings.setToolTip("Open full pairing editor for this round")
@@ -134,7 +133,7 @@ class TournamentTab(QtWidgets.QWidget):
         """)
         header_layout.addWidget(self.btn_edit_pairings)
         self.btn_edit_pairings.hide()  # Hidden by default, shown only for manual tournaments
-        
+
         self.btn_print_pairings = QtWidgets.QPushButton(" Print Pairings")
         self.btn_print_pairings.setIcon(get_icon("export", "document-print"))
         self.btn_print_pairings.setToolTip("Print the current round\'s pairings")
@@ -244,12 +243,12 @@ class TournamentTab(QtWidgets.QWidget):
 
 
         display_round_number = self.current_round_index + 1
-        
+
         # Check if this is a manual pairing tournament
         if self.tournament.pairing_system == "manual":
             self._handle_manual_pairing_round(display_round_number, self.current_round_index)
             return
-        
+
         self.status_message.emit(f"Generating pairings for Round {display_round_number}...")
         QtWidgets.QApplication.processEvents()
 
@@ -339,12 +338,12 @@ class TournamentTab(QtWidgets.QWidget):
 
 
         display_round_number = self.current_round_index + 1
-        
+
         # Check if this is a manual pairing tournament
         if self.tournament.pairing_system == "manual":
             self._handle_manual_pairing_round(display_round_number, round_to_prepare_idx)
             return
-        
+
         self.status_message.emit(f"Generating pairings for Round {display_round_number}...")
         QtWidgets.QApplication.processEvents()
 
@@ -486,12 +485,12 @@ class TournamentTab(QtWidgets.QWidget):
         black_id = result_selector.property("black_id")
 
         menu = QtWidgets.QMenu(self)
-        
+
         # For manual pairing tournaments, offer option to edit all pairings
         if self.tournament.pairing_system == "manual":
             edit_all_action = menu.addAction("Edit Pairings...")
             menu.addSeparator()
-        
+
         adjust_action = menu.addAction("Manually Adjust Pairing...")
 
         # Only allow adjustment for the current round before results are recorded
@@ -865,9 +864,9 @@ class TournamentTab(QtWidgets.QWidget):
         # Show/hide edit pairings buttons for manual tournaments
         if tournament_exists and self.tournament.pairing_system == "manual":
             self.btn_edit_pairings.show()
-            
+
             # Enable only if there are pairings to edit and results haven't been recorded
-            has_pairings = (self.current_round_index < len(self.tournament.rounds_pairings_ids) and 
+            has_pairings = (self.current_round_index < len(self.tournament.rounds_pairings_ids) and
                           len(self.tournament.rounds_pairings_ids[self.current_round_index]) > 0)
             self.btn_edit_pairings.setEnabled(has_pairings and can_record)
         else:
@@ -887,41 +886,41 @@ class TournamentTab(QtWidgets.QWidget):
         # Get existing pairings if they exist
         existing_pairings = None
         existing_bye = None
-        
+
         if round_to_prepare_idx < len(self.tournament.rounds_pairings_ids):
             # Load existing pairings
             pairings_ids = self.tournament.rounds_pairings_ids[round_to_prepare_idx]
             bye_id = self.tournament.rounds_byes_ids[round_to_prepare_idx]
-            
+
             existing_pairings = []
             for w_id, b_id in pairings_ids:
                 w = self.tournament.players.get(w_id)
                 b = self.tournament.players.get(b_id)
                 if w and b:
                     existing_pairings.append((w, b))
-                    
+
             existing_bye = self.tournament.players.get(bye_id) if bye_id else None
-        
+
         # Open the manual pairing dialog
         active_players = [p for p in self.tournament.players.values() if p.is_active]
-        
+
         dialog = ManualPairingDialog(
-            active_players, 
-            existing_pairings, 
-            existing_bye, 
-            display_round_number, 
+            active_players,
+            existing_pairings,
+            existing_bye,
+            display_round_number,
             self,
             self.tournament
         )
-        
+
         if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             pairings, bye_player = dialog.get_pairings_and_bye()
-            
+
             # Set the manual pairings in the tournament
             if self.tournament.set_manual_pairings(round_to_prepare_idx, pairings, bye_player):
                 self.lbl_round_title.setText(f"Round {display_round_number} Pairings & Results")
                 self.display_pairings_for_input(pairings, bye_player)
-                
+
                 # Log the pairings
                 self.history_message.emit(f"--- Round {display_round_number} Manual Pairings Set ---")
                 for i, (white, black) in enumerate(pairings, 1):
@@ -929,57 +928,57 @@ class TournamentTab(QtWidgets.QWidget):
                 if bye_player:
                     self.history_message.emit(f"  Bye: {bye_player.name}")
                 self.history_message.emit("-" * 20)
-                
+
                 self.dirty.emit()
                 self.status_message.emit(f"Round {display_round_number} manual pairings set. Enter results.")
             else:
                 QtWidgets.QMessageBox.critical(self, "Error", "Failed to set manual pairings.")
-        
+
         self.update_ui_state()
 
     def _edit_all_manual_pairings(self):
         """Open the manual pairing dialog to edit all pairings for the current round."""
         if not self.tournament or self.tournament.pairing_system != "manual":
             return
-            
+
         display_round_number = self.current_round_index + 1
-        
+
         # Get existing pairings
         existing_pairings = None
         existing_bye = None
-        
+
         if self.current_round_index < len(self.tournament.rounds_pairings_ids):
             pairings_ids = self.tournament.rounds_pairings_ids[self.current_round_index]
             bye_id = self.tournament.rounds_byes_ids[self.current_round_index]
-            
+
             existing_pairings = []
             for w_id, b_id in pairings_ids:
                 w = self.tournament.players.get(w_id)
                 b = self.tournament.players.get(b_id)
                 if w and b:
                     existing_pairings.append((w, b))
-                    
+
             existing_bye = self.tournament.players.get(bye_id) if bye_id else None
-        
+
         # Open the manual pairing dialog
         active_players = [p for p in self.tournament.players.values() if p.is_active]
-        
+
         dialog = ManualPairingDialog(
-            active_players, 
-            existing_pairings, 
-            existing_bye, 
-            display_round_number, 
+            active_players,
+            existing_pairings,
+            existing_bye,
+            display_round_number,
             self,
             self.tournament
         )
-        
+
         if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
             pairings, bye_player = dialog.get_pairings_and_bye()
-            
+
             # Set the manual pairings in the tournament
             if self.tournament.set_manual_pairings(self.current_round_index, pairings, bye_player):
                 self.display_pairings_for_input(pairings, bye_player)
-                
+
                 # Log the updated pairings
                 self.history_message.emit(f"--- Round {display_round_number} Manual Pairings Updated ---")
                 for i, (white, black) in enumerate(pairings, 1):
@@ -987,12 +986,10 @@ class TournamentTab(QtWidgets.QWidget):
                 if bye_player:
                     self.history_message.emit(f"  Bye: {bye_player.name}")
                 self.history_message.emit("-" * 20)
-                
+
                 self.dirty.emit()
                 self.status_message.emit(f"Round {display_round_number} pairings updated.")
             else:
                 QtWidgets.QMessageBox.critical(self, "Error", "Failed to update manual pairings.")
-        
+
         self.update_ui_state()
-
-
