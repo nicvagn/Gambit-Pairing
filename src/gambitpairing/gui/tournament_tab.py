@@ -120,10 +120,10 @@ class TournamentTab(QtWidgets.QWidget):
         header_layout.addWidget(self.lbl_round_title)
         header_layout.addStretch()
 
-        # Edit Manual Pairings button (only shown for manual tournaments)
+        # Edit Pairings button (available for all pairing systems)
         self.btn_edit_pairings = QtWidgets.QPushButton("Edit Pairings")
         self.btn_edit_pairings.setToolTip("Open full pairing editor for this round")
-        self.btn_edit_pairings.clicked.connect(self._edit_all_manual_pairings)
+        self.btn_edit_pairings.clicked.connect(self._edit_all_pairings)
         apply_stylesheet(self.btn_edit_pairings, """
             min-height: 32px;
             max-height: 32px;
@@ -132,7 +132,7 @@ class TournamentTab(QtWidgets.QWidget):
             font-weight: 600;
         """)
         header_layout.addWidget(self.btn_edit_pairings)
-        self.btn_edit_pairings.hide()  # Hidden by default, shown only for manual tournaments
+        self.btn_edit_pairings.hide()  # Hidden by default, shown when pairings exist
 
         self.btn_print_pairings = QtWidgets.QPushButton(" Print Pairings")
         self.btn_print_pairings.setIcon(get_icon("export", "document-print"))
@@ -183,40 +183,20 @@ class TournamentTab(QtWidgets.QWidget):
         if not self.tournament:
             QtWidgets.QMessageBox.warning(self, "Start Error", "No tournament loaded.")
             return
-        pairing_system = getattr(self.tournament, "pairing_system", "dutch_swiss")
-        num_players = len(self.tournament.players)
-        # Minimum player checks for each system
-        if pairing_system == "round_robin":
-            if num_players < 3:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Start Error",
-                    "Round Robin tournaments require at least three players.")
-                return
-        elif pairing_system == "dutch_swiss":
-            if num_players < 2:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Start Error",
-                    "FIDE Dutch Swiss tournaments require at least two players.")
-                return
-            min_players = 2 ** self.tournament.num_rounds
-            if num_players < min_players:
-                reply = QtWidgets.QMessageBox.warning(
-                    self,
-                    "Insufficient Players",
-                    f"For a {self.tournament.num_rounds}-round FIDE Dutch Swiss tournament, a minimum of {min_players} players is recommended. The tournament may not work properly. Do you want to continue anyway?",
-                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
-                    QtWidgets.QMessageBox.StandardButton.No
-                )
-                if reply == QtWidgets.QMessageBox.StandardButton.No:
-                    return
-        elif pairing_system == "manual":
-            if num_players < 2:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Start Error",
-                    "Manual pairing tournaments require at least two players.")
+        if len(self.tournament.players) < 2:
+            QtWidgets.QMessageBox.warning(self, "Start Error", "Add at least two players.")
+            return
+        # New minimum players check based on the number of rounds
+        min_players = 2 ** self.tournament.num_rounds
+        if len(self.tournament.players) < min_players:
+            reply = QtWidgets.QMessageBox.warning(
+                self,
+                "Insufficient Players",
+                f"For a {self.tournament.num_rounds}-round tournament, a minimum of {min_players} players is recommended. The tournament may not work properly. Do you want to continue anyway?",
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+                QtWidgets.QMessageBox.StandardButton.No
+            )
+            if reply == QtWidgets.QMessageBox.StandardButton.No:
                 return
         reply = QtWidgets.QMessageBox.question(
             self,
@@ -506,22 +486,22 @@ class TournamentTab(QtWidgets.QWidget):
 
         menu = QtWidgets.QMenu(self)
 
-        # For manual pairing tournaments, offer option to edit all pairings
-        if self.tournament.pairing_system == "manual":
-            edit_all_action = menu.addAction("Edit Pairings...")
-            menu.addSeparator()
+        # Offer option to edit all pairings for all tournaments
+        edit_all_action = menu.addAction("Edit Pairings...")
+        menu.addSeparator()
 
         adjust_action = menu.addAction("Manually Adjust Pairing...")
 
         # Only allow adjustment for the current round before results are recorded
         can_adjust = self.current_round_index < len(self.tournament.rounds_pairings_ids)
         adjust_action.setEnabled(can_adjust)
+        edit_all_action.setEnabled(can_adjust)
 
         # Use exec() which returns the triggered action
         action = menu.exec(self.table_pairings.viewport().mapToGlobal(pos))
 
-        if self.tournament.pairing_system == "manual" and action == edit_all_action:
-            self._edit_all_manual_pairings()
+        if action == edit_all_action:
+            self._edit_all_pairings()
         elif action == adjust_action:
             self.prompt_manual_adjust(white_id, black_id)
 
@@ -881,14 +861,18 @@ class TournamentTab(QtWidgets.QWidget):
 
         print(f"[DEBUG] can_start={can_start}, can_prepare={can_prepare}, can_record={can_record}, can_undo={can_undo}")
 
-        # Show/hide edit pairings buttons for manual tournaments
-        if tournament_exists and self.tournament.pairing_system == "manual":
-            self.btn_edit_pairings.show()
-
-            # Enable only if there are pairings to edit and results haven't been recorded
+        # Show/hide edit pairings button for all tournaments with pairings
+        if tournament_exists:
+            # Check if there are pairings to edit
             has_pairings = (self.current_round_index < len(self.tournament.rounds_pairings_ids) and
                           len(self.tournament.rounds_pairings_ids[self.current_round_index]) > 0)
-            self.btn_edit_pairings.setEnabled(has_pairings and can_record)
+            
+            if has_pairings:
+                self.btn_edit_pairings.show()
+                # Enable only if results haven't been recorded for this round
+                self.btn_edit_pairings.setEnabled(can_record)
+            else:
+                self.btn_edit_pairings.hide()
         else:
             self.btn_edit_pairings.hide()
 
@@ -956,9 +940,9 @@ class TournamentTab(QtWidgets.QWidget):
 
         self.update_ui_state()
 
-    def _edit_all_manual_pairings(self):
+    def _edit_all_pairings(self):
         """Open the manual pairing dialog to edit all pairings for the current round."""
-        if not self.tournament or self.tournament.pairing_system != "manual":
+        if not self.tournament:
             return
 
         display_round_number = self.current_round_index + 1
@@ -1000,7 +984,8 @@ class TournamentTab(QtWidgets.QWidget):
                 self.display_pairings_for_input(pairings, bye_player)
 
                 # Log the updated pairings
-                self.history_message.emit(f"--- Round {display_round_number} Manual Pairings Updated ---")
+                pairing_type = "Manual" if self.tournament.pairing_system == "manual" else "Edited"
+                self.history_message.emit(f"--- Round {display_round_number} {pairing_type} Pairings Updated ---")
                 for i, (white, black) in enumerate(pairings, 1):
                     self.history_message.emit(f"  Board {i}: {white.name} (W) vs {black.name} (B)")
                 if bye_player:
@@ -1010,6 +995,6 @@ class TournamentTab(QtWidgets.QWidget):
                 self.dirty.emit()
                 self.status_message.emit(f"Round {display_round_number} pairings updated.")
             else:
-                QtWidgets.QMessageBox.critical(self, "Error", "Failed to update manual pairings.")
+                QtWidgets.QMessageBox.critical(self, "Error", "Failed to update pairings.")
 
         self.update_ui_state()
