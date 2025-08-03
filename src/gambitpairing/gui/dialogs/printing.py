@@ -1,4 +1,5 @@
-from pyQT import QtWidgets, QPrinter, QPrintPreviewDialog, QtGui
+from PyQt6 import QtWidgets, QtGui
+from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 
 def print_pairings(self):
         """Print the current round's pairings table in a clean, ink-friendly, professional format (no input widgets)."""

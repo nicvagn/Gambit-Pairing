@@ -11,14 +11,12 @@ from gambitpairing.core.tournament import Tournament
 from gambitpairing.core.constants import APP_NAME, APP_VERSION
 from gambitpairing.core import utils
 
-from .dialogs import SettingsDialog, NewTournamentDialog
+from .dialogs import SettingsDialog, NewTournamentDialog, UpdateDownloadDialog, UpdatePromptDialog
 from .players_tab import PlayersTab
 from .tournament_tab import TournamentTab
 from .standings_tab import StandingsTab
 from .crosstable_tab import CrosstableTab
 from .history_tab import HistoryTab
-from .update_dialog import UpdateDownloadDialog
-from .update_prompt_dialog import UpdatePromptDialog
 from .update_worker import UpdateWorker
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
 from PyQt6.QtGui import QPixmap

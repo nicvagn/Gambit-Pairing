@@ -6,8 +6,8 @@ from PyQt6.QtCore import Qt, QMimeData
 from PyQt6.QtGui import QDrag
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QDockWidget
 
-from ..core.player import Player
-from ..core.pairing_dutch_swiss import create_dutch_swiss_pairings
+from gambitpairing.core.player import Player
+from gambitpairing.core.pairing_dutch_swiss import create_dutch_swiss_pairings
 
 
 class DraggableListWidget(QtWidgets.QListWidget):
