@@ -9,9 +9,21 @@ class StandingsTab(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.tournament = None
+        self.parent_window = parent  # Store reference to main window
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.standings_group = QtWidgets.QGroupBox("Standings")
         standings_layout = QtWidgets.QVBoxLayout(self.standings_group)
+        
+        # Add round info label
+        self.lbl_round_info = QtWidgets.QLabel("")
+        self.lbl_round_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = self.lbl_round_info.font()
+        font.setPointSize(font.pointSize() + 1)
+        font.setBold(True)
+        self.lbl_round_info.setFont(font)
+        self.lbl_round_info.setStyleSheet("color: #666; margin: 5px;")
+        standings_layout.addWidget(self.lbl_round_info)
+        
         self.table_standings = QtWidgets.QTableWidget(0, 3)
         self.table_standings.setHorizontalHeaderLabels(["Rank", "Player", "Score"])
         self.table_standings.setToolTip("Player standings sorted by Score and configured Tiebreakers.")
@@ -28,6 +40,19 @@ class StandingsTab(QtWidgets.QWidget):
 
     def set_tournament(self, tournament):
         self.tournament = tournament
+        # Update the group box title with tournament name
+        if tournament and tournament.name:
+            self.standings_group.setTitle(f"Standings - {tournament.name}")
+        else:
+            self.standings_group.setTitle("Standings")
+
+    def _get_current_round_info(self):
+        """Get current round information for display in titles/headers."""
+        from gambitpairing.core.print_utils import TournamentPrintUtils
+        # Use unified round information retrieval
+        if hasattr(self.parent_window, 'tournament_tab'):
+            return TournamentPrintUtils.get_round_info(self.parent_window.tournament_tab)
+        return ""
 
     def update_standings_table_headers(self):
          if not self.tournament: return
@@ -50,9 +75,14 @@ class StandingsTab(QtWidgets.QWidget):
     def update_standings_table(self) -> None:
         if not self.tournament:
             self.table_standings.setRowCount(0)
+            self.lbl_round_info.setText("")
             return
 
         try:
+             # Update round info display
+             round_info = self._get_current_round_info()
+             self.lbl_round_info.setText(round_info)
+             
              # Ensure headers match current config first
              expected_col_count = 3 + len(self.tournament.tiebreak_order)
              if self.table_standings.columnCount() != expected_col_count:
@@ -166,14 +196,29 @@ class StandingsTab(QtWidgets.QWidget):
 
     def print_standings(self):
         """Print the current standings table in a clean, ink-friendly, professional format with a polished legend."""
+        from gambitpairing.core.print_utils import TournamentPrintUtils, PrintOptionsDialog
+        
         if self.table_standings.rowCount() == 0:
             QtWidgets.QMessageBox.information(self, "Print Standings", "No standings to print.")
             return
-        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-        preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
-        preview.setWindowTitle("Print Preview - Standings")
+        
+        # Always include tournament name
+        tournament_name = ""
+        if self.tournament and self.tournament.name:
+            tournament_name = self.tournament.name
+        printer, preview = TournamentPrintUtils.create_print_preview_dialog(self, "Print Preview - Standings")
+        include_tournament_name = True
         def render_preview(printer_obj):
             doc = QtGui.QTextDocument()
+            
+            # Get proper round information using unified utility
+            round_subtitle = self._get_current_round_info()
+            
+            # Build title with optional tournament name
+            main_title = "Standings"
+            if include_tournament_name and tournament_name:
+                main_title += f" - {tournament_name}"
+            
             tb_keys = []
             tb_legend = []
             for i, tb_key in enumerate(self.tournament.tiebreak_order):
@@ -256,8 +301,8 @@ class StandingsTab(QtWidgets.QWidget):
                 </style>
             </head>
             <body>
-                <h2>Standings</h2>
-                <div class="subtitle">{self.round_group.title() if hasattr(self, "round_group") else ""}</div>
+                <h2>{main_title}</h2>
+                <div class="subtitle">{round_subtitle}</div>
                 <div class="legend">
                     <span class="legend-title">Tiebreaker Legend</span>
                     <table class="legend-table">

@@ -3,6 +3,7 @@ from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 from PyQt6.QtCore import QDateTime
 
 from gambitpairing.core.constants import TIEBREAK_NAMES
+from gambitpairing.core.print_utils import TournamentPrintUtils, PrintOptionsDialog
 
 
 def print_pairings(self):
@@ -12,13 +13,28 @@ def print_pairings(self):
             self, "Print Pairings", "No pairings to print."
         )
         return
-    printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-    preview = QPrintPreviewDialog(printer, self)
-    preview.setWindowTitle("Print Preview - Pairings")
+    
+    # Always include tournament name
+    tournament_name = ""
+    if hasattr(self, 'tournament') and self.tournament and self.tournament.name:
+        tournament_name = self.tournament.name
+    printer, preview = TournamentPrintUtils.create_print_preview_dialog(self, "Print Preview - Pairings")
+    include_tournament_name = True
 
     def render_preview(printer_obj):
         doc = QtGui.QTextDocument()
-        round_title = self.round_group.title() if hasattr(self, "round_group") else ""
+        # Use unified utility for clean round title
+        round_title = ""
+        if hasattr(self, "lbl_round_title") and hasattr(self.lbl_round_title, "text"):
+            round_title = TournamentPrintUtils.get_clean_print_title(self.lbl_round_title.text())
+        elif hasattr(self, "round_group") and hasattr(self.round_group, "title"):
+            round_title = TournamentPrintUtils.get_clean_print_title(self.round_group.title())
+        
+        # Build title with optional tournament name
+        main_title = "Pairings"
+        if include_tournament_name and tournament_name:
+            main_title += f" - {tournament_name}"
+        
         html = f"""
         <html>
         <head>
@@ -74,7 +90,7 @@ def print_pairings(self):
             </style>
         </head>
         <body>
-            <h2>Pairings</h2>
+            <h2>{main_title}</h2>
             <div class="subtitle">{round_title}</div>
             <table class="pairings">
                 <tr>
@@ -127,12 +143,27 @@ def print_standings(self):
             self, "Print Standings", "No standings to print."
         )
         return
-    printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-    preview = QPrintPreviewDialog(printer, self)
-    preview.setWindowTitle("Print Preview - Standings")
+    
+    # Always include tournament name
+    tournament_name = ""
+    if hasattr(self, 'tournament') and self.tournament and self.tournament.name:
+        tournament_name = self.tournament.name
+    printer, preview = TournamentPrintUtils.create_print_preview_dialog(self, "Print Preview - Standings")
+    include_tournament_name = True
 
     def render_preview(printer_obj):
         doc = QtGui.QTextDocument()
+        # Use unified utility for round information
+        subtitle = ""
+        if hasattr(self, "lbl_round_title") and hasattr(self.lbl_round_title, "text"):
+            subtitle = self.lbl_round_title.text()
+        elif hasattr(self, "round_group") and hasattr(self.round_group, "title"):
+            subtitle = self.round_group.title()
+        
+        # Build title with optional tournament name
+        main_title = "Standings"
+        if include_tournament_name and tournament_name:
+            main_title += f" - {tournament_name}"
         tb_keys = []
         tb_legend = []
         for i, tb_key in enumerate(self.tournament.tiebreak_order):
@@ -215,8 +246,8 @@ def print_standings(self):
                 </style>
             </head>
             <body>
-                <h2>Standings</h2>
-                <div class="subtitle">{self.round_group.title() if hasattr(self, "round_group") else ""}</div>
+                <h2>{main_title}</h2>
+                <div class="subtitle">{subtitle}</div>
                 <div class="legend">
                     <span class="legend-title">Tiebreaker Legend</span>
                     <table class="legend-table">
@@ -259,5 +290,4 @@ def print_standings(self):
         doc.print(printer_obj)
 
     preview.paintRequested.connect(render_preview)
-    preview.exec()
     preview.exec()

@@ -667,16 +667,29 @@ class TournamentTab(QtWidgets.QWidget):
         # Print the current round's pairings table in a clean, ink-friendly, professional format (no input widgets).
         from PyQt6.QtCore import QDateTime
         from PyQt6.QtGui import QTextDocument
-        from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
+        from gambitpairing.core.print_utils import TournamentPrintUtils, PrintOptionsDialog
+        
         if self.table_pairings.rowCount() == 0:
             QtWidgets.QMessageBox.information(self, "Print Pairings", "No pairings to print.")
             return
-        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-        preview = QPrintPreviewDialog(printer, self)
-        preview.setWindowTitle("Print Preview - Pairings")
+        
+        # Always include tournament name
+        tournament_name = ""
+        if hasattr(self, 'tournament') and self.tournament and self.tournament.name:
+            tournament_name = self.tournament.name
+        printer, preview = TournamentPrintUtils.create_print_preview_dialog(self, "Print Preview - Pairings")
+        include_tournament_name = True
         def render_preview(printer_obj):
             doc = QTextDocument()
-            round_title = self.lbl_round_title.text() if hasattr(self, "lbl_round_title") else ""
+            round_title = TournamentPrintUtils.get_clean_print_title(
+                self.lbl_round_title.text() if hasattr(self, "lbl_round_title") else ""
+            )
+            
+            # Build title with optional tournament name
+            main_title = "Pairings"
+            if include_tournament_name and tournament_name:
+                main_title += f" - {tournament_name}"
+            
             html = f"""
             <html>
             <head>
@@ -692,7 +705,7 @@ class TournamentTab(QtWidgets.QWidget):
                 </style>
             </head>
             <body>
-                <h2>Pairings</h2>
+                <h2>{main_title}</h2>
                 <div class="subtitle">{round_title}</div>
                 <table class="pairings">
                     <tr>
