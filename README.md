@@ -61,7 +61,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
   - Full tiebreaker configuration with drag-and-drop order in settings.
 
 - **Swiss Pairings**
-  - Automated pairings for each round, avoiding rematches and balancing colors.
+  - Automated pairings for each round, avoiding rematches and balancing colours.
   - Manual adjustment of pairings before results are entered (with dialog).
   - Bye assignment according to USCF rules, including handling of inactive/withdrawn players.
 
@@ -107,14 +107,12 @@ it will parse the pyproject.toml and install all the runtime and development dep
 ## Usage
 
 1. Install the application:
-    ```bash
-    ./install_editable_pip.sh
-    ```
-    > the script will tell you the rest
+- see: [installing.md])docs/installing.md)
 
 2. **Create or Load a Tournament:**
     - Use "File > New Tournament..." or "File > Load Tournament..." to start.
     - Configure rounds and tiebreaks in "Settings".
+
 3. **Add Players:**
     - Enter player details (name, rating, gender, etc.) and click "Add New Player...".
     - Import players from CSV via "File > Import Players from CSV...".
@@ -141,7 +139,7 @@ it will parse the pyproject.toml and install all the runtime and development dep
 10. **Check for Updates:**
     - Use "Help > Check for Updates..." to check for new versions (packaged releases only).
 
-## Notes
+    ## Notes
 
 - The pairing algorithm follows USCF-style Swiss rules, including color balancing and bye assignment.
 - Tiebreak order is fully configurable and reflected in the standings and printouts.

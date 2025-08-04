@@ -20,9 +20,8 @@ This module provides shared functionality for generating print content across di
 
 
 import re
-from typing import Optional, Tuple
+from typing import Tuple
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QDateTime
 from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 
 

@@ -6,11 +6,11 @@
 2. Download or clone this repository.
 3. if bash is on your $PATH run install.sh
     OR
-   >install the pip package defined by the pyproject.toml requirements table
+   >install the pip package defined by the pyproject.toml in git root
    >from the root dir with pyproject.toml
-   >```bash
-   >pip install .
-   >```
+   ```bash
+   pip install .
+   ```
 
 ## Usage
 
