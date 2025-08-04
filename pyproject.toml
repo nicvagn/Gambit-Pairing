@@ -32,6 +32,8 @@ Issues = "https://github.com/Chickaboo/gambit-pairing/issues"
 [project.optional-dependencies]
 dev = [
   "build",
+  "pyinstaller",
+  "black",
 ]
 
 [project.gui-scripts]
@@ -41,5 +43,8 @@ gambit-pairing = "gambitpairing:main"
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-gambitpairing = ["resources/*.qss", "resources/icons/*.png", "resources/icons/*.ico"
+gambitpairing = [
+  "src/gambitpairing/resources/styles.qss",
+  "src/gambitpairing/resources/icon.ico",
+  "src/gambitpairing/resources/icon.png",
 ]

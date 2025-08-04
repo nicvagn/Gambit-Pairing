@@ -1,8 +1,24 @@
+# Gambit Pairing
+# Copyright (C) 2025  Gambit Pairing developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtGui import QAction, QCloseEvent
-from PyQt6.QtCore import QDateTime, QFileInfo, Qt
+from PyQt6.QtCore import QFileInfo, Qt
 from typing import List, Tuple, Optional
-from pathlib import Path
 import sys
 import os
 from gambitpairing.core.updater import Updater
@@ -11,14 +27,17 @@ from gambitpairing.core.tournament import Tournament
 from gambitpairing.core.constants import APP_NAME, APP_VERSION
 from gambitpairing.core import utils
 
-from .dialogs import SettingsDialog, NewTournamentDialog
+from .dialogs import (
+    SettingsDialog,
+    NewTournamentDialog,
+    UpdateDownloadDialog,
+    UpdatePromptDialog,
+)
 from .players_tab import PlayersTab
 from .tournament_tab import TournamentTab
 from .standings_tab import StandingsTab
 from .crosstable_tab import CrosstableTab
 from .history_tab import HistoryTab
-from .update_dialog import UpdateDownloadDialog
-from .update_prompt_dialog import UpdatePromptDialog
 from .update_worker import UpdateWorker
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
 from PyQt6.QtGui import QPixmap
@@ -417,6 +436,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
         self._update_ui_state()
 
+    '''This is a repeat definition
     def _on_round_completed(self, new_round_index: int) -> None:
         """
         Slot called when a round is successfully recorded and advanced in the TournamentTab.
@@ -427,6 +447,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         if hasattr(self.tournament_tab, "set_current_round_index"):
             self.tournament_tab.set_current_round_index(new_round_index)
         self._update_ui_state()
+    '''
 
     def prompt_new_tournament(self):
         if not self.check_save_before_proceeding():
@@ -443,6 +464,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                     players=[],
                     num_rounds=num_rounds,
                     tiebreak_order=tiebreak_order,
+                    pairing_system=pairing_system,
                 )
                 # Store pairing_system as an attribute if needed:
                 self.pairing_system = pairing_system
@@ -485,7 +507,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
 
             if self.tournament.tiebreak_order != new_tiebreaks:
                 self.tournament.tiebreak_order = new_tiebreaks
-                self.update_history_log(f"Tiebreak order updated.")
+                self.update_history_log("Tiebreak order updated.")
                 self.mark_dirty()
                 self.standings_tab.update_standings_table_headers()
                 self.standings_tab.update_standings_table()
@@ -634,8 +656,9 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         dialog = QDialog(self)
         dialog.setWindowTitle(f"About {APP_NAME}")
         layout = QVBoxLayout(dialog)
-        # Add about.webp image
-        image_path = resource_path("../resources/icons/about.webp")
+
+        # Load about.webp from resources/icons
+        image_path = resource_path(os.path.join("resources", "icons", "about.webp"))
         if os.path.exists(image_path):
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
@@ -656,17 +679,6 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         layout.addWidget(ok_btn)
         dialog.setLayout(layout)
         dialog.exec()
-
-    def closeEvent(self, event: QCloseEvent):
-        if self.is_updating:
-            event.accept()
-            return
-
-        if self.check_save_before_proceeding():
-            logging.info(f"{APP_NAME} closing.")
-            event.accept()
-        else:
-            event.ignore()
 
     def check_for_pending_update(self) -> bool:
         """Checks for a previously downloaded update and asks to install it."""
@@ -702,14 +714,14 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                     self.updater.cleanup_pending_update()
         return False
 
-    def check_for_updates_manual(self):
+    def check_for_updates_manual(self) -> None:
         """Manually checks for updates and notifies the user of the result."""
         if not getattr(sys, "frozen", False):
             QtWidgets.QMessageBox.information(
                 self,
                 "Update Check",
                 "Automatic updates are only available in packaged releases.\n\n"
-                "If you installed from source, please update using git or your package manager.",
+                "If you installed from source, please update using git or your package manager. ie: `pip install --upgrade [git-root]`",
             )
             return
         if not self.updater:

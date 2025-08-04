@@ -1,3 +1,20 @@
+# Gambit Pairing
+# Copyright (C) 2025  Gambit Pairing developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from typing import List, Optional, Tuple, Set, Dict, Any
 from gambitpairing.core.player import Player
 from gambitpairing.core.constants import (
@@ -104,11 +121,25 @@ class Tournament:
                     self.previous_matches,
                     self._get_eligible_bye_player,
                     allow_repeat_pairing_callback,
+                    self.num_rounds,
                 )
             )
             self.rounds_pairings_ids.append(round_pairings_ids)
             self.rounds_byes_ids.append(bye_player_id)
             return pairings, bye_player
+        elif self.pairing_system == "round_robin":
+            active_playrs = self._get_active_players()
+            pairings, bye_player, round_pairings_ids, bye_player_id = (
+                create_round_robin_pairings(active_players)
+            )
+            self.rounds_pairings_ids.append(round_pairings_ids)
+            self.rounds_byes_ids.append(bye_player_id)
+            return pairings, bye_player
+        elif self.pairing_system == "manual":
+            # For manual pairing, return empty pairings - they will be set manually
+            self.rounds_pairings_ids.append([])
+            self.rounds_byes_ids.append(None)
+            return [], None
         else:
             raise NotImplementedError(
                 f"Pairing system '{self.pairing_system}' is not implemented."
@@ -344,6 +375,41 @@ class Tournament:
         )
         # Ensure self.rounds_pairings_ids[round_index] is updated with the modified list
         self.rounds_pairings_ids[round_index] = current_pairings_ids_for_round
+        return True
+
+    def set_manual_pairings(
+        self,
+        round_index: int,
+        pairings: List[Tuple[Player, Player]],
+        bye_player: Optional[Player],
+    ) -> bool:
+        """Set manual pairings for a specific round."""
+        if round_index < 0:
+            logging.error(f"Set Manual Pairings: Invalid round index {round_index}")
+            return False
+
+        # Ensure we have enough rounds
+        while len(self.rounds_pairings_ids) <= round_index:
+            self.rounds_pairings_ids.append([])
+
+        while len(self.rounds_byes_ids) <= round_index:
+            self.rounds_byes_ids.append(None)
+
+        # Convert pairings to ID pairs
+        pairings_ids = [(white.id, black.id) for white, black in pairings]
+        bye_player_id = bye_player.id if bye_player else None
+
+        # Update the round data
+        self.rounds_pairings_ids[round_index] = pairings_ids
+        self.rounds_byes_ids[round_index] = bye_player_id
+
+        # Update previous matches to include these pairings
+        for white, black in pairings:
+            self.previous_matches.add(frozenset([white.id, black.id]))
+
+        logging.info(
+            f"Set manual pairings for round {round_index + 1}: {len(pairings)} pairings, bye: {bye_player.name if bye_player else 'None'}"
+        )
         return True
 
     def record_results(

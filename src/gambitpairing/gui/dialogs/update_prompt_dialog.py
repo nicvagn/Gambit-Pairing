@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets, QtCore, QtGui
+from PyQt6 import QtWidgets
 from gambitpairing.core.constants import APP_NAME
 from gambitpairing.core.utils import apply_stylesheet
 

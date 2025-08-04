@@ -1,3 +1,20 @@
+# Gambit Pairing
+# Copyright (C) 2025  Gambit Pairing developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import requests
 import json
 from typing import Optional, Dict, Any, Tuple
@@ -15,6 +32,7 @@ import hashlib
 # Fallback update URL if not defined elsewhere
 UPDATE_URL = "https://api.github.com/repos/Chickaboo/Gambit-Pairing/releases/latest"
 
+
 class Updater:
     """Handles checking for and applying application updates from GitHub Releases."""
 
@@ -30,9 +48,15 @@ class Updater:
             response = requests.get(UPDATE_URL, timeout=10)
             response.raise_for_status()
             self.latest_version_info = response.json()
-            latest_version_str = self.latest_version_info.get("tag_name", "0.0.0").lstrip('v')
-            is_newer = parse_version(latest_version_str) > parse_version(self.current_version)
-            logging.info(f"Latest version: {latest_version_str}, Current version: {self.current_version}, Newer available: {is_newer}")
+            latest_version_str = self.latest_version_info.get(
+                "tag_name", "0.0.0"
+            ).lstrip("v")
+            is_newer = parse_version(latest_version_str) > parse_version(
+                self.current_version
+            )
+            logging.info(
+                f"Latest version: {latest_version_str}, Current version: {self.current_version}, Newer available: {is_newer}"
+            )
             return is_newer
         except requests.RequestException as e:
             logging.error(f"Update check failed: Network error - {e}")
@@ -42,23 +66,35 @@ class Updater:
             return False
 
     def get_latest_version(self) -> Optional[str]:
-        return self.latest_version_info.get("tag_name", "N/A").lstrip('v') if self.latest_version_info else None
+        return (
+            self.latest_version_info.get("tag_name", "N/A").lstrip("v")
+            if self.latest_version_info
+            else None
+        )
 
     def get_release_notes(self) -> Optional[str]:
-        return self.latest_version_info.get("body", "No description available.") if self.latest_version_info else None
+        return (
+            self.latest_version_info.get("body", "No description available.")
+            if self.latest_version_info
+            else None
+        )
 
     def _get_asset_urls(self) -> Tuple[Optional[str], Optional[str]]:
-        if not self.latest_version_info: return None, None
+        if not self.latest_version_info:
+            return None, None
         assets = self.latest_version_info.get("assets", [])
         zip_url, checksum_url = None, None
         for asset in assets:
-            if asset.get("name", "").endswith(".zip"): zip_url = asset.get("browser_download_url")
-            if asset.get("name", "").endswith(".sha256"): checksum_url = asset.get("browser_download_url")
+            if asset.get("name", "").endswith(".zip"):
+                zip_url = asset.get("browser_download_url")
+            if asset.get("name", "").endswith(".sha256"):
+                checksum_url = asset.get("browser_download_url")
         return zip_url, checksum_url
 
     def download_update(self, progress_callback=None) -> Optional[str]:
         zip_url, checksum_url = self._get_asset_urls()
-        if not zip_url: return None
+        if not zip_url:
+            return None
 
         if checksum_url:
             try:
@@ -70,11 +106,11 @@ class Updater:
 
         try:
             response = requests.get(zip_url, stream=True, timeout=60)
-            total_size = int(response.headers.get('content-length', 0))
+            total_size = int(response.headers.get("content-length", 0))
             temp_dir = tempfile.gettempdir()
             self.update_zip_path = os.path.join(temp_dir, "gambit_update.zip")
             bytes_downloaded = 0
-            with open(self.update_zip_path, 'wb') as f:
+            with open(self.update_zip_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
                     bytes_downloaded += len(chunk)
@@ -86,7 +122,8 @@ class Updater:
             return None
 
     def verify_checksum(self, file_path: str) -> bool:
-        if not self.expected_checksum: return True
+        if not self.expected_checksum:
+            return True
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:
             for byte_block in iter(lambda: f.read(4096), b""):
@@ -96,18 +133,21 @@ class Updater:
         return calculated_checksum.lower() == self.expected_checksum.lower()
 
     def extract_update(self) -> Optional[str]:
-        if not self.update_zip_path: return None
+        if not self.update_zip_path:
+            return None
         extract_dir = Path(tempfile.gettempdir()) / "gambit_update_extracted"
-        if extract_dir.exists(): shutil.rmtree(extract_dir)
+        if extract_dir.exists():
+            shutil.rmtree(extract_dir)
         try:
-            with zipfile.ZipFile(self.update_zip_path, 'r') as zip_ref:
+            with zipfile.ZipFile(self.update_zip_path, "r") as zip_ref:
                 zip_ref.extractall(extract_dir)
             os.remove(self.update_zip_path)
-            
+
             extracted_items = list(extract_dir.iterdir())
             if len(extracted_items) == 1 and extracted_items[0].is_dir():
                 final_path = Path(tempfile.gettempdir()) / "gambit_update_final"
-                if final_path.exists(): shutil.rmtree(final_path)
+                if final_path.exists():
+                    shutil.rmtree(final_path)
                 shutil.move(str(extracted_items[0]), str(final_path))
                 shutil.rmtree(extract_dir)
                 logging.info(f"Update contents moved to {final_path}")
@@ -123,14 +163,15 @@ class Updater:
 
     def cleanup_pending_update(self):
         path = self.get_pending_update_path()
-        if path: shutil.rmtree(path, ignore_errors=True)
+        if path:
+            shutil.rmtree(path, ignore_errors=True)
 
     def apply_update(self, extracted_path: str) -> None:
         """
         Apply the update by copying files from the extracted update directory to the app directory,
         skipping the running executable. No admin rights or external scripts required.
         """
-        if not getattr(sys, 'frozen', False):
+        if not getattr(sys, "frozen", False):
             logging.warning("Skipping update: not running from a frozen executable.")
             return
 
@@ -166,6 +207,8 @@ class Updater:
             if errors:
                 logging.error("Some files could not be updated:\n" + "\n".join(errors))
             else:
-                logging.info("Update applied successfully. Please restart the application.")
+                logging.info(
+                    "Update applied successfully. Please restart the application."
+                )
         except Exception as e:
             logging.error(f"Failed to apply update: {e}")

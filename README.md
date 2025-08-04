@@ -31,7 +31,7 @@ $$ |                                            \$$$$$$  |
  \_\      | |                                     /_/
           |_|
 ```
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
@@ -91,28 +91,27 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
   - Modern dialogs for update prompts and progress.
   - Automatic and manual update checks.
 
-## Requirements
-> see pyproject.toml
-ie:
 
-``` toml
-[project]
-name = "gambit-pairing"
-version = "x.x.xxx"
-dependencies = [ HERE ]
-```
+## Documentation
+
+- [Program Structure](docs/program-structure.md)
+- [Installation Guide](docs/installing.md)
+- [Developer Hacking Guide](docs/HACKING.md)
+- [Manual Pairing Guide](docs/manual-pairing-guide.md)
+
+## Requirements
+To install with pip, there is a helper sh script, ensure-all-dependancies.sh
+
+it will parse the pyproject.toml and install all the runtime and development dependancies.
 
 ## Usage
 
 1. Run the application:
-   from src directory (after dependancies are installed):
     ```bash
-    python ./gambitparing
+    ./install_editable_pip.sh
     ```
-    or if installed:
-    ```bash
-    gambit-pairing
-    ```
+    the script will tell you the rest
+
 2. **Create or Load a Tournament:**
     - Use "File > New Tournament..." or "File > Load Tournament..." to start.
     - Configure rounds and tiebreaks in "Settings".
@@ -152,17 +151,21 @@ dependencies = [ HERE ]
 
 ## License
 
-This project is open source and available under the [MIT License](https://mit-license.org/).
+This project is open source and available under the GPL-v3
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Screenshots
 
 > _Below are some example screenshots of Gambit Pairing in action._
 
+**About Dialog**
+![About Dialog](docs/screenshots/app.png)
+
 **Tournament Control Tab**
 ![Main Tournament Control](docs/screenshots/tournament.png)
 
 **Player Manager Tab**
-![Main Tournament Control](docs/screenshots/player.png)
+![Player Tab](docs/screenshots/player.png)
 
 **Standings Tab**
 ![Standings Tab](docs/screenshots/standings.png)
@@ -175,3 +178,6 @@ This project is open source and available under the [MIT License](https://mit-li
 
 **Print Dialog**
 ![Print Dialog](docs/screenshots/print_dialog.png)
+
+**Manual Pairing Dialog**
+![Manual Pairing Dialog](docs/screenshots/manual.png)

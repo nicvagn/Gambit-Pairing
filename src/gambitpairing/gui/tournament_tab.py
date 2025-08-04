@@ -1,3 +1,19 @@
+# Gambit Pairing
+# Copyright (C) 2025  Gambit Pairing developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import logging
 from typing import List, Optional, Tuple
 
@@ -9,7 +25,17 @@ from gambitpairing.core.utils import apply_stylesheet
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
-from .dialogs import ManualPairDialog
+from .dialogs import ManualPairDialog, ManualPairingDialog
+
+
+def get_icon(icon_name: str, fallback_theme_name: str = None) -> QtGui.QIcon:
+    """Load icon for print button."""
+    # Try theme icon first, then return empty icon if not found
+    if fallback_theme_name:
+        theme_icon = QtGui.QIcon.fromTheme(fallback_theme_name)
+        if not theme_icon.isNull():
+            return theme_icon
+    return QtGui.QIcon()
 
 
 class CheckableButton(QtWidgets.QPushButton):
@@ -109,10 +135,31 @@ class TournamentTab(QtWidgets.QWidget):
         self.lbl_round_title.setFont(font)
         header_layout.addWidget(self.lbl_round_title)
         header_layout.addStretch()
+
+        # Edit Pairings button (available for all pairing systems)
+        self.btn_edit_pairings = QtWidgets.QPushButton("Edit Pairings")
+        self.btn_edit_pairings.setToolTip("Open full pairing editor for this round")
+        self.btn_edit_pairings.clicked.connect(self._edit_all_pairings)
+        apply_stylesheet(self.btn_edit_pairings, """
+            min-height: 32px;
+            max-height: 32px;
+            padding: 5px 10px;
+            font-size: 10pt;
+            font-weight: 600;
+        """)
+        header_layout.addWidget(self.btn_edit_pairings)
+        self.btn_edit_pairings.hide()  # Hidden by default, shown when pairings exist
+
         self.btn_print_pairings = QtWidgets.QPushButton(" Print Pairings")
-        self.btn_print_pairings.setIcon(QtGui.QIcon.fromTheme("document-print"))
+        self.btn_print_pairings.setIcon(get_icon("export", "document-print"))
         self.btn_print_pairings.setToolTip("Print the current round\'s pairings")
-        apply_stylesheet(self.btn_print_pairings, "padding: 5px;")
+        apply_stylesheet(self.btn_print_pairings, """
+            min-height: 32px;
+            max-height: 32px;
+            padding: 5px 10px;
+            font-size: 10pt;
+            font-weight: 600;
+        """)
         header_layout.addWidget(self.btn_print_pairings)
         self.main_layout.addLayout(header_layout)        # Pairings Table - Reduced to 3 columns
         self.table_pairings = QtWidgets.QTableWidget(0, 3)
@@ -152,6 +199,40 @@ class TournamentTab(QtWidgets.QWidget):
         if not self.tournament:
             QtWidgets.QMessageBox.warning(self, "Start Error", "No tournament loaded.")
             return
+        pairing_system = getattr(self.tournament, "pairing_system", "dutch_swiss")
+        num_players = len(self.tournament.players)
+        # Minimum player checks for each system
+        if pairing_system == "round_robin":
+            if num_players < 3:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error",
+                    "Round Robin tournaments require at least three players.")
+                return
+        elif pairing_system == "dutch_swiss":
+            if num_players < 2:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error",
+                    "FIDE Dutch Swiss tournaments require at least two players.")
+                return
+            min_players = 2 ** self.tournament.num_rounds
+            if num_players < min_players:
+                reply = QtWidgets.QMessageBox.warning(
+                    self,
+                    "Insufficient Players",
+                    f"For a {self.tournament.num_rounds}-round FIDE Dutch Swiss tournament, a minimum of {min_players} players is recommended. The tournament may not work properly. Do you want to continue anyway?",
+                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+                    QtWidgets.QMessageBox.StandardButton.No
+                )
+                if reply == QtWidgets.QMessageBox.StandardButton.No:
+                    return
+        elif pairing_system == "manual":
+            if num_players < 2:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error",
+                    "Manual pairing tournaments require at least two players.")
         if len(self.tournament.players) < 2:
             QtWidgets.QMessageBox.warning(self, "Start Error", "Add at least two players.")
             return
@@ -212,6 +293,12 @@ class TournamentTab(QtWidgets.QWidget):
 
 
         display_round_number = self.current_round_index + 1
+
+        # Check if this is a manual pairing tournament
+        if self.tournament.pairing_system == "manual":
+            self._handle_manual_pairing_round(display_round_number, self.current_round_index)
+            return
+
         self.status_message.emit(f"Generating pairings for Round {display_round_number}...")
         QtWidgets.QApplication.processEvents()
 
@@ -301,6 +388,12 @@ class TournamentTab(QtWidgets.QWidget):
 
 
         display_round_number = self.current_round_index + 1
+
+        # Check if this is a manual pairing tournament
+        if self.tournament.pairing_system == "manual":
+            self._handle_manual_pairing_round(display_round_number, round_to_prepare_idx)
+            return
+
         self.status_message.emit(f"Generating pairings for Round {display_round_number}...")
         QtWidgets.QApplication.processEvents()
 
@@ -442,16 +535,24 @@ class TournamentTab(QtWidgets.QWidget):
         black_id = result_selector.property("black_id")
 
         menu = QtWidgets.QMenu(self)
+
+        # Offer option to edit all pairings for all tournaments
+        edit_all_action = menu.addAction("Edit Pairings...")
+        menu.addSeparator()
+
         adjust_action = menu.addAction("Manually Adjust Pairing...")
 
         # Only allow adjustment for the current round before results are recorded
         can_adjust = self.current_round_index < len(self.tournament.rounds_pairings_ids)
         adjust_action.setEnabled(can_adjust)
+        edit_all_action.setEnabled(can_adjust)
 
         # Use exec() which returns the triggered action
         action = menu.exec(self.table_pairings.viewport().mapToGlobal(pos))
 
-        if action == adjust_action:
+        if action == edit_all_action:
+            self._edit_all_pairings()
+        elif action == adjust_action:
             self.prompt_manual_adjust(white_id, black_id)
 
     def prompt_manual_adjust(self, white_id: str, black_id: str):
@@ -582,16 +683,29 @@ class TournamentTab(QtWidgets.QWidget):
         # Print the current round's pairings table in a clean, ink-friendly, professional format (no input widgets).
         from PyQt6.QtCore import QDateTime
         from PyQt6.QtGui import QTextDocument
-        from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
+        from gambitpairing.core.print_utils import TournamentPrintUtils, PrintOptionsDialog
+
         if self.table_pairings.rowCount() == 0:
             QtWidgets.QMessageBox.information(self, "Print Pairings", "No pairings to print.")
             return
-        printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-        preview = QPrintPreviewDialog(printer, self)
-        preview.setWindowTitle("Print Preview - Pairings")
+
+        # Always include tournament name
+        tournament_name = ""
+        if hasattr(self, 'tournament') and self.tournament and self.tournament.name:
+            tournament_name = self.tournament.name
+        printer, preview = TournamentPrintUtils.create_print_preview_dialog(self, "Print Preview - Pairings")
+        include_tournament_name = True
         def render_preview(printer_obj):
             doc = QTextDocument()
-            round_title = self.lbl_round_title.text() if hasattr(self, "lbl_round_title") else ""
+            round_title = TournamentPrintUtils.get_clean_print_title(
+                self.lbl_round_title.text() if hasattr(self, "lbl_round_title") else ""
+            )
+
+            # Build title with optional tournament name
+            main_title = "Pairings"
+            if include_tournament_name and tournament_name:
+                main_title += f" - {tournament_name}"
+
             html = f"""
             <html>
             <head>
@@ -607,7 +721,7 @@ class TournamentTab(QtWidgets.QWidget):
                 </style>
             </head>
             <body>
-                <h2>Pairings</h2>
+                <h2>{main_title}</h2>
                 <div class="subtitle">{round_title}</div>
                 <table class="pairings">
                     <tr>
@@ -810,6 +924,21 @@ class TournamentTab(QtWidgets.QWidget):
 
         print(f"[DEBUG] can_start={can_start}, can_prepare={can_prepare}, can_record={can_record}, can_undo={can_undo}")
 
+        # Show/hide edit pairings button for all tournaments with pairings
+        if tournament_exists:
+            # Check if there are pairings to edit
+            has_pairings = (self.current_round_index < len(self.tournament.rounds_pairings_ids) and
+                          len(self.tournament.rounds_pairings_ids[self.current_round_index]) > 0)
+
+            if has_pairings:
+                self.btn_edit_pairings.show()
+                # Enable only if results haven't been recorded for this round
+                self.btn_edit_pairings.setEnabled(can_record)
+            else:
+                self.btn_edit_pairings.hide()
+        else:
+            self.btn_edit_pairings.hide()
+
         # Removed button enables since buttons no longer exist in the tab
         # self.btn_start.setEnabled(can_start)
         # self.btn_next.setEnabled(can_prepare)
@@ -818,3 +947,117 @@ class TournamentTab(QtWidgets.QWidget):
 
         # Optionally, disable the whole tab if no tournament
         self.setEnabled(tournament_exists)
+
+    def _handle_manual_pairing_round(self, display_round_number: int, round_to_prepare_idx: int):
+        """Handle manual pairing for a round."""
+        # Get existing pairings if they exist
+        existing_pairings = None
+        existing_bye = None
+
+        if round_to_prepare_idx < len(self.tournament.rounds_pairings_ids):
+            # Load existing pairings
+            pairings_ids = self.tournament.rounds_pairings_ids[round_to_prepare_idx]
+            bye_id = self.tournament.rounds_byes_ids[round_to_prepare_idx]
+
+            existing_pairings = []
+            for w_id, b_id in pairings_ids:
+                w = self.tournament.players.get(w_id)
+                b = self.tournament.players.get(b_id)
+                if w and b:
+                    existing_pairings.append((w, b))
+
+            existing_bye = self.tournament.players.get(bye_id) if bye_id else None
+
+        # Open the manual pairing dialog
+        active_players = [p for p in self.tournament.players.values() if p.is_active]
+
+        dialog = ManualPairingDialog(
+            active_players,
+            existing_pairings,
+            existing_bye,
+            display_round_number,
+            self,
+            self.tournament
+        )
+
+        if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+            pairings, bye_player = dialog.get_pairings_and_bye()
+
+            # Set the manual pairings in the tournament
+            if self.tournament.set_manual_pairings(round_to_prepare_idx, pairings, bye_player):
+                self.lbl_round_title.setText(f"Round {display_round_number} Pairings & Results")
+                self.display_pairings_for_input(pairings, bye_player)
+
+                # Log the pairings
+                self.history_message.emit(f"--- Round {display_round_number} Manual Pairings Set ---")
+                for i, (white, black) in enumerate(pairings, 1):
+                    self.history_message.emit(f"  Board {i}: {white.name} (W) vs {black.name} (B)")
+                if bye_player:
+                    self.history_message.emit(f"  Bye: {bye_player.name}")
+                self.history_message.emit("-" * 20)
+
+                self.dirty.emit()
+                self.status_message.emit(f"Round {display_round_number} manual pairings set. Enter results.")
+            else:
+                QtWidgets.QMessageBox.critical(self, "Error", "Failed to set manual pairings.")
+
+        self.update_ui_state()
+
+    def _edit_all_pairings(self):
+        """Open the manual pairing dialog to edit all pairings for the current round."""
+        if not self.tournament:
+            return
+
+        display_round_number = self.current_round_index + 1
+
+        # Get existing pairings
+        existing_pairings = None
+        existing_bye = None
+
+        if self.current_round_index < len(self.tournament.rounds_pairings_ids):
+            pairings_ids = self.tournament.rounds_pairings_ids[self.current_round_index]
+            bye_id = self.tournament.rounds_byes_ids[self.current_round_index]
+
+            existing_pairings = []
+            for w_id, b_id in pairings_ids:
+                w = self.tournament.players.get(w_id)
+                b = self.tournament.players.get(b_id)
+                if w and b:
+                    existing_pairings.append((w, b))
+
+            existing_bye = self.tournament.players.get(bye_id) if bye_id else None
+
+        # Open the manual pairing dialog
+        active_players = [p for p in self.tournament.players.values() if p.is_active]
+
+        dialog = ManualPairingDialog(
+            active_players,
+            existing_pairings,
+            existing_bye,
+            display_round_number,
+            self,
+            self.tournament
+        )
+
+        if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
+            pairings, bye_player = dialog.get_pairings_and_bye()
+
+            # Set the manual pairings in the tournament
+            if self.tournament.set_manual_pairings(self.current_round_index, pairings, bye_player):
+                self.display_pairings_for_input(pairings, bye_player)
+
+                # Log the updated pairings
+                pairing_type = "Manual" if self.tournament.pairing_system == "manual" else "Edited"
+                self.history_message.emit(f"--- Round {display_round_number} {pairing_type} Pairings Updated ---")
+                for i, (white, black) in enumerate(pairings, 1):
+                    self.history_message.emit(f"  Board {i}: {white.name} (W) vs {black.name} (B)")
+                if bye_player:
+                    self.history_message.emit(f"  Bye: {bye_player.name}")
+                self.history_message.emit("-" * 20)
+
+                self.dirty.emit()
+                self.status_message.emit(f"Round {display_round_number} pairings updated.")
+            else:
+                QtWidgets.QMessageBox.critical(self, "Error", "Failed to update pairings.")
+
+        self.update_ui_state()

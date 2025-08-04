@@ -1,3 +1,20 @@
+# Gambit Pairing
+# Copyright (C) 2025  Gambit Pairing developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import logging
 import os
 import random
@@ -76,47 +93,13 @@ def restart_application():
 
 
 # --- Style Management ---
-class StyleManager:
-    """Centralized style management for legacy GUI support."""
-
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
-
-    def __init__(self):
-        if not self._initialized:
-            self.legacy_mode = False
-            self._initialized = True
-
-    def apply_style(self, widget, style_sheet: str):
-        """Apply a stylesheet to a widget and track it for legacy mode."""
-        try:
-            widget.setStyleSheet(style_sheet)
-        except RuntimeError:
-            # Widget may have been deleted, ignore
-            pass
-        # Set WindowsVista style for legacy mode
-        app = QApplication.instance()
-        if app is not None:
-            try:
-                available_styles = QStyleFactory.keys()
-                if "Fusion" in available_styles:
-                    app.setStyle("WindowsVista")
-            except Exception:
-                pass
-
-
-# Global style manager instance
-style_manager = StyleManager()
-
-
 def apply_stylesheet(widget, style_sheet: str):
-    """Apply a stylesheet with legacy GUI support."""
-    style_manager.apply_style(widget, style_sheet)
+    """Apply a stylesheet to a widget."""
+    try:
+        widget.setStyleSheet(style_sheet)
+    except RuntimeError:
+        # Widget may have been deleted, ignore
+        pass
 
 
 # --- Utility Functions ---

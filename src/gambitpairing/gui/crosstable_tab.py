@@ -1,7 +1,24 @@
+# Gambit Pairing
+# Copyright (C) 2025  Gambit Pairing developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt
 import functools
 from gambitpairing.core.constants import WIN_SCORE, DRAW_SCORE, LOSS_SCORE
+
 
 class CrosstableTab(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -12,7 +29,9 @@ class CrosstableTab(QtWidgets.QWidget):
         crosstable_layout = QtWidgets.QVBoxLayout(self.crosstable_group)
         self.table_crosstable = QtWidgets.QTableWidget(0, 0)
         self.table_crosstable.setToolTip("Grid showing results between players.")
-        self.table_crosstable.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table_crosstable.setEditTriggers(
+            QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
+        )
         self.table_crosstable.setAlternatingRowColors(True)
         font = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.SystemFont.FixedFont)
         self.table_crosstable.setFont(font)
@@ -43,7 +62,10 @@ class CrosstableTab(QtWidgets.QWidget):
 
         headers = ["#", "Player", "Score"] + [str(i + 1) for i in range(n)]
         self.table_crosstable.setHorizontalHeaderLabels(headers)
-        v_headers = [f"{i+1}. {p.name} ({p.rating or 'NR'})" for i, p in enumerate(sorted_players)]
+        v_headers = [
+            f"{i+1}. {p.name} ({p.rating or 'NR'})"
+            for i, p in enumerate(sorted_players)
+        ]
         self.table_crosstable.setVerticalHeaderLabels(v_headers)
 
         for r_idx, p1 in enumerate(sorted_players):
