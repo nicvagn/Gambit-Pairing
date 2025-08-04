@@ -18,11 +18,11 @@ def main():
     logging.info("run_app() exited with code: %s", exit_code)
     sys.exit(exit_code)
 
-def resource_path(relative_path):
+def resource_path(relative_path) -> str:
     """Get absolute path to resource, works for dev and standard deployments"""
     return os.path.join(BASE_DIR, relative_path)
 
-def get_icon_path():
+def get_icon_path() -> str | None:
     """Get the icon path. Works with standard deployments"""
     icon_folder = resource_path(os.path.join("resources", "icons"))
     ico_path = os.path.join(icon_folder, "icon.ico")
@@ -34,7 +34,8 @@ def get_icon_path():
         return png_path
     return None
 
-def run_app():
+def run_app() -> int:
+    """Run app and return exit status code"""
     app = QtWidgets.QApplication(sys.argv)
 
     icon_path = get_icon_path()
