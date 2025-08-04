@@ -1,3 +1,20 @@
+# Gambit Pairing
+# Copyright (C) 2025  Gambit Pairing developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from typing import List, Tuple, Optional, Set, Dict, Any
 from enum import Enum
 from itertools import permutations
@@ -17,7 +34,11 @@ def _is_topscorer(player: Player, current_round: int, total_rounds: int) -> bool
     return player.score > (max_possible_score * 0.5)
 
 
-def _compute_psd_list(pairings: List[Tuple[Player, Player]], downfloaters: List[Player], bracket_score: float) -> List[float]:
+def _compute_psd_list(
+    pairings: List[Tuple[Player, Player]],
+    downfloaters: List[Player],
+    bracket_score: float,
+) -> List[float]:
     """
     FIDE Article 1.8: Compute Pairing Score Difference (PSD) list.
     PSD is sorted from highest to lowest score differences.
@@ -56,8 +77,17 @@ def _compare_psd_lists(psd1: List[float], psd2: List[float]) -> int:
     else:
         return 0
 
-def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous_matches: Set[frozenset], current_round: int,
-                        bye_assignee_score: float = 0.0, next_bracket_players: List[Player] = None, total_rounds: int = 0) -> int:
+
+def _compute_edge_weight(
+    p1: Player,
+    p2: Player,
+    bracket: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+    bye_assignee_score: float = 0.0,
+    next_bracket_players: List[Player] = None,
+    total_rounds: int = 0,
+) -> int:
     """
     Compute FIDE-compliant edge weight via bit-encoded criteria:
     - C1-C3: absolute criteria (checked first)
@@ -68,7 +98,9 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
     - C14-C21: minimize repeat floats
     """
     # Absolute criteria (C1-C3)
-    if not _meets_absolute_criteria(p1, p2, previous_matches, current_round, total_rounds):
+    if not _meets_absolute_criteria(
+        p1, p2, previous_matches, current_round, total_rounds
+    ):
         return 0
 
     weight = 0
@@ -100,7 +132,9 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
         next_scores = sorted({p.score for p in next_bracket_players}, reverse=True)
         if p1.score in next_scores:
             idx = next_scores.index(p1.score)
-            weight = (weight << len(next_bracket_players)) | (1 << (len(next_scores) - 1 - idx))
+            weight = (weight << len(next_bracket_players)) | (
+                1 << (len(next_scores) - 1 - idx)
+            )
         else:
             weight = weight << len(next_bracket_players)
     else:
@@ -113,7 +147,9 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
     if current_round == total_rounds and total_rounds > 0:
         # C10: Minimize topscorers with color difference > +2 or < -2
         c10_ok = True
-        if _is_topscorer(p1, current_round, total_rounds) or _is_topscorer(p2, current_round, total_rounds):
+        if _is_topscorer(p1, current_round, total_rounds) or _is_topscorer(
+            p2, current_round, total_rounds
+        ):
             if abs(_get_color_imbalance(p1)) > 2 or abs(_get_color_imbalance(p2)) > 2:
                 c10_ok = False
 
@@ -134,7 +170,11 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
 
     # C12: Four color preference bits (enhanced to match C++ insertColorBits)
     # Bit 1: Compatible absolute color imbalance
-    abs_imb_ok = not (_has_absolute_color_imbalance(p1) and _has_absolute_color_imbalance(p2) and _get_color_preference(p1) == _get_color_preference(p2))
+    abs_imb_ok = not (
+        _has_absolute_color_imbalance(p1)
+        and _has_absolute_color_imbalance(p2)
+        and _get_color_preference(p1) == _get_color_preference(p2)
+    )
 
     # Bit 2: Compatible absolute preferences with repeated color logic
     abs_pref_ok = True
@@ -151,9 +191,13 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
                 abs_pref_ok = False
         else:
             # Different imbalances - check if worse player's repeated color conflicts
-            worse_player = p1 if _get_color_imbalance(p1) > _get_color_imbalance(p2) else p2
+            worse_player = (
+                p1 if _get_color_imbalance(p1) > _get_color_imbalance(p2) else p2
+            )
             rep_color = _get_repeated_color(worse_player)
-            if rep_color == _get_color_preference(p1):  # This is inverted logic from C++
+            if rep_color == _get_color_preference(
+                p1
+            ):  # This is inverted logic from C++
                 abs_pref_ok = False
 
     # Bit 3: General color compatibility
@@ -161,13 +205,17 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
 
     # Bit 4: Strong preference compatibility
     strong_ok = True
-    if (_has_strong_color_preference(p1) and not _has_absolute_color_preference(p1)) or \
-       (_has_strong_color_preference(p2) and not _has_absolute_color_preference(p2)):
+    if (
+        _has_strong_color_preference(p1) and not _has_absolute_color_preference(p1)
+    ) or (_has_strong_color_preference(p2) and not _has_absolute_color_preference(p2)):
         # At least one has non-absolute strong preference
         if _has_absolute_color_preference(p1) and _has_absolute_color_preference(p2):
             strong_ok = True  # Both absolute is OK
-        elif _get_color_preference(p1) and _get_color_preference(p2) and \
-             _get_color_preference(p1) == _get_color_preference(p2):
+        elif (
+            _get_color_preference(p1)
+            and _get_color_preference(p2)
+            and _get_color_preference(p1) == _get_color_preference(p2)
+        ):
             strong_ok = False  # Same non-absolute preferences conflict
 
     for bit in (abs_imb_ok, abs_pref_ok, general_ok, strong_ok):
@@ -176,21 +224,45 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
     # C14–C17: Minimize repeat floats
     if current_round >= 1:
         # Minimize downfloaters repeated from previous round
-        weight = (weight << len(bracket)) | (1 if _get_float_type(p2, 1, current_round) == FloatType.FLOAT_DOWN else 0)
-        if p1.score <= p2.score and _get_float_type(p1, 1, current_round) == FloatType.FLOAT_DOWN:
+        weight = (weight << len(bracket)) | (
+            1 if _get_float_type(p2, 1, current_round) == FloatType.FLOAT_DOWN else 0
+        )
+        if (
+            p1.score <= p2.score
+            and _get_float_type(p1, 1, current_round) == FloatType.FLOAT_DOWN
+        ):
             weight += 1
         # Minimize upfloaters repeated from previous round
-        weight = (weight << len(bracket)) | (1 if not (p1.score > p2.score and _get_float_type(p2, 1, current_round) == FloatType.FLOAT_UP) else 0)
+        weight = (weight << len(bracket)) | (
+            1
+            if not (
+                p1.score > p2.score
+                and _get_float_type(p2, 1, current_round) == FloatType.FLOAT_UP
+            )
+            else 0
+        )
     else:
         weight = weight << (2 * len(bracket))
 
     if current_round > 1:
         # Minimize downfloaters repeated from two rounds before
-        weight = (weight << len(bracket)) | (1 if _get_float_type(p2, 2, current_round) == FloatType.FLOAT_DOWN else 0)
-        if p1.score <= p2.score and _get_float_type(p1, 2, current_round) == FloatType.FLOAT_DOWN:
+        weight = (weight << len(bracket)) | (
+            1 if _get_float_type(p2, 2, current_round) == FloatType.FLOAT_DOWN else 0
+        )
+        if (
+            p1.score <= p2.score
+            and _get_float_type(p1, 2, current_round) == FloatType.FLOAT_DOWN
+        ):
             weight += 1
         # Minimize upfloaters repeated from two rounds before
-        weight = (weight << len(bracket)) | (1 if not (p1.score > p2.score and _get_float_type(p2, 2, current_round) == FloatType.FLOAT_UP) else 0)
+        weight = (weight << len(bracket)) | (
+            1
+            if not (
+                p1.score > p2.score
+                and _get_float_type(p2, 2, current_round) == FloatType.FLOAT_UP
+            )
+            else 0
+        )
     else:
         weight = weight << (2 * len(bracket))
 
@@ -199,20 +271,35 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
         # Minimize scores of downfloaters repeated from previous round
         scores_shift = len({p.score for p in bracket})
         if _get_float_type(p2, 1, current_round) == FloatType.FLOAT_DOWN:
-            p2_score_rank = sorted({p.score for p in bracket}, reverse=True).index(p2.score) if p2.score in [p.score for p in bracket] else 0
+            p2_score_rank = (
+                sorted({p.score for p in bracket}, reverse=True).index(p2.score)
+                if p2.score in [p.score for p in bracket]
+                else 0
+            )
             weight = (weight << scores_shift) | (1 << p2_score_rank)
         else:
             weight = weight << scores_shift
 
         if _get_float_type(p1, 1, current_round) == FloatType.FLOAT_DOWN:
-            p1_score_rank = sorted({p.score for p in bracket}, reverse=True).index(p1.score) if p1.score in [p.score for p in bracket] else 0
+            p1_score_rank = (
+                sorted({p.score for p in bracket}, reverse=True).index(p1.score)
+                if p1.score in [p.score for p in bracket]
+                else 0
+            )
             weight = (weight << scores_shift) | (1 << p1_score_rank)
         else:
             weight = weight << scores_shift
 
         # Minimize scores of opponents of upfloaters from previous round
-        if not (_get_float_type(p2, 1, current_round) == FloatType.FLOAT_UP and p1.score > p2.score):
-            p1_score_rank = sorted({p.score for p in bracket}, reverse=True).index(p1.score) if p1.score in [p.score for p in bracket] else 0
+        if not (
+            _get_float_type(p2, 1, current_round) == FloatType.FLOAT_UP
+            and p1.score > p2.score
+        ):
+            p1_score_rank = (
+                sorted({p.score for p in bracket}, reverse=True).index(p1.score)
+                if p1.score in [p.score for p in bracket]
+                else 0
+            )
             weight = (weight << scores_shift) | (1 << p1_score_rank)
         else:
             weight = weight << scores_shift
@@ -223,19 +310,34 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
         # Similar logic for two rounds back
         scores_shift = len({p.score for p in bracket})
         if _get_float_type(p2, 2, current_round) == FloatType.FLOAT_DOWN:
-            p2_score_rank = sorted({p.score for p in bracket}, reverse=True).index(p2.score) if p2.score in [p.score for p in bracket] else 0
+            p2_score_rank = (
+                sorted({p.score for p in bracket}, reverse=True).index(p2.score)
+                if p2.score in [p.score for p in bracket]
+                else 0
+            )
             weight = (weight << scores_shift) | (1 << p2_score_rank)
         else:
             weight = weight << scores_shift
 
         if _get_float_type(p1, 2, current_round) == FloatType.FLOAT_DOWN:
-            p1_score_rank = sorted({p.score for p in bracket}, reverse=True).index(p1.score) if p1.score in [p.score for p in bracket] else 0
+            p1_score_rank = (
+                sorted({p.score for p in bracket}, reverse=True).index(p1.score)
+                if p1.score in [p.score for p in bracket]
+                else 0
+            )
             weight = (weight << scores_shift) | (1 << p1_score_rank)
         else:
             weight = weight << scores_shift
 
-        if not (_get_float_type(p2, 2, current_round) == FloatType.FLOAT_UP and p1.score > p2.score):
-            p1_score_rank = sorted({p.score for p in bracket}, reverse=True).index(p1.score) if p1.score in [p.score for p in bracket] else 0
+        if not (
+            _get_float_type(p2, 2, current_round) == FloatType.FLOAT_UP
+            and p1.score > p2.score
+        ):
+            p1_score_rank = (
+                sorted({p.score for p in bracket}, reverse=True).index(p1.score)
+                if p1.score in [p.score for p in bracket]
+                else 0
+            )
             weight = (weight << scores_shift) | (1 << p1_score_rank)
         else:
             weight = weight << scores_shift
@@ -250,12 +352,15 @@ def _compute_edge_weight(p1: Player, p2: Player, bracket: List[Player], previous
 
 class FloatType(Enum):
     """Types of floaters based on C++ implementation"""
+
     FLOAT_DOWN = 1
     FLOAT_UP = 2
     FLOAT_NONE = 3
 
+
 class PairingWeight:
     """Edge weight class similar to C++ matching_computer::edge_weight"""
+
     def __init__(self, value: int = 0):
         self.value = value
 
@@ -280,6 +385,7 @@ class PairingWeight:
         self.value <<= bits
         return self
 
+
 # FIDE Dutch Swiss pairing algorithm implementation
 # Based on the C++ reference implementation, adapted for Python
 def create_dutch_swiss_pairings(
@@ -288,8 +394,10 @@ def create_dutch_swiss_pairings(
     previous_matches: Set[frozenset],
     get_eligible_bye_player,
     allow_repeat_pairing_callback=None,
-    total_rounds: int = 0
-) -> Tuple[List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]]:
+    total_rounds: int = 0,
+) -> Tuple[
+    List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]
+]:
     """
     Create pairings for a Swiss-system round using the FIDE Dutch system.
     Based on C++ implementation from swisssystems::dutch
@@ -305,7 +413,7 @@ def create_dutch_swiss_pairings(
     # Filter out inactive players and ensure pairing numbers are set
     active_players = [p for p in players if p.is_active]
     for idx, p in enumerate(active_players):
-        if not hasattr(p, 'pairing_number') or p.pairing_number is None:
+        if not hasattr(p, "pairing_number") or p.pairing_number is None:
             p.pairing_number = idx + 1
 
     # Sort players by score (descending), then pairing number (ascending) - FIDE Article 1.2
@@ -326,10 +434,16 @@ def create_dutch_swiss_pairings(
         return _pair_round_one(sorted_players, bye_player, bye_player_id)
 
     # Main pairing algorithm for rounds 2+
-    return _compute_dutch_pairings(sorted_players, current_round, previous_matches, bye_player, bye_player_id)
+    return _compute_dutch_pairings(
+        sorted_players, current_round, previous_matches, bye_player, bye_player_id
+    )
 
 
-def _pair_round_one(players: List[Player], bye_player: Optional[Player], bye_player_id: Optional[str]) -> Tuple[List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]]:
+def _pair_round_one(
+    players: List[Player], bye_player: Optional[Player], bye_player_id: Optional[str]
+) -> Tuple[
+    List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]
+]:
     """Handle round 1 pairing: top half vs bottom half by initial rating/rank"""
     n = len(players)
     pairings = []
@@ -338,13 +452,13 @@ def _pair_round_one(players: List[Player], bye_player: Optional[Player], bye_pla
     # For round 1, sort by rating descending (highest rated first)
     players_by_rating = sorted(players, key=lambda p: (-p.rating, p.pairing_number))
 
-    s1 = players_by_rating[:n//2]  # Top half (highest rated)
-    s2 = players_by_rating[n//2:]  # Bottom half (lowest rated)
+    s1 = players_by_rating[: n // 2]  # Top half (highest rated)
+    s2 = players_by_rating[n // 2 :]  # Bottom half (lowest rated)
 
     # FIDE Rule: Pair rank 1 vs rank (n/2+1), rank 2 vs rank (n/2+2), etc.
-    for i in range(n//2):
+    for i in range(n // 2):
         higher_rated = s1[i]  # Rank i+1
-        lower_rated = s2[i]   # Rank (n/2+i+1)
+        lower_rated = s2[i]  # Rank (n/2+i+1)
 
         # FIDE Color assignment in round 1:
         # Boards 1, 3, 5, etc.: higher rated gets white
@@ -362,7 +476,15 @@ def _pair_round_one(players: List[Player], bye_player: Optional[Player], bye_pla
     return pairings, bye_player, round_pairings_ids, bye_player_id
 
 
-def _compute_dutch_pairings(players: List[Player], current_round: int, previous_matches: Set[frozenset], bye_player: Optional[Player], bye_player_id: Optional[str]) -> Tuple[List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]]:
+def _compute_dutch_pairings(
+    players: List[Player],
+    current_round: int,
+    previous_matches: Set[frozenset],
+    bye_player: Optional[Player],
+    bye_player_id: Optional[str],
+) -> Tuple[
+    List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]
+]:
     """Main Dutch system pairing computation for rounds 2+ - FIDE compliant"""
 
     # Sort players by score (descending), then pairing number (ascending) - FIDE Article 1.2
@@ -412,7 +534,13 @@ def _compute_dutch_pairings(players: List[Player], current_round: int, previous_
             continue
 
         # Determine bracket type and parameters
-        M0 = len([p for p in bracket_players if hasattr(p, 'is_moved_down') and p.is_moved_down])
+        M0 = len(
+            [
+                p
+                for p in bracket_players
+                if hasattr(p, "is_moved_down") and p.is_moved_down
+            ]
+        )
         resident_count = len(resident_players)
         total_in_bracket = len(bracket_players)
 
@@ -445,22 +573,35 @@ def _compute_dutch_pairings(players: List[Player], current_round: int, previous_
         for player in remaining:
             player.is_moved_down = True
             # record float-down round for repeat-float minimization
-            if not hasattr(player, 'float_history'):
+            if not hasattr(player, "float_history"):
                 player.float_history = []
             player.float_history.append(current_round)
         moved_down_players = remaining
 
     # After all brackets, pair any remaining moved-down players (final downfloaters)
     if moved_down_players:
-        remaining_pairings = _pair_remaining_players(moved_down_players, previous_matches)
+        remaining_pairings = _pair_remaining_players(
+            moved_down_players, previous_matches
+        )
         for white, black in remaining_pairings:
             pairings.append((white, black))
             round_pairings_ids.append((white.id, black.id))
     return pairings, bye_player, round_pairings_ids, bye_player_id
 
 
-def _try_fide_round3_pattern(score_groups: Dict[float, List[Player]], sorted_scores: List[float],
-                           previous_matches: Set[frozenset], current_round: int) -> Optional[Tuple[List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]]]:
+def _try_fide_round3_pattern(
+    score_groups: Dict[float, List[Player]],
+    sorted_scores: List[float],
+    previous_matches: Set[frozenset],
+    current_round: int,
+) -> Optional[
+    Tuple[
+        List[Tuple[Player, Player]],
+        Optional[Player],
+        List[Tuple[str, str]],
+        Optional[str],
+    ]
+]:
     """
     Try the specific Round 3 pattern used by FIDE managers.
     Different patterns for different bracket sizes:
@@ -476,7 +617,9 @@ def _try_fide_round3_pattern(score_groups: Dict[float, List[Player]], sorted_sco
             continue  # Can't pair odd number of players in bracket
 
         # Sort by rating (descending)
-        sorted_by_rating = sorted(players_in_bracket, key=lambda p: (-p.rating, p.pairing_number))
+        sorted_by_rating = sorted(
+            players_in_bracket, key=lambda p: (-p.rating, p.pairing_number)
+        )
 
         if len(players_in_bracket) == 4:
             # For 4 players: pair highest vs lowest within bracket
@@ -509,7 +652,12 @@ def _try_fide_round3_pattern(score_groups: Dict[float, List[Player]], sorted_sco
             # Sally(1440), Cooper(1300), Joe(1200), Sony(1100), Ben(1000), Patty(1000), Gunner(900), Mark(850)
             # Expected pattern: 4-0, 1-5, 6-2, 3-7 (indices in rating-sorted list)
             if len(sorted_by_rating) == 8:
-                pattern_indices = [(4, 0), (1, 5), (6, 2), (3, 7)]  # Ben-Sally, Cooper-Patty, Gunner-Joe, Sony-Mark
+                pattern_indices = [
+                    (4, 0),
+                    (1, 5),
+                    (6, 2),
+                    (3, 7),
+                ]  # Ben-Sally, Cooper-Patty, Gunner-Joe, Sony-Mark
 
                 bracket_pairings = []
                 for idx1, idx2 in pattern_indices:
@@ -553,8 +701,19 @@ def _try_fide_round3_pattern(score_groups: Dict[float, List[Player]], sorted_sco
         return None  # Pattern didn't work completely
 
 
-def _try_fide_cross_bracket_pattern(high_scorers: List[Player], low_scorers: List[Player],
-                                  previous_matches: Set[frozenset], current_round: int) -> Optional[Tuple[List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]]]:
+def _try_fide_cross_bracket_pattern(
+    high_scorers: List[Player],
+    low_scorers: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+) -> Optional[
+    Tuple[
+        List[Tuple[Player, Player]],
+        Optional[Player],
+        List[Tuple[str, str]],
+        Optional[str],
+    ]
+]:
     """
     Try the specific cross-bracket pairing pattern used by FIDE managers.
     This handles the case where there are two equal-sized score groups in Round 2.
@@ -573,7 +732,7 @@ def _try_fide_cross_bracket_pattern(high_scorers: List[Player], low_scorers: Lis
 
     # The specific pattern that matches FIDE manager behavior
     high_score_pairs = [(0, 5), (4, 1), (2, 7), (6, 3)]  # indices in high_by_rating
-    low_score_pairs = [(5, 0), (1, 4), (7, 2), (3, 6)]   # indices in low_by_rating
+    low_score_pairs = [(5, 0), (1, 4), (7, 2), (3, 6)]  # indices in low_by_rating
 
     pairings = []
     round_pairings_ids = []
@@ -604,8 +763,12 @@ def _try_fide_cross_bracket_pattern(high_scorers: List[Player], low_scorers: Lis
         return None  # Pattern didn't work, fall back to standard processing
 
 
-def _try_cross_bracket_pairing(high_score_players: List[Player], low_score_players: List[Player],
-                             previous_matches: Set[frozenset], current_round: int) -> Optional[Tuple[List[Tuple[Player, Player]], List[Tuple[str, str]]]]:
+def _try_cross_bracket_pairing(
+    high_score_players: List[Player],
+    low_score_players: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+) -> Optional[Tuple[List[Tuple[Player, Player]], List[Tuple[str, str]]]]:
     """
     Attempt cross-bracket pairing for round 2 when we have equal groups.
     This handles the case where 1.0 scorers need to be paired with 0.0 scorers.
@@ -653,7 +816,9 @@ def _try_cross_bracket_pairing(high_score_players: List[Player], low_score_playe
     return pairings, round_pairings_ids
 
 
-def _process_homogeneous_bracket(bracket: List[Player], previous_matches: Set[frozenset], current_round: int) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
+def _process_homogeneous_bracket(
+    bracket: List[Player], previous_matches: Set[frozenset], current_round: int
+) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
     """Process homogeneous bracket (all same score) according to FIDE Dutch rules"""
     # If too few players, no pairing
     if len(bracket) <= 1:
@@ -672,40 +837,54 @@ def _process_homogeneous_bracket(bracket: List[Player], previous_matches: Set[fr
     best_score = -1
 
     # Configuration 1: Standard S1[i] vs S2[i]
-    config1 = _try_bracket_configuration(S1, S2, previous_matches, current_round, "standard")
-    if config1 and config1['paired_count'] > best_score:
+    config1 = _try_bracket_configuration(
+        S1, S2, previous_matches, current_round, "standard"
+    )
+    if config1 and config1["paired_count"] > best_score:
         best_config = config1
-        best_score = config1['paired_count']
+        best_score = config1["paired_count"]
 
     # Configuration 2: Try S2 transpositions (FIDE Article 4.2)
     s2_transpositions = _generate_s2_transpositions(S2, len(S1))
     for i, s2_variant in enumerate(s2_transpositions[:10]):  # Limit for performance
-        config = _try_bracket_configuration(S1, s2_variant, previous_matches, current_round, f"s2_trans_{i}")
-        if config and config['paired_count'] > best_score:
+        config = _try_bracket_configuration(
+            S1, s2_variant, previous_matches, current_round, f"s2_trans_{i}"
+        )
+        if config and config["paired_count"] > best_score:
             best_config = config
-            best_score = config['paired_count']
+            best_score = config["paired_count"]
             if best_score == MaxPairs:  # Perfect pairing found
                 break
 
     # Configuration 3: Try resident exchanges (FIDE Article 4.3)
     if best_score < MaxPairs:
         resident_exchanges = _generate_resident_exchanges(S1, S2)
-        for i, (s1_variant, s2_variant) in enumerate(resident_exchanges[:10]):  # Limit for performance
-            config = _try_bracket_configuration(s1_variant, s2_variant, previous_matches, current_round, f"exchange_{i}")
-            if config and config['paired_count'] > best_score:
+        for i, (s1_variant, s2_variant) in enumerate(
+            resident_exchanges[:10]
+        ):  # Limit for performance
+            config = _try_bracket_configuration(
+                s1_variant, s2_variant, previous_matches, current_round, f"exchange_{i}"
+            )
+            if config and config["paired_count"] > best_score:
                 best_config = config
-                best_score = config['paired_count']
+                best_score = config["paired_count"]
                 if best_score == MaxPairs:  # Perfect pairing found
                     break
 
     if best_config:
-        return best_config['pairings'], best_config['unpaired']
+        return best_config["pairings"], best_config["unpaired"]
     else:
         # Fallback: no valid configuration found
         return [], bracket
 
 
-def _try_bracket_configuration(s1: List[Player], s2: List[Player], previous_matches: Set[frozenset], current_round: int, config_name: str) -> Optional[Dict]:
+def _try_bracket_configuration(
+    s1: List[Player],
+    s2: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+    config_name: str,
+) -> Optional[Dict]:
     """Try a specific S1 vs S2 configuration and evaluate it"""
     pairings = []
     unpaired = []
@@ -737,15 +916,21 @@ def _try_bracket_configuration(s1: List[Player], s2: List[Player], previous_matc
         unpaired.append(s2[i])
 
     return {
-        'name': config_name,
-        'pairings': pairings,
-        'unpaired': unpaired,
-        'paired_count': len(pairings),
-        'color_violations': color_violations
+        "name": config_name,
+        "pairings": pairings,
+        "unpaired": unpaired,
+        "paired_count": len(pairings),
+        "color_violations": color_violations,
     }
 
 
-def _process_heterogeneous_bracket(bracket: List[Player], resident_players: List[Player], M1: int, previous_matches: Set[frozenset], current_round: int) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
+def _process_heterogeneous_bracket(
+    bracket: List[Player],
+    resident_players: List[Player],
+    M1: int,
+    previous_matches: Set[frozenset],
+    current_round: int,
+) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
     """Process heterogeneous bracket (mixed scores) according to FIDE Dutch rules"""
 
     # Ensure BSN assignments
@@ -756,21 +941,25 @@ def _process_heterogeneous_bracket(bracket: List[Player], resident_players: List
     S2 = resident_players.copy()  # All resident players
 
     # FIDE Rule 2.2.3: Limbo contains excess MDPs
-    M0 = len([p for p in bracket if hasattr(p, 'is_moved_down') and p.is_moved_down])
+    M0 = len([p for p in bracket if hasattr(p, "is_moved_down") and p.is_moved_down])
     Limbo = bracket[M1:M0] if M0 > M1 else []
 
     configurations = []
 
     # Generate MDP-Pairings and process remainders
     # 1. Original configuration
-    config = _evaluate_heterogeneous_configuration(S1, S2, Limbo, previous_matches, current_round, "original")
+    config = _evaluate_heterogeneous_configuration(
+        S1, S2, Limbo, previous_matches, current_round, "original"
+    )
     if config:
         configurations.append(config)
 
     # 2. S2 transpositions for MDP-Pairing
     s2_transpositions = _generate_s2_transpositions(S2, M1)
     for i, s2_variant in enumerate(s2_transpositions):
-        config = _evaluate_heterogeneous_configuration(S1, s2_variant, Limbo, previous_matches, current_round, f"mdp_trans_{i}")
+        config = _evaluate_heterogeneous_configuration(
+            S1, s2_variant, Limbo, previous_matches, current_round, f"mdp_trans_{i}"
+        )
         if config:
             configurations.append(config)
 
@@ -778,19 +967,32 @@ def _process_heterogeneous_bracket(bracket: List[Player], resident_players: List
     if len(Limbo) > 0:
         exchanges = _generate_mdp_exchanges(S1, Limbo)
         for i, (new_s1, new_limbo) in enumerate(exchanges):
-            config = _evaluate_heterogeneous_configuration(new_s1, S2, new_limbo, previous_matches, current_round, f"mdp_exchange_{i}")
+            config = _evaluate_heterogeneous_configuration(
+                new_s1,
+                S2,
+                new_limbo,
+                previous_matches,
+                current_round,
+                f"mdp_exchange_{i}",
+            )
             if config:
                 configurations.append(config)
 
     best_config = _select_best_fide_configuration(configurations)
 
     if best_config:
-        return best_config['pairings'], best_config['unpaired'] + Limbo
+        return best_config["pairings"], best_config["unpaired"] + Limbo
     else:
         return [], bracket
 
 
-def _evaluate_fide_configuration(S1: List[Player], S2: List[Player], previous_matches: Set[frozenset], current_round: int, config_name: str) -> Optional[Dict]:
+def _evaluate_fide_configuration(
+    S1: List[Player],
+    S2: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+    config_name: str,
+) -> Optional[Dict]:
     """Evaluate configuration according to FIDE criteria"""
     pairings = []
     unpaired = []
@@ -831,22 +1033,33 @@ def _evaluate_fide_configuration(S1: List[Player], S2: List[Player], previous_ma
     sd_down = [p.score - artificial for p in unpaired]
     # PSD list sorted descending
     psd = sorted(sd_pairs + sd_down, reverse=True)
-    color_violations = sum(1 for p1, p2 in pairings if not _colors_satisfy_fide_preferences(p1, p2))
+    color_violations = sum(
+        1 for p1, p2 in pairings if not _colors_satisfy_fide_preferences(p1, p2)
+    )
     # Compute repeat-float metrics: count prior floats for each downfloater
-    float_counts = sorted([len(p.float_history) if hasattr(p, 'float_history') else 0 for p in unpaired])
+    float_counts = sorted(
+        [len(p.float_history) if hasattr(p, "float_history") else 0 for p in unpaired]
+    )
     return {
-        'name': config_name,
-        'pairings': pairings,
-        'unpaired': unpaired,
-        'downfloaters': downfloaters,
-        'psd': psd,
-        'float_counts': float_counts,
-        'color_violations': color_violations,
-        'paired_count': paired_count
+        "name": config_name,
+        "pairings": pairings,
+        "unpaired": unpaired,
+        "downfloaters": downfloaters,
+        "psd": psd,
+        "float_counts": float_counts,
+        "color_violations": color_violations,
+        "paired_count": paired_count,
     }
 
 
-def _evaluate_heterogeneous_configuration(S1: List[Player], S2: List[Player], Limbo: List[Player], previous_matches: Set[frozenset], current_round: int, config_name: str) -> Optional[Dict]:
+def _evaluate_heterogeneous_configuration(
+    S1: List[Player],
+    S2: List[Player],
+    Limbo: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+    config_name: str,
+) -> Optional[Dict]:
     """Evaluate heterogeneous bracket configuration with MDP-Pairing and remainder"""
 
     # Create MDP-Pairing (S1 MDPs with S2 residents)
@@ -865,7 +1078,9 @@ def _evaluate_heterogeneous_configuration(S1: List[Player], S2: List[Player], Li
 
     # Process remainder (remaining S2 players)
     remainder_players = S2[M1:]
-    remainder_pairings, remainder_unpaired = _process_homogeneous_bracket(remainder_players, previous_matches, current_round)
+    remainder_pairings, remainder_unpaired = _process_homogeneous_bracket(
+        remainder_players, previous_matches, current_round
+    )
 
     # Combine results
     all_pairings = mdp_pairings + remainder_pairings
@@ -873,16 +1088,18 @@ def _evaluate_heterogeneous_configuration(S1: List[Player], S2: List[Player], Li
 
     downfloaters = len(all_unpaired)
     score_differences = sum(abs(p1.score - p2.score) for p1, p2 in all_pairings)
-    color_violations = sum(1 for p1, p2 in all_pairings if not _colors_satisfy_fide_preferences(p1, p2))
+    color_violations = sum(
+        1 for p1, p2 in all_pairings if not _colors_satisfy_fide_preferences(p1, p2)
+    )
 
     return {
-        'name': config_name,
-        'pairings': all_pairings,
-        'unpaired': all_unpaired,
-        'downfloaters': downfloaters,
-        'score_diff_total': score_differences,
-        'color_violations': color_violations,
-        'paired_count': len(all_pairings)
+        "name": config_name,
+        "pairings": all_pairings,
+        "unpaired": all_unpaired,
+        "downfloaters": downfloaters,
+        "score_diff_total": score_differences,
+        "color_violations": color_violations,
+        "paired_count": len(all_pairings),
     }
 
 
@@ -897,7 +1114,7 @@ def _generate_s2_transpositions(S2: List[Player], N1: int) -> List[List[Player]]
 
     # Ensure BSNs are set according to FIDE sequential rules
     for i, player in enumerate(S2):
-        if not hasattr(player, 'bsn') or player.bsn is None:
+        if not hasattr(player, "bsn") or player.bsn is None:
             player.bsn = i + 1
 
     # FIDE 4.2.1: Generate all possible transpositions
@@ -925,7 +1142,9 @@ def _generate_s2_transpositions(S2: List[Player], N1: int) -> List[List[Player]]
     return unique_transpositions
 
 
-def _generate_resident_exchanges(S1: List[Player], S2: List[Player]) -> List[Tuple[List[Player], List[Player]]]:
+def _generate_resident_exchanges(
+    S1: List[Player], S2: List[Player]
+) -> List[Tuple[List[Player], List[Player]]]:
     """
     FIDE Article 4.3: Generate resident exchanges according to FIDE rules.
     Sorted by: 1) smallest number of exchanged BSNs, 2) comparison criteria
@@ -951,15 +1170,18 @@ def _generate_resident_exchanges(S1: List[Player], S2: List[Player]) -> List[Tup
             # FIDE 4.3.3: Priority criteria for sorting exchanges
             bsn_sum_diff = abs(S2[j].bsn - S1[i].bsn)  # Criterion 2
             highest_s1_to_s2 = S1[i].bsn  # Criterion 3
-            lowest_s2_to_s1 = S2[j].bsn   # Criterion 4
+            lowest_s2_to_s1 = S2[j].bsn  # Criterion 4
 
-            exchanges.append((
-                1,  # number of exchanges
-                bsn_sum_diff,
-                -highest_s1_to_s2,  # negative for descending sort (higher BSN better)
-                lowest_s2_to_s1,
-                new_s1, new_s2
-            ))
+            exchanges.append(
+                (
+                    1,  # number of exchanges
+                    bsn_sum_diff,
+                    -highest_s1_to_s2,  # negative for descending sort (higher BSN better)
+                    lowest_s2_to_s1,
+                    new_s1,
+                    new_s2,
+                )
+            )
 
     # Two-player exchanges (if we have enough players)
     if len(S1) >= 2 and len(S2) >= 2:
@@ -979,17 +1201,22 @@ def _generate_resident_exchanges(S1: List[Player], S2: List[Player]) -> List[Tup
                         new_s1.sort(key=lambda p: (-p.score, p.pairing_number))
                         new_s2.sort(key=lambda p: (-p.score, p.pairing_number))
 
-                        bsn_sum_diff = abs((S2[j1].bsn + S2[j2].bsn) - (S1[i1].bsn + S1[i2].bsn))
+                        bsn_sum_diff = abs(
+                            (S2[j1].bsn + S2[j2].bsn) - (S1[i1].bsn + S1[i2].bsn)
+                        )
                         highest_s1_to_s2 = max(S1[i1].bsn, S1[i2].bsn)
                         lowest_s2_to_s1 = min(S2[j1].bsn, S2[j2].bsn)
 
-                        exchanges.append((
-                            2,  # number of exchanges
-                            bsn_sum_diff,
-                            -highest_s1_to_s2,
-                            lowest_s2_to_s1,
-                            new_s1, new_s2
-                        ))
+                        exchanges.append(
+                            (
+                                2,  # number of exchanges
+                                bsn_sum_diff,
+                                -highest_s1_to_s2,
+                                lowest_s2_to_s1,
+                                new_s1,
+                                new_s2,
+                            )
+                        )
 
     # Sort exchanges by FIDE criteria
     exchanges.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
@@ -1003,11 +1230,13 @@ def _ensure_bsn_assignments(players: List[Player]) -> None:
     BSN is assigned sequentially within each bracket according to FIDE rules.
     """
     for i, player in enumerate(players):
-        if not hasattr(player, 'bsn') or player.bsn is None:
+        if not hasattr(player, "bsn") or player.bsn is None:
             player.bsn = i + 1
 
 
-def _generate_mdp_exchanges(S1: List[Player], Limbo: List[Player]) -> List[Tuple[List[Player], List[Player]]]:
+def _generate_mdp_exchanges(
+    S1: List[Player], Limbo: List[Player]
+) -> List[Tuple[List[Player], List[Player]]]:
     """Generate MDP exchanges according to FIDE Article 4.4"""
     # Collect exchanges with BSN keys for sorting
     seq_exchanges = []  # List of (bsn_list, new_s1, new_limbo)
@@ -1037,7 +1266,7 @@ def _select_best_fide_configuration(configurations: List[Dict]) -> Optional[Dict
         return None
 
     # Remove configurations that don't produce any pairings
-    valid_configs = [c for c in configurations if c['paired_count'] > 0]
+    valid_configs = [c for c in configurations if c["paired_count"] > 0]
     if not valid_configs:
         return None
 
@@ -1051,74 +1280,104 @@ def _select_best_fide_configuration(configurations: List[Dict]) -> Optional[Dict
 
 def _compute_comprehensive_fide_quality_metrics(config: Dict) -> None:
     """Compute all FIDE quality metrics for a configuration"""
-    pairings = config.get('pairings', [])
-    unpaired = config.get('unpaired', [])
+    pairings = config.get("pairings", [])
+    unpaired = config.get("unpaired", [])
 
     # C6: Number of downfloaters (players who float down to lower bracket)
-    config['downfloaters'] = len(unpaired)
+    config["downfloaters"] = len(unpaired)
 
     # C7: PSD list (Pairing Score Differences) - must be lexicographically minimal
-    if 'psd' not in config or not config['psd']:
-        bracket_scores = [p.score for p in config.get('all_players', [])]
+    if "psd" not in config or not config["psd"]:
+        bracket_scores = [p.score for p in config.get("all_players", [])]
         if not bracket_scores and pairings:
             bracket_scores = [p.score for p1, p2 in pairings for p in [p1, p2]]
         bracket_score = min(bracket_scores) if bracket_scores else 0.0
-        config['psd'] = _compute_psd_list(pairings, unpaired, bracket_score)
+        config["psd"] = _compute_psd_list(pairings, unpaired, bracket_score)
 
     # C8: Quality criteria compliance in future rounds (placeholder - complex to evaluate)
-    config['future_compliance_score'] = 0
+    config["future_compliance_score"] = 0
 
     # C9: Bye assignee criteria (player with lowest pairing number who hasn't received bye)
     # This is handled elsewhere, but we track it
-    config['bye_violation'] = 0
+    config["bye_violation"] = 0
 
     # C10: Forbid pairing players who already played (C1 - absolute criterion)
-    config['repeat_pairing_violations'] = 0  # Should be 0 for valid configs
+    config["repeat_pairing_violations"] = 0  # Should be 0 for valid configs
 
     # C11: No player gets the same color 3 times in a row
-    config['three_consecutive_color_violations'] = sum(
-        1 for p1, p2 in pairings
+    config["three_consecutive_color_violations"] = sum(
+        1
+        for p1, p2 in pairings
         if _has_three_consecutive_colors(p1) or _has_three_consecutive_colors(p2)
     )
 
     # C12: Absolute color preference violations
-    config['absolute_color_violations'] = sum(
-        1 for p1, p2 in pairings
-        if (_has_absolute_color_preference(p1) and _get_color_preference(p1) != (W if p1 == pairings[0][0] else B)) or
-           (_has_absolute_color_preference(p2) and _get_color_preference(p2) != (B if p1 == pairings[0][0] else W))
-    ) if pairings else 0
+    config["absolute_color_violations"] = (
+        sum(
+            1
+            for p1, p2 in pairings
+            if (
+                _has_absolute_color_preference(p1)
+                and _get_color_preference(p1) != (W if p1 == pairings[0][0] else B)
+            )
+            or (
+                _has_absolute_color_preference(p2)
+                and _get_color_preference(p2) != (B if p1 == pairings[0][0] else W)
+            )
+        )
+        if pairings
+        else 0
+    )
 
     # C13: Strong color preference violations (non-absolute)
-    config['strong_color_violations'] = sum(
-        1 for p1, p2 in pairings
-        if (_has_strong_color_preference(p1) and not _has_absolute_color_preference(p1) and
-            _get_color_preference(p1) != (W if p1 == pairings[0][0] else B)) or
-           (_has_strong_color_preference(p2) and not _has_absolute_color_preference(p2) and
-            _get_color_preference(p2) != (B if p1 == pairings[0][0] else W))
-    ) if pairings else 0
+    config["strong_color_violations"] = (
+        sum(
+            1
+            for p1, p2 in pairings
+            if (
+                _has_strong_color_preference(p1)
+                and not _has_absolute_color_preference(p1)
+                and _get_color_preference(p1) != (W if p1 == pairings[0][0] else B)
+            )
+            or (
+                _has_strong_color_preference(p2)
+                and not _has_absolute_color_preference(p2)
+                and _get_color_preference(p2) != (B if p1 == pairings[0][0] else W)
+            )
+        )
+        if pairings
+        else 0
+    )
 
     # C14-C21: Minimize sum of number of previous downfloats per downfloater
     # Collect float history for each unpaired player
     float_counts = []
     for player in unpaired:
-        if hasattr(player, 'float_history'):
+        if hasattr(player, "float_history"):
             float_counts.append(len(player.float_history))
         else:
             float_counts.append(0)
 
-    config['total_previous_floats'] = sum(float_counts)
-    config['float_counts_sorted'] = sorted(float_counts, reverse=True)  # For lexicographic comparison
+    config["total_previous_floats"] = sum(float_counts)
+    config["float_counts_sorted"] = sorted(
+        float_counts, reverse=True
+    )  # For lexicographic comparison
 
     # Additional metrics for tiebreaking
-    config['mild_color_violations'] = sum(
-        1 for p1, p2 in pairings
-        if not _colors_satisfy_fide_preferences(p1, p2) and
-           not _has_absolute_color_preference(p1) and not _has_absolute_color_preference(p2) and
-           not _has_strong_color_preference(p1) and not _has_strong_color_preference(p2)
+    config["mild_color_violations"] = sum(
+        1
+        for p1, p2 in pairings
+        if not _colors_satisfy_fide_preferences(p1, p2)
+        and not _has_absolute_color_preference(p1)
+        and not _has_absolute_color_preference(p2)
+        and not _has_strong_color_preference(p1)
+        and not _has_strong_color_preference(p2)
     )
 
 
-def _apply_fide_quality_criteria_selection(configurations: List[Dict]) -> Optional[Dict]:
+def _apply_fide_quality_criteria_selection(
+    configurations: List[Dict],
+) -> Optional[Dict]:
     """
     Apply FIDE quality criteria in exact descending priority order.
     Returns the configuration that best satisfies FIDE criteria C6-C21.
@@ -1129,15 +1388,17 @@ def _apply_fide_quality_criteria_selection(configurations: List[Dict]) -> Option
     current_configs = configurations.copy()
 
     # C6: Minimize number of downfloaters (highest priority)
-    min_downfloaters = min(c['downfloaters'] for c in current_configs)
-    current_configs = [c for c in current_configs if c['downfloaters'] == min_downfloaters]
+    min_downfloaters = min(c["downfloaters"] for c in current_configs)
+    current_configs = [
+        c for c in current_configs if c["downfloaters"] == min_downfloaters
+    ]
     if len(current_configs) == 1:
         return current_configs[0]
 
     # C7: Minimize PSD list lexicographically (second highest priority)
-    current_configs.sort(key=lambda c: c['psd'])
-    best_psd = current_configs[0]['psd']
-    current_configs = [c for c in current_configs if c['psd'] == best_psd]
+    current_configs.sort(key=lambda c: c["psd"])
+    best_psd = current_configs[0]["psd"]
+    current_configs = [c for c in current_configs if c["psd"] == best_psd]
     if len(current_configs) == 1:
         return current_configs[0]
 
@@ -1145,56 +1406,90 @@ def _apply_fide_quality_criteria_selection(configurations: List[Dict]) -> Option
     # In practice, this requires complex analysis of future pairing possibilities
 
     # C9: Bye assignee criteria (typically handled elsewhere)
-    min_bye_violations = min(c['bye_violation'] for c in current_configs)
-    current_configs = [c for c in current_configs if c['bye_violation'] == min_bye_violations]
+    min_bye_violations = min(c["bye_violation"] for c in current_configs)
+    current_configs = [
+        c for c in current_configs if c["bye_violation"] == min_bye_violations
+    ]
     if len(current_configs) == 1:
         return current_configs[0]
 
     # C10: Forbid repeat pairings (should be 0 for all valid configs)
-    min_repeat_violations = min(c['repeat_pairing_violations'] for c in current_configs)
-    current_configs = [c for c in current_configs if c['repeat_pairing_violations'] == min_repeat_violations]
+    min_repeat_violations = min(c["repeat_pairing_violations"] for c in current_configs)
+    current_configs = [
+        c
+        for c in current_configs
+        if c["repeat_pairing_violations"] == min_repeat_violations
+    ]
     if len(current_configs) == 1:
         return current_configs[0]
 
     # C11: Minimize three consecutive same color violations
-    min_consecutive_violations = min(c['three_consecutive_color_violations'] for c in current_configs)
-    current_configs = [c for c in current_configs if c['three_consecutive_color_violations'] == min_consecutive_violations]
+    min_consecutive_violations = min(
+        c["three_consecutive_color_violations"] for c in current_configs
+    )
+    current_configs = [
+        c
+        for c in current_configs
+        if c["three_consecutive_color_violations"] == min_consecutive_violations
+    ]
     if len(current_configs) == 1:
         return current_configs[0]
 
     # C12: Minimize absolute color preference violations
-    min_absolute_violations = min(c['absolute_color_violations'] for c in current_configs)
-    current_configs = [c for c in current_configs if c['absolute_color_violations'] == min_absolute_violations]
+    min_absolute_violations = min(
+        c["absolute_color_violations"] for c in current_configs
+    )
+    current_configs = [
+        c
+        for c in current_configs
+        if c["absolute_color_violations"] == min_absolute_violations
+    ]
     if len(current_configs) == 1:
         return current_configs[0]
 
     # C13: Minimize strong color preference violations
-    min_strong_violations = min(c['strong_color_violations'] for c in current_configs)
-    current_configs = [c for c in current_configs if c['strong_color_violations'] == min_strong_violations]
+    min_strong_violations = min(c["strong_color_violations"] for c in current_configs)
+    current_configs = [
+        c
+        for c in current_configs
+        if c["strong_color_violations"] == min_strong_violations
+    ]
     if len(current_configs) == 1:
         return current_configs[0]
 
     # C14-C21: Minimize sum of previous downfloats (with lexicographic comparison for ties)
-    min_total_floats = min(c['total_previous_floats'] for c in current_configs)
-    current_configs = [c for c in current_configs if c['total_previous_floats'] == min_total_floats]
+    min_total_floats = min(c["total_previous_floats"] for c in current_configs)
+    current_configs = [
+        c for c in current_configs if c["total_previous_floats"] == min_total_floats
+    ]
     if len(current_configs) == 1:
         return current_configs[0]
 
     # Final tiebreaker: lexicographic comparison of float count lists
-    current_configs.sort(key=lambda c: c['float_counts_sorted'])
-    best_float_pattern = current_configs[0]['float_counts_sorted']
-    current_configs = [c for c in current_configs if c['float_counts_sorted'] == best_float_pattern]
+    current_configs.sort(key=lambda c: c["float_counts_sorted"])
+    best_float_pattern = current_configs[0]["float_counts_sorted"]
+    current_configs = [
+        c for c in current_configs if c["float_counts_sorted"] == best_float_pattern
+    ]
     if len(current_configs) == 1:
         return current_configs[0]
 
     # Ultimate tiebreaker: mild color preference violations
-    min_mild_violations = min(c['mild_color_violations'] for c in current_configs)
-    final_configs = [c for c in current_configs if c['mild_color_violations'] == min_mild_violations]
+    min_mild_violations = min(c["mild_color_violations"] for c in current_configs)
+    final_configs = [
+        c for c in current_configs if c["mild_color_violations"] == min_mild_violations
+    ]
 
     return final_configs[0]  # Return first if still tied
 
 
-def _meets_absolute_criteria(p1: Player, p2: Player, previous_matches: Set[frozenset], current_round: int = 0, total_rounds: int = 0) -> bool:
+def _meets_absolute_criteria(
+    p1: Player,
+    p2: Player,
+    previous_matches: Set[frozenset],
+    current_round: int = 0,
+    total_rounds: int = 0,
+) -> bool:
     """
     Check FIDE absolute criteria [C1-C3]
     C1: Players must not have played before
@@ -1213,7 +1508,9 @@ def _meets_absolute_criteria(p1: Player, p2: Player, previous_matches: Set[froze
 
         # If both are non-topscorers
         if not is_p1_topscorer and not is_p2_topscorer:
-            if _has_absolute_color_preference(p1) and _has_absolute_color_preference(p2):
+            if _has_absolute_color_preference(p1) and _has_absolute_color_preference(
+                p2
+            ):
                 pref1 = _get_color_preference(p1)
                 pref2 = _get_color_preference(p2)
                 if pref1 == pref2:
@@ -1222,7 +1519,9 @@ def _meets_absolute_criteria(p1: Player, p2: Player, previous_matches: Set[froze
     return True
 
 
-def _assign_colors_fide(p1: Player, p2: Player, current_round: int) -> Tuple[Player, Player]:
+def _assign_colors_fide(
+    p1: Player, p2: Player, current_round: int
+) -> Tuple[Player, Player]:
     """
     Assign colors according to FIDE Article 5 rules (descending priority).
     Returns (white_player, black_player)
@@ -1257,19 +1556,31 @@ def _assign_colors_fide(p1: Player, p2: Player, current_round: int) -> Tuple[Pla
             return (p1, p2) if last_colors_p1[-1] == W else (p2, p1)
 
     # 5.2.4: Grant the colour preference of the higher ranked player
-    higher_ranked = p1 if (-p1.score, -p1.rating, p1.pairing_number) < (-p2.score, -p2.rating, p2.pairing_number) else p2
+    higher_ranked = (
+        p1
+        if (-p1.score, -p1.rating, p1.pairing_number)
+        < (-p2.score, -p2.rating, p2.pairing_number)
+        else p2
+    )
     lower_ranked = p2 if higher_ranked == p1 else p1
 
     higher_pref = _get_color_preference(higher_ranked)
     if higher_pref:
-        return (higher_ranked, lower_ranked) if higher_pref == W else (lower_ranked, higher_ranked)
+        return (
+            (higher_ranked, lower_ranked)
+            if higher_pref == W
+            else (lower_ranked, higher_ranked)
+        )
 
     # 5.2.5: Use pairing number parity with initial-colour
     # Higher ranked player: odd pairing number = initial-colour (W), even = opposite (B)
     if higher_ranked.pairing_number % 2 == 1:
         return (higher_ranked, lower_ranked)  # Give initial-colour (White)
     else:
-        return (lower_ranked, higher_ranked)   # Give opposite colour (Black for higher ranked)
+        return (
+            lower_ranked,
+            higher_ranked,
+        )  # Give opposite colour (Black for higher ranked)
 
 
 def _colors_satisfy_fide_preferences(white: Player, black: Player) -> bool:
@@ -1283,7 +1594,9 @@ def _colors_satisfy_fide_preferences(white: Player, black: Player) -> bool:
     return white_satisfied and black_satisfied
 
 
-def _pair_dutch_bracket_improved(bracket: List[Player], previous_matches: Set[frozenset], current_round: int) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
+def _pair_dutch_bracket_improved(
+    bracket: List[Player], previous_matches: Set[frozenset], current_round: int
+) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
     """
     Improved Dutch system bracket pairing with better configuration selection.
     Uses more sophisticated scoring and FIDE-compliant optimization.
@@ -1306,30 +1619,41 @@ def _pair_dutch_bracket_improved(bracket: List[Player], previous_matches: Set[fr
     s2 = bracket[mid:]
 
     # Generate comprehensive pairing configurations
-    configurations = _generate_comprehensive_configurations(s1, s2, previous_matches, current_round)
+    configurations = _generate_comprehensive_configurations(
+        s1, s2, previous_matches, current_round
+    )
 
     # Select the best configuration using enhanced FIDE criteria
     best_config = _select_optimal_configuration(configurations)
 
     # If we have a good configuration, use it
-    if best_config and len(best_config['pairings']) >= len(bracket) // 2 - 1:
-        return best_config['pairings'], best_config['unpaired']
+    if best_config and len(best_config["pairings"]) >= len(bracket) // 2 - 1:
+        return best_config["pairings"], best_config["unpaired"]
 
     # If Dutch system doesn't work well, fall back to enhanced greedy approach
     return _enhanced_fallback_pairing(bracket, previous_matches, current_round)
 
 
-def _generate_comprehensive_configurations(s1: List[Player], s2: List[Player], previous_matches: Set[frozenset], current_round: int) -> List[Dict]:
+def _generate_comprehensive_configurations(
+    s1: List[Player],
+    s2: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+) -> List[Dict]:
     """Generate comprehensive pairing configurations with better scoring"""
     configurations = []
 
     # Standard configuration: S1[i] vs S2[i]
-    config = _evaluate_configuration(s1, s2, previous_matches, current_round, "standard")
+    config = _evaluate_configuration(
+        s1, s2, previous_matches, current_round, "standard"
+    )
     if config:
         configurations.append(config)
 
     # Transposed configuration: S2[i] vs S1[i]
-    config = _evaluate_configuration(s2, s1, previous_matches, current_round, "transpose")
+    config = _evaluate_configuration(
+        s2, s1, previous_matches, current_round, "transpose"
+    )
     if config:
         configurations.append(config)
 
@@ -1337,7 +1661,9 @@ def _generate_comprehensive_configurations(s1: List[Player], s2: List[Player], p
     for i in range(len(s1) - 1):
         s1_variant = s1.copy()
         s1_variant[i], s1_variant[i + 1] = s1_variant[i + 1], s1_variant[i]
-        config = _evaluate_configuration(s1_variant, s2, previous_matches, current_round, f"s1_exchange_{i}")
+        config = _evaluate_configuration(
+            s1_variant, s2, previous_matches, current_round, f"s1_exchange_{i}"
+        )
         if config:
             configurations.append(config)
 
@@ -1345,7 +1671,9 @@ def _generate_comprehensive_configurations(s1: List[Player], s2: List[Player], p
     for i in range(len(s2) - 1):
         s2_variant = s2.copy()
         s2_variant[i], s2_variant[i + 1] = s2_variant[i + 1], s2_variant[i]
-        config = _evaluate_configuration(s1, s2_variant, previous_matches, current_round, f"s2_exchange_{i}")
+        config = _evaluate_configuration(
+            s1, s2_variant, previous_matches, current_round, f"s2_exchange_{i}"
+        )
         if config:
             configurations.append(config)
 
@@ -1357,14 +1685,26 @@ def _generate_comprehensive_configurations(s1: List[Player], s2: List[Player], p
                 s2_variant = s2.copy()
                 s1_variant[i], s1_variant[i + 1] = s1_variant[i + 1], s1_variant[i]
                 s2_variant[j], s2_variant[j + 1] = s2_variant[j + 1], s2_variant[j]
-                config = _evaluate_configuration(s1_variant, s2_variant, previous_matches, current_round, f"combo_{i}_{j}")
+                config = _evaluate_configuration(
+                    s1_variant,
+                    s2_variant,
+                    previous_matches,
+                    current_round,
+                    f"combo_{i}_{j}",
+                )
                 if config:
                     configurations.append(config)
 
     return configurations
 
 
-def _evaluate_configuration(list1: List[Player], list2: List[Player], previous_matches: Set[frozenset], current_round: int, config_name: str) -> Optional[Dict]:
+def _evaluate_configuration(
+    list1: List[Player],
+    list2: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+    config_name: str,
+) -> Optional[Dict]:
     """Evaluate a specific pairing configuration with comprehensive scoring"""
     pairings = []
     unpaired = []
@@ -1411,11 +1751,11 @@ def _evaluate_configuration(list1: List[Player], list2: List[Player], previous_m
 
         # Evaluate color preference satisfaction
         color_satisfaction = _evaluate_color_satisfaction(white, black)
-        if color_satisfaction['absolute_violation']:
+        if color_satisfaction["absolute_violation"]:
             absolute_color_violations += 1
-        elif color_satisfaction['strong_violation']:
+        elif color_satisfaction["strong_violation"]:
             strong_color_violations += 1
-        elif color_satisfaction['mild_violation']:
+        elif color_satisfaction["mild_violation"]:
             mild_color_violations += 1
 
     # Add unpaired players
@@ -1424,17 +1764,21 @@ def _evaluate_configuration(list1: List[Player], list2: List[Player], previous_m
             unpaired.append(player)
 
     return {
-        'name': config_name,
-        'pairings': pairings,
-        'unpaired': unpaired,
-        'score_diff': score_diff_total,
-        'rating_diff': rating_diff_total,
-        'absolute_violations': absolute_color_violations,
-        'strong_violations': strong_color_violations,
-        'mild_violations': mild_color_violations,
-        'repeat_pairings': repeat_pairings,
-        'num_pairs': len(pairings),
-        'pairing_efficiency': len(pairings) / (len(list1) + len(list2)) * 2 if len(list1) + len(list2) > 0 else 0
+        "name": config_name,
+        "pairings": pairings,
+        "unpaired": unpaired,
+        "score_diff": score_diff_total,
+        "rating_diff": rating_diff_total,
+        "absolute_violations": absolute_color_violations,
+        "strong_violations": strong_color_violations,
+        "mild_violations": mild_color_violations,
+        "repeat_pairings": repeat_pairings,
+        "num_pairs": len(pairings),
+        "pairing_efficiency": (
+            len(pairings) / (len(list1) + len(list2)) * 2
+            if len(list1) + len(list2) > 0
+            else 0
+        ),
     }
 
 
@@ -1444,12 +1788,12 @@ def _select_optimal_configuration(configurations: List[Dict]) -> Optional[Dict]:
         return None
 
     # First, filter out any configs with repeat pairings if we have alternatives
-    no_repeats = [c for c in configurations if c['repeat_pairings'] == 0]
+    no_repeats = [c for c in configurations if c["repeat_pairings"] == 0]
     if no_repeats:
         configurations = no_repeats
 
     # Then filter out configs with absolute violations if we have alternatives
-    no_absolute = [c for c in configurations if c['absolute_violations'] == 0]
+    no_absolute = [c for c in configurations if c["absolute_violations"] == 0]
     if no_absolute:
         configurations = no_absolute
 
@@ -1460,14 +1804,17 @@ def _select_optimal_configuration(configurations: List[Dict]) -> Optional[Dict]:
     # 4. Minimize strong color violations
     # 5. Minimize score differences
     # 6. Minimize mild violations and rating differences
-    best = max(configurations, key=lambda c: (
-        c['num_pairs'],                  # PRIMARY: maximize pairings
-        -c['absolute_violations'],       # Then minimize absolute violations
-        -c['repeat_pairings'],          # Then minimize repeats
-        -c['strong_violations'],        # Then minimize strong violations
-        -c['score_diff'] / max(1, c['num_pairs']),  # Normalized score difference
-        -c['mild_violations']           # Finally mild violations
-    ))
+    best = max(
+        configurations,
+        key=lambda c: (
+            c["num_pairs"],  # PRIMARY: maximize pairings
+            -c["absolute_violations"],  # Then minimize absolute violations
+            -c["repeat_pairings"],  # Then minimize repeats
+            -c["strong_violations"],  # Then minimize strong violations
+            -c["score_diff"] / max(1, c["num_pairs"]),  # Normalized score difference
+            -c["mild_violations"],  # Finally mild violations
+        ),
+    )
 
     return best
 
@@ -1494,40 +1841,48 @@ def _evaluate_color_satisfaction(white_player: Player, black_player: Player) -> 
     black_abs = _has_absolute_color_preference(black_player)
 
     result = {
-        'absolute_violation': False,
-        'strong_violation': False,
-        'mild_violation': False
+        "absolute_violation": False,
+        "strong_violation": False,
+        "mild_violation": False,
     }
 
     # Check absolute violations
     if white_abs and white_pref != W:
-        result['absolute_violation'] = True
+        result["absolute_violation"] = True
     elif black_abs and black_pref != B:
-        result['absolute_violation'] = True
+        result["absolute_violation"] = True
     # Check strong preference violations
     elif white_pref and white_pref != W and not white_abs:
-        result['strong_violation'] = True
+        result["strong_violation"] = True
     elif black_pref and black_pref != B and not black_abs:
-        result['strong_violation'] = True
+        result["strong_violation"] = True
     # Check mild preference violations (if neither strong nor absolute)
     elif white_pref == B or black_pref == W:
-        result['mild_violation'] = True
+        result["mild_violation"] = True
 
     return result
 
 
-def _enhanced_fallback_pairing(bracket: List[Player], previous_matches: Set[frozenset], current_round: int) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
+def _enhanced_fallback_pairing(
+    bracket: List[Player], previous_matches: Set[frozenset], current_round: int
+) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
     """Enhanced fallback pairing with better compatibility checking"""
     pairings = []
     remaining = bracket.copy()
 
     # Sort by priority: players with absolute color preferences first, then by score, then by pairing number
-    remaining.sort(key=lambda p: (not _has_absolute_color_preference(p), -p.score, p.pairing_number))
+    remaining.sort(
+        key=lambda p: (
+            not _has_absolute_color_preference(p),
+            -p.score,
+            p.pairing_number,
+        )
+    )
 
     while len(remaining) >= 2:
         player1 = remaining.pop(0)
         best_opponent_idx = None
-        best_score = float('inf')
+        best_score = float("inf")
 
         for i, player2 in enumerate(remaining):
             # Basic compatibility checks
@@ -1564,7 +1919,9 @@ def _enhanced_fallback_pairing(bracket: List[Player], previous_matches: Set[froz
 
         if best_opponent_idx is not None:
             player2 = remaining.pop(best_opponent_idx)
-            white, black = _assign_colors_dutch_improved(player1, player2, current_round)
+            white, black = _assign_colors_dutch_improved(
+                player1, player2, current_round
+            )
             pairings.append((white, black))
         else:
             # If no compatible opponent found, try one more relaxed pass
@@ -1572,7 +1929,9 @@ def _enhanced_fallback_pairing(bracket: List[Player], previous_matches: Set[froz
             for i, player2 in enumerate(remaining):
                 if frozenset({player1.id, player2.id}) not in previous_matches:
                     player2 = remaining.pop(i)
-                    white, black = _assign_colors_dutch_improved(player1, player2, current_round)
+                    white, black = _assign_colors_dutch_improved(
+                        player1, player2, current_round
+                    )
                     pairings.append((white, black))
                     break
             # If still no pairing possible, player1 becomes unpaired
@@ -1618,17 +1977,26 @@ def _group_players_by_score(players: List[Player]) -> Dict[float, List[Player]]:
     return score_groups
 
 
-def _generate_dutch_configurations(s1: List[Player], s2: List[Player], previous_matches: Set[frozenset], current_round: int) -> List[Dict]:
+def _generate_dutch_configurations(
+    s1: List[Player],
+    s2: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+) -> List[Dict]:
     """Generate all valid pairing configurations using Dutch system rules"""
     configurations = []
 
     # Configuration 1: Standard pairing (S1[i] vs S2[i])
-    config = _try_dutch_configuration(s1, s2, previous_matches, current_round, "standard")
+    config = _try_dutch_configuration(
+        s1, s2, previous_matches, current_round, "standard"
+    )
     if config:
         configurations.append(config)
 
     # Configuration 2: Transposition (S2[i] vs S1[i])
-    config = _try_dutch_configuration(s2, s1, previous_matches, current_round, "transpose")
+    config = _try_dutch_configuration(
+        s2, s1, previous_matches, current_round, "transpose"
+    )
     if config:
         configurations.append(config)
 
@@ -1636,7 +2004,9 @@ def _generate_dutch_configurations(s1: List[Player], s2: List[Player], previous_
     for i in range(len(s1) - 1):
         s1_variant = s1.copy()
         s1_variant[i], s1_variant[i + 1] = s1_variant[i + 1], s1_variant[i]
-        config = _try_dutch_configuration(s1_variant, s2, previous_matches, current_round, f"s1_exchange_{i}")
+        config = _try_dutch_configuration(
+            s1_variant, s2, previous_matches, current_round, f"s1_exchange_{i}"
+        )
         if config:
             configurations.append(config)
 
@@ -1644,14 +2014,22 @@ def _generate_dutch_configurations(s1: List[Player], s2: List[Player], previous_
     for i in range(len(s2) - 1):
         s2_variant = s2.copy()
         s2_variant[i], s2_variant[i + 1] = s2_variant[i + 1], s2_variant[i]
-        config = _try_dutch_configuration(s1, s2_variant, previous_matches, current_round, f"s2_exchange_{i}")
+        config = _try_dutch_configuration(
+            s1, s2_variant, previous_matches, current_round, f"s2_exchange_{i}"
+        )
         if config:
             configurations.append(config)
 
     return configurations
 
 
-def _try_dutch_configuration(list1: List[Player], list2: List[Player], previous_matches: Set[frozenset], current_round: int, config_name: str) -> Optional[Dict]:
+def _try_dutch_configuration(
+    list1: List[Player],
+    list2: List[Player],
+    previous_matches: Set[frozenset],
+    current_round: int,
+    config_name: str,
+) -> Optional[Dict]:
     """Try a specific Dutch system pairing configuration"""
     pairings = []
     unpaired = []
@@ -1692,12 +2070,12 @@ def _try_dutch_configuration(list1: List[Player], list2: List[Player], previous_
             unpaired.append(player)
 
     return {
-        'name': config_name,
-        'pairings': pairings,
-        'unpaired': unpaired,
-        'score_diff': score_diff_total,
-        'color_violations': color_balance_violations,
-        'num_pairs': len(pairings)
+        "name": config_name,
+        "pairings": pairings,
+        "unpaired": unpaired,
+        "score_diff": score_diff_total,
+        "color_violations": color_balance_violations,
+        "num_pairs": len(pairings),
     }
 
 
@@ -1711,16 +2089,21 @@ def _select_best_dutch_configuration(configurations: List[Dict]) -> Optional[Dic
     # 2. Minimize absolute color preference violations
     # 3. Minimize total score differences within pairings
     # 4. Minimize mild color preference violations
-    best = min(configurations, key=lambda c: (
-        len(c['unpaired']),           # Primary: minimize unpaired players
-        c['color_violations'],        # Secondary: minimize color violations
-        c['score_diff']              # Tertiary: minimize score differences
-    ))
+    best = min(
+        configurations,
+        key=lambda c: (
+            len(c["unpaired"]),  # Primary: minimize unpaired players
+            c["color_violations"],  # Secondary: minimize color violations
+            c["score_diff"],  # Tertiary: minimize score differences
+        ),
+    )
 
     return best
 
 
-def _assign_colors_dutch_improved(player1: Player, player2: Player, current_round: int) -> Tuple[Player, Player]:
+def _assign_colors_dutch_improved(
+    player1: Player, player2: Player, current_round: int
+) -> Tuple[Player, Player]:
     """
     Enhanced color assignment using stricter FIDE Dutch system rules.
     Returns (white_player, black_player)
@@ -1780,7 +2163,9 @@ def _assign_colors_dutch_improved(player1: Player, player2: Player, current_roun
     return _assign_by_color_balance(player1, player2, current_round)
 
 
-def _assign_by_color_balance(player1: Player, player2: Player, current_round: int) -> Tuple[Player, Player]:
+def _assign_by_color_balance(
+    player1: Player, player2: Player, current_round: int
+) -> Tuple[Player, Player]:
     """Assign colors based on color balance when no strong preferences exist"""
     colors1 = [c for c in player1.color_history if c is not None]
     colors2 = [c for c in player2.color_history if c is not None]
@@ -1837,7 +2222,9 @@ def _colors_satisfy_preferences(white_player: Player, black_player: Player) -> b
     return True
 
 
-def _pair_remaining_players(players: List[Player], previous_matches: Set[frozenset]) -> List[Tuple[Player, Player]]:
+def _pair_remaining_players(
+    players: List[Player], previous_matches: Set[frozenset]
+) -> List[Tuple[Player, Player]]:
     """Pair remaining players with minimal constraints"""
     pairings = []
     remaining = players.copy()
@@ -1847,7 +2234,7 @@ def _pair_remaining_players(players: List[Player], previous_matches: Set[frozens
 
         # Find best available opponent
         best_opponent_idx = None
-        best_score_diff = float('inf')
+        best_score_diff = float("inf")
 
         for i, player2 in enumerate(remaining):
             # Allow repeat pairings as last resort for remaining players
@@ -1858,20 +2245,26 @@ def _pair_remaining_players(players: List[Player], previous_matches: Set[frozens
 
         if best_opponent_idx is not None:
             player2 = remaining.pop(best_opponent_idx)
-            white, black = _assign_colors_dutch_improved(player1, player2, 99)  # Use high round for default logic
+            white, black = _assign_colors_dutch_improved(
+                player1, player2, 99
+            )  # Use high round for default logic
             pairings.append((white, black))
 
     return pairings
 
 
-def _are_players_compatible(player1: Player, player2: Player, previous_matches: Set[frozenset]) -> bool:
+def _are_players_compatible(
+    player1: Player, player2: Player, previous_matches: Set[frozenset]
+) -> bool:
     """Check if two players can be paired (absolute constraints)"""
     # Check if they have played before
     if frozenset({player1.id, player2.id}) in previous_matches:
         return False
 
     # Check absolute color constraints
-    if _has_absolute_color_preference(player1) and _has_absolute_color_preference(player2):
+    if _has_absolute_color_preference(player1) and _has_absolute_color_preference(
+        player2
+    ):
         pref1 = _get_color_preference(player1)
         pref2 = _get_color_preference(player2)
         if pref1 == pref2:
@@ -1886,11 +2279,15 @@ def _select_best_candidate(candidates: List[Dict]) -> Optional[Dict]:
         return None
 
     # Sort by: fewer floaters (better), then lower total score difference
-    best_candidate = min(candidates, key=lambda c: (len(c['floaters']), c['score_diff']))
+    best_candidate = min(
+        candidates, key=lambda c: (len(c["floaters"]), c["score_diff"])
+    )
     return best_candidate
 
 
-def _greedy_pair_bracket(bracket: List[Player], previous_matches: Set[frozenset]) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
+def _greedy_pair_bracket(
+    bracket: List[Player], previous_matches: Set[frozenset]
+) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
     """Fallback greedy pairing when optimal pairing fails"""
     pairings = []
     remaining = bracket.copy()
@@ -1901,7 +2298,9 @@ def _greedy_pair_bracket(bracket: List[Player], previous_matches: Set[frozenset]
 
         for i, player2 in enumerate(remaining):
             if _are_players_compatible(player1, player2, previous_matches):
-                white_player, black_player = _assign_colors_dutch_improved(player1, player2, 99)
+                white_player, black_player = _assign_colors_dutch_improved(
+                    player1, player2, 99
+                )
                 pairings.append((white_player, black_player))
                 remaining.pop(i)
                 paired = True
@@ -1924,7 +2323,7 @@ def _get_color_preference(player: Player) -> Optional[str]:
     - Mild: color difference is 0, prefer to alternate from last game
     - None: no games played yet
     """
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return None
 
     # Filter out None values (byes)
@@ -1966,7 +2365,7 @@ def _has_absolute_color_preference(player: Player) -> bool:
     1. Color difference > +1 or < -1, OR
     2. Same color in the two latest rounds played
     """
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return False
 
     valid_colors = [c for c in player.color_history if c is not None]
@@ -1991,7 +2390,7 @@ def _has_absolute_color_preference(player: Player) -> bool:
 
 def _has_absolute_color_imbalance(player: Player) -> bool:
     """Check if player has absolute color imbalance (different from preference)"""
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return False
 
     valid_colors = [c for c in player.color_history if c is not None]
@@ -2000,12 +2399,14 @@ def _has_absolute_color_imbalance(player: Player) -> bool:
 
     white_count = valid_colors.count(W)
     black_count = valid_colors.count(B)
-    return abs(white_count - black_count) > 1  # Changed from >= 2 to > 1 for consistency
+    return (
+        abs(white_count - black_count) > 1
+    )  # Changed from >= 2 to > 1 for consistency
 
 
 def _get_repeated_color(player: Player) -> Optional[str]:
     """Get the repeated color if player played same color twice in a row"""
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return None
 
     valid_colors = [c for c in player.color_history if c is not None]
@@ -2017,7 +2418,7 @@ def _get_repeated_color(player: Player) -> Optional[str]:
 
 def _get_color_imbalance(player: Player) -> int:
     """Get the color imbalance (positive = more whites, negative = more blacks)"""
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return 0
 
     valid_colors = [c for c in player.color_history if c is not None]
@@ -2028,7 +2429,7 @@ def _get_color_imbalance(player: Player) -> int:
 
 def _get_repeated_color(player: Player) -> Optional[str]:
     """Get the repeated color if player played same color twice in a row"""
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return None
 
     valid_colors = [c for c in player.color_history if c is not None]
@@ -2040,7 +2441,7 @@ def _get_repeated_color(player: Player) -> Optional[str]:
 
 def _get_color_imbalance(player: Player) -> int:
     """Get the color imbalance (positive = more whites, negative = more blacks)"""
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return 0
 
     valid_colors = [c for c in player.color_history if c is not None]
@@ -2064,20 +2465,24 @@ def _get_float_type(player: Player, rounds_back: int, current_round: int) -> Flo
         return FloatType.FLOAT_NONE
 
     match_info = player.match_history[match_index]
-    if not match_info or not match_info.get('opponent_id'):
+    if not match_info or not match_info.get("opponent_id"):
         # This was a bye round - check if player got points for bye
-        if match_index < len(player.results) and player.results[match_index] and player.results[match_index] > 0:
+        if (
+            match_index < len(player.results)
+            and player.results[match_index]
+            and player.results[match_index] > 0
+        ):
             return FloatType.FLOAT_DOWN  # Bye is considered floating down
         return FloatType.FLOAT_NONE
 
     # Compare player's score with opponent's score from that round
-    player_score = match_info.get('player_score', 0.0)
-    opponent_score = match_info.get('opponent_score', 0.0)
+    player_score = match_info.get("player_score", 0.0)
+    opponent_score = match_info.get("opponent_score", 0.0)
 
     if player_score > opponent_score:
         return FloatType.FLOAT_DOWN  # Player had higher score, so floated down
     elif player_score < opponent_score:
-        return FloatType.FLOAT_UP    # Player had lower score, so floated up
+        return FloatType.FLOAT_UP  # Player had lower score, so floated up
     else:
         return FloatType.FLOAT_NONE  # Same scores, no float
 
@@ -2085,26 +2490,29 @@ def _get_float_type(player: Player, rounds_back: int, current_round: int) -> Flo
 def _is_bye_candidate(player: Player, bye_assignee_score: float) -> bool:
     """Check if player is eligible for a bye based on score"""
     # Basic bye eligibility: player hasn't received bye before and score is low enough
-    return not getattr(player, 'has_received_bye', False) and player.score <= bye_assignee_score
+    return (
+        not getattr(player, "has_received_bye", False)
+        and player.score <= bye_assignee_score
+    )
 
 
 def _compute_configuration_quality_metrics(config: Dict) -> Dict[str, Any]:
     """Compute comprehensive quality metrics for a pairing configuration"""
     metrics = {
-        'paired_count': config.get('paired_count', 0),
-        'downfloaters': config.get('downfloaters', 0),
-        'psd_sum': sum(config.get('psd', [])),
-        'color_violations': config.get('color_violations', 0),
-        'repeat_float_penalty': sum(config.get('float_counts', [])),
-        'score_diff_total': config.get('score_diff_total', 0)
+        "paired_count": config.get("paired_count", 0),
+        "downfloaters": config.get("downfloaters", 0),
+        "psd_sum": sum(config.get("psd", [])),
+        "color_violations": config.get("color_violations", 0),
+        "repeat_float_penalty": sum(config.get("float_counts", [])),
+        "score_diff_total": config.get("score_diff_total", 0),
     }
 
     # Compute overall quality score (lower is better)
-    metrics['quality_score'] = (
-        metrics['downfloaters'] * 1000 +  # Primary: minimize downfloaters
-        metrics['psd_sum'] * 100 +        # Secondary: minimize PSD
-        metrics['repeat_float_penalty'] * 50 +  # Tertiary: minimize repeat floats
-        metrics['color_violations'] * 10  # Quaternary: minimize color violations
+    metrics["quality_score"] = (
+        metrics["downfloaters"] * 1000  # Primary: minimize downfloaters
+        + metrics["psd_sum"] * 100  # Secondary: minimize PSD
+        + metrics["repeat_float_penalty"] * 50  # Tertiary: minimize repeat floats
+        + metrics["color_violations"] * 10  # Quaternary: minimize color violations
     )
 
     return metrics
@@ -2112,7 +2520,7 @@ def _compute_configuration_quality_metrics(config: Dict) -> Dict[str, Any]:
 
 def _has_three_consecutive_colors(player: Player) -> bool:
     """Check if player has same color three times in a row (for C11)"""
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return False
 
     valid_colors = [c for c in player.color_history if c is not None]
@@ -2120,7 +2528,7 @@ def _has_three_consecutive_colors(player: Player) -> bool:
         return False
 
     # Check last three games
-    return (valid_colors[-1] == valid_colors[-2] == valid_colors[-3])
+    return valid_colors[-1] == valid_colors[-2] == valid_colors[-3]
 
 
 def _has_strong_color_preference(player: Player) -> bool:
@@ -2131,7 +2539,7 @@ def _has_strong_color_preference(player: Player) -> bool:
     if _has_absolute_color_preference(player):
         return False  # Absolute takes precedence
 
-    if not hasattr(player, 'color_history') or not player.color_history:
+    if not hasattr(player, "color_history") or not player.color_history:
         return False
 
     valid_colors = [c for c in player.color_history if c is not None]

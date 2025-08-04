@@ -1,6 +1,22 @@
+# Gambit Pairing
+# Copyright (C) 2025  Gambit Pairing developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 # --- Constants ---
 APP_NAME = "Gambit Pairing"
-APP_VERSION = "0.5" # Incremented version
+APP_VERSION = "0.5"  # Incremented version
 SAVE_FILE_EXTENSION = ".gpf"
 SAVE_FILE_FILTER = f"Gambit Pairing Files (*{SAVE_FILE_EXTENSION});;All Files (*)"
 CSV_FILTER = "CSV Files (*.csv);;Text Files (*.txt)"
@@ -17,13 +33,13 @@ RESULT_BLACK_WIN = "0-1"
 # TODO: Add Forfeit result types and handling
 
 # Tiebreaker Keys & Default Order
-TB_MEDIAN = 'median'
-TB_SOLKOFF = 'solkoff'
-TB_CUMULATIVE = 'cumulative'
-TB_CUMULATIVE_OPP = 'cumulative_opp'
-TB_SONNENBORN_BERGER = 'sb'
-TB_MOST_BLACKS = 'most_blacks'
-TB_HEAD_TO_HEAD = 'h2h' # Internal comparison key
+TB_MEDIAN = "median"
+TB_SOLKOFF = "solkoff"
+TB_CUMULATIVE = "cumulative"
+TB_CUMULATIVE_OPP = "cumulative_opp"
+TB_SONNENBORN_BERGER = "sb"
+TB_MOST_BLACKS = "most_blacks"
+TB_HEAD_TO_HEAD = "h2h"  # Internal comparison key
 
 # Default display names for tiebreaks
 TIEBREAK_NAMES = {
