@@ -26,20 +26,18 @@ def resource_path(relative_path):
 def get_cross_platform_icon():
     """
     Get application icon with cross-platform fallbacks:
-    1. Try custom icons (ico, png, svg)
+    1. Try custom icons (ico, png)
     2. Try Qt theme icons
     3. Fall back to system standard icon
     """
     # First, try custom icons in preferred order
     icon_folder = resource_path(os.path.join("resources", "icons"))
     custom_icon_files = [
-        "icon.svg",    # Scalable vector
         "icon.png",    # Cross-platform
         "icon.ico",    # Windows preferred
     ]
 
     for icon_file in custom_icon_files:
-        continue
         icon_path = os.path.join(icon_folder, icon_file)
         if os.path.exists(icon_path):
             logging.info(f"Using custom icon: {icon_path}")
