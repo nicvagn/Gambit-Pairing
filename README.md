@@ -31,7 +31,7 @@ $$ |                                            \$$$$$$  |
  \_\      | |                                     /_/
           |_|
 ```
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
@@ -96,8 +96,6 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 
 - [Program Structure](docs/program-structure.md)
 - [Installation Guide](docs/installing.md)
-- [Running Without Install](docs/running-no-install.md)
-- [Building a Wheel](docs/building-wheel.md)
 - [Developer Hacking Guide](docs/HACKING.md)
 - [Manual Pairing Guide](docs/manual-pairing-guide.md)
 
@@ -153,7 +151,8 @@ it will parse the pyproject.toml and install all the runtime and development dep
 
 ## License
 
-This project is open source and available under the [MIT License](https://mit-license.org/).
+This project is open source and available under the GPL-v3
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Screenshots
 
