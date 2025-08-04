@@ -76,47 +76,13 @@ def restart_application():
 
 
 # --- Style Management ---
-class StyleManager:
-    """Centralized style management for legacy GUI support."""
-
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
-
-    def __init__(self):
-        if not self._initialized:
-            self.legacy_mode = False
-            self._initialized = True
-
-    def apply_style(self, widget, style_sheet: str):
-        """Apply a stylesheet to a widget and track it for legacy mode."""
-        try:
-            widget.setStyleSheet(style_sheet)
-        except RuntimeError:
-            # Widget may have been deleted, ignore
-            pass
-        # Set WindowsVista style for legacy mode
-        app = QApplication.instance()
-        if app is not None:
-            try:
-                available_styles = QStyleFactory.keys()
-                if "Fusion" in available_styles:
-                    app.setStyle("WindowsVista")
-            except Exception:
-                pass
-
-
-# Global style manager instance
-style_manager = StyleManager()
-
-
 def apply_stylesheet(widget, style_sheet: str):
-    """Apply a stylesheet with legacy GUI support."""
-    style_manager.apply_style(widget, style_sheet)
+    """Apply a stylesheet to a widget."""
+    try:
+        widget.setStyleSheet(style_sheet)
+    except RuntimeError:
+        # Widget may have been deleted, ignore
+        pass
 
 
 # --- Utility Functions ---

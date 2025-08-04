@@ -45,10 +45,10 @@ def get_cross_platform_icon():
 
     # Try Qt theme icons (works well on Linux, limited on Windows/macOS)
     theme_icons = [
-        "applications-games",
-        "application-default-icon",
         "preferences-system",
+        "application-default-icon",
         "applications-system"
+        "applications-games",
     ]
 
     for theme_name in theme_icons:
@@ -122,19 +122,15 @@ def run_app():
     except Exception as e:
         logging.error(f"Could not load stylesheet: {e}")
 
-    try:
-        # Try to apply a modern style if available
-        available_styles = QtWidgets.QStyleFactory.keys()
-        preferred_styles = ["Fusion", "WindowsVista", "Windows"]  # Cross-platform preferences
-
-        for preferred_style in preferred_styles:
-            if preferred_style in available_styles:
-                app.setStyle(preferred_style)
-                logging.info(f"Applied style: {preferred_style}")
-                break
-
-    except Exception as e:
-        logging.warning(f"Could not set preferred application style: {e}")
+    # Set WindowsVista style for legacy mode
+    app_instance = QtWidgets.QApplication.instance()
+    if app_instance is not None:
+        try:
+            available_styles = QtWidgets.QStyleFactory.keys()
+            if "Fusion" in available_styles:
+                app_instance.setStyle("WindowsVista")
+        except Exception:
+            pass
 
     window = SwissTournamentApp()
     window.set_app_instance(app)
