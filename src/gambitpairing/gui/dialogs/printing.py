@@ -1,5 +1,8 @@
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
+from PyQt6.QtCore import QDateTime
+
+from gambitpairing.core.constants import TIEBREAK_NAMES
 
 
 def print_pairings(self):
@@ -10,113 +13,111 @@ def print_pairings(self):
         )
         return
     printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-    preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
+    preview = QPrintPreviewDialog(printer, self)
     preview.setWindowTitle("Print Preview - Pairings")
 
-
-def render_preview(printer_obj):
-    doc = QtGui.QTextDocument()
-    round_title = self.round_group.title() if hasattr(self, "round_group") else ""
-    html = f"""
-    <html>
-    <head>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                color: #000;
-                background: #fff;
-                margin: 0;
-                padding: 0;
-            }}
-            h2 {{
-                text-align: center;
-                margin: 0 0 0.5em 0;
-                font-size: 1.35em;
-                font-weight: normal;
-                letter-spacing: 0.03em;
-            }}
-            .subtitle {{
-                text-align: center;
-                font-size: 1.05em;
-                margin-bottom: 1.2em;
-            }}
-            table.pairings {{
-                border-collapse: collapse;
-                width: 100%;
-                margin: 0 auto 1.5em auto;
-            }}
-            table.pairings th, table.pairings td {{
-                border: 1px solid #222;
-                padding: 6px 10px;
-                text-align: left;
-                font-size: 11pt;
-                white-space: nowrap;
-            }}
-            table.pairings th {{
-                font-weight: bold;
-                background: none;
-            }}
-            .bye-row td {{
-                font-style: italic;
-                font-weight: bold;
-                text-align: center;
-                border-top: 2px solid #222;
-            }}
-            .footer {{
-                text-align: center;
-                font-size: 9pt;
-                margin-top: 2em;
-                color: #888;
-                letter-spacing: 0.04em;
-            }}
-        </style>
-    </head>
-    <body>
-        <h2>Pairings</h2>
-        <div class="subtitle">{round_title}</div>
-        <table class="pairings">
-            <tr>
-                <th style="width:7%;">Bd</th>
-                <th style="width:46%;">White</th>
-                <th style="width:46%;">Black</th>
-            </tr>
-    """
-    for row in range(self.table_pairings.rowCount()):
-        white_item = self.table_pairings.item(row, 0)
-        black_item = self.table_pairings.item(row, 1)
-        white = white_item.text() if white_item else ""
-        black = black_item.text() if black_item else ""
-        html += f"""
-            <tr>
-                <td style="text-align:center;">{row + 1}</td>
-                <td>{white}</td>
-                <td>{black}</td>
-            </tr>
+    def render_preview(printer_obj):
+        doc = QtGui.QTextDocument()
+        round_title = self.round_group.title() if hasattr(self, "round_group") else ""
+        html = f"""
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    color: #000;
+                    background: #fff;
+                    margin: 0;
+                    padding: 0;
+                }}
+                h2 {{
+                    text-align: center;
+                    margin: 0 0 0.5em 0;
+                    font-size: 1.35em;
+                    font-weight: normal;
+                    letter-spacing: 0.03em;
+                }}
+                .subtitle {{
+                    text-align: center;
+                    font-size: 1.05em;
+                    margin-bottom: 1.2em;
+                }}
+                table.pairings {{
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin: 0 auto 1.5em auto;
+                }}
+                table.pairings th, table.pairings td {{
+                    border: 1px solid #222;
+                    padding: 6px 10px;
+                    text-align: left;
+                    font-size: 11pt;
+                    white-space: nowrap;
+                }}
+                table.pairings th {{
+                    font-weight: bold;
+                    background: none;
+                }}
+                .bye-row td {{
+                    font-style: italic;
+                    font-weight: bold;
+                    text-align: center;
+                    border-top: 2px solid #222;
+                }}
+                .footer {{
+                    text-align: center;
+                    font-size: 9pt;
+                    margin-top: 2em;
+                    color: #888;
+                    letter-spacing: 0.04em;
+                }}
+            </style>
+        </head>
+        <body>
+            <h2>Pairings</h2>
+            <div class="subtitle">{round_title}</div>
+            <table class="pairings">
+                <tr>
+                    <th style="width:7%;">Bd</th>
+                    <th style="width:46%;">White</th>
+                    <th style="width:46%;">Black</th>
+                </tr>
         """
-    if (
-        self.lbl_bye.isVisible()
-        and self.lbl_bye.text()
-        and self.lbl_bye.text() != "Bye: None"
-    ):
+        for row in range(self.table_pairings.rowCount()):
+            white_item = self.table_pairings.item(row, 0)
+            black_item = self.table_pairings.item(row, 1)
+            white = white_item.text() if white_item else ""
+            black = black_item.text() if black_item else ""
+            html += f"""
+                <tr>
+                    <td style="text-align:center;">{row + 1}</td>
+                    <td>{white}</td>
+                    <td>{black}</td>
+                </tr>
+            """
+        if (
+            self.lbl_bye.isVisible()
+            and self.lbl_bye.text()
+            and self.lbl_bye.text() != "Bye: None"
+        ):
+            html += f"""
+            <tr class="bye-row">
+                <td colspan="3">{self.lbl_bye.text()}</td>
+            </tr>
+            """
         html += f"""
-        <tr class="bye-row">
-            <td colspan="3">{self.lbl_bye.text()}</td>
-        </tr>
+            </table>
+            <div class="footer">
+                Printed by Gambit Pairing &mdash; {QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm")}
+            </div>
+        </body>
+        </html>
         """
-    html += f"""
-        </table>
-        <div class="footer">
-            Printed by Gambit Pairing &mdash; {QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm")}
-        </div>
-    </body>
-    </html>
-    """
-    doc.setHtml(html)
-    doc.print(printer_obj)
+        doc.setHtml(html)
+        doc.print(printer_obj)
 
-
-preview.paintRequested.connect(render_preview)
-preview.exec()
+    preview.paintRequested.connect(render_preview)
+    preview.exec()
 
 
 def print_standings(self):
@@ -127,7 +128,7 @@ def print_standings(self):
         )
         return
     printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-    preview = QPrintPreviewDialog(printer, self)  # <-- FIXED LINE
+    preview = QPrintPreviewDialog(printer, self)
     preview.setWindowTitle("Print Preview - Standings")
 
     def render_preview(printer_obj):
@@ -258,4 +259,5 @@ def print_standings(self):
         doc.print(printer_obj)
 
     preview.paintRequested.connect(render_preview)
+    preview.exec()
     preview.exec()
