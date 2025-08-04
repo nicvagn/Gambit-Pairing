@@ -106,11 +106,11 @@ it will parse the pyproject.toml and install all the runtime and development dep
 
 ## Usage
 
-1. Run the application:
+1. Install the application:
     ```bash
     ./install_editable_pip.sh
     ```
-    the script will tell you the rest
+    > the script will tell you the rest
 
 2. **Create or Load a Tournament:**
     - Use "File > New Tournament..." or "File > Load Tournament..." to start.
