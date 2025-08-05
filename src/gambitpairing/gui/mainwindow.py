@@ -119,6 +119,9 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         self.tournament_tab.standings_update_requested.connect(
             self.standings_tab.update_standings_table
         )
+        self.tournament_tab.standings_update_requested.connect(
+            self.players_tab.refresh_player_list
+        )
 
         self.tabs.addTab(self.players_tab, "Players")
         self.tabs.addTab(self.tournament_tab, "Tournament")
@@ -205,25 +208,6 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             "&Add Player...", self.players_tab.add_player_detailed
         )
         player_menu.addAction(self.add_player_action)
-
-        # View Menu
-        view_menu = menu_bar.addMenu("&View")
-        view_menu.addAction(
-            "Players", lambda: self.tabs.setCurrentWidget(self.players_tab)
-        )
-        view_menu.addAction(
-            "Tournament Control",
-            lambda: self.tabs.setCurrentWidget(self.tournament_tab),
-        )
-        view_menu.addAction(
-            "Standings", lambda: self.tabs.setCurrentWidget(self.standings_tab)
-        )
-        view_menu.addAction(
-            "Cross-Table", lambda: self.tabs.setCurrentWidget(self.crosstable_tab)
-        )
-        view_menu.addAction(
-            "History Log", lambda: self.tabs.setCurrentWidget(self.history_tab)
-        )
 
         # Help Menu
         help_menu = menu_bar.addMenu("&Help")

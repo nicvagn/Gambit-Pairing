@@ -120,6 +120,37 @@ class StandingsTab(QtWidgets.QWidget):
                 if header_item:  # Ensure the QTableWidgetItem for header exists
                     header_item.setToolTip(tip)
 
+    def _set_player_column_minimum_width(self):
+        """Set minimum width for player column based on longest player name."""
+        if not self.tournament or self.table_standings.rowCount() == 0:
+            return
+            
+        # Get font metrics for accurate width calculation
+        font_metrics = self.table_standings.fontMetrics()
+        
+        # Find the longest player name text
+        max_width = 0
+        header_text = "Player"  # Include header text in calculation
+        max_width = max(max_width, font_metrics.horizontalAdvance(header_text))
+        
+        for row in range(self.table_standings.rowCount()):
+            item = self.table_standings.item(row, 1)  # Player column is index 1
+            if item:
+                text_width = font_metrics.horizontalAdvance(item.text())
+                max_width = max(max_width, text_width)
+        
+        # Add padding for cell margins and some extra space
+        padding = 40  # Account for cell padding and some breathing room
+        minimum_width = max_width + padding
+        
+        # Ensure a reasonable minimum (at least 150 pixels)
+        minimum_width = max(minimum_width, 150)
+        
+        # Set the minimum width for the player column
+        header = self.table_standings.horizontalHeader()
+        header.setMinimumSectionSize(minimum_width)
+        self.table_standings.setColumnWidth(1, minimum_width)
+
     def update_standings_table(self) -> None:
         if not self.tournament:
             self.table_standings.setRowCount(0)
@@ -198,6 +229,9 @@ class StandingsTab(QtWidgets.QWidget):
 
             self.table_standings.resizeColumnsToContents()
             self.table_standings.resizeRowsToContents()
+            
+            # Set minimum width for player column based on longest name
+            self._set_player_column_minimum_width()
 
         except Exception as e:
             logging.exception("Error updating standings table:")

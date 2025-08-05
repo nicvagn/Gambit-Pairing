@@ -788,6 +788,6 @@ class Tournament:
 
 
 # --- GUI Dialogs ---
-# (No changes to PlayerEditDialog, PlayerDetailDialog, SettingsDialog, ManualPairDialog unless behaviorally impacted by core changes)
+# (No changes to PlayerEditDialog, PlayerDetailDialog, SettingsDialog, unless behaviorally impacted by core changes)
 # PlayerDetailDialog: Default rating could be None, Player class handles default.
 # SettingsDialog: Tiebreak order changes are reflected.

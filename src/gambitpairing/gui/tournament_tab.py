@@ -25,7 +25,7 @@ from gambitpairing.core.utils import apply_stylesheet
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
-from .dialogs import ManualPairDialog, ManualPairingDialog
+from .dialogs import ManualPairingDialog
 
 
 def get_icon(icon_name: str, fallback_theme_name: str = None) -> QtGui.QIcon:
@@ -553,7 +553,39 @@ class TournamentTab(QtWidgets.QWidget):
         if action == edit_all_action:
             self._edit_all_pairings()
         elif action == adjust_action:
-            self.prompt_manual_adjust(white_id, black_id)
+            # Get current round pairings and bye
+            existing_pairings = None
+            existing_bye = None
+            display_round_number = self.current_round_index + 1
+            if self.current_round_index < len(self.tournament.rounds_pairings_ids):
+                pairings_ids = self.tournament.rounds_pairings_ids[self.current_round_index]
+                bye_id = self.tournament.rounds_byes_ids[self.current_round_index]
+                existing_pairings = []
+                for w_id, b_id in pairings_ids:
+                    w = self.tournament.players.get(w_id)
+                    b = self.tournament.players.get(b_id)
+                    if w and b:
+                        existing_pairings.append((w, b))
+                existing_bye = self.tournament.players.get(bye_id) if bye_id else None
+            active_players = [p for p in self.tournament.players.values() if p.is_active]
+            dialog = ManualPairingDialog(
+                active_players,
+                existing_pairings,
+                existing_bye,
+                display_round_number,
+                self,
+                self.tournament
+            )
+            
+            # Connect signal to refresh player list when player status changes
+            dialog.player_status_changed.connect(self._on_player_status_changed)
+            
+            dialog.exec()
+            
+    def _on_player_status_changed(self):
+        """Handle when player status changes in manual pairing dialog."""
+        # Emit signal to refresh player list in players tab
+        self.standings_update_requested.emit()
 
     def prompt_manual_adjust(self, white_id: str, black_id: str):
          if not self.tournament: return
@@ -588,7 +620,7 @@ class TournamentTab(QtWidgets.QWidget):
                      available_opponents.append(bye_player_obj)
 
 
-         dialog = ManualPairDialog(player_to_adjust.name, current_opponent.name, available_opponents, self)
+         dialog = ManualPairingDialog(player_to_adjust.name, current_opponent.name, available_opponents, self)
          if dialog.exec():
               new_opponent_id = dialog.get_selected_opponent_id()
               if new_opponent_id:
