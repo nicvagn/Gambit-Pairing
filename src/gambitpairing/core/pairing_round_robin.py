@@ -134,29 +134,6 @@ BERGER_TABLES: dict[str, BergerTable] = {
 }
 
 
-def create_round_robin_pairings(players: Players) -> Tuple[Pairings, ...]:
-    """
-    Create pairings for a complete FIDE round-robin tournament.
-
-    Args:
-        players: Collection of Player objects to be paired
-
-    Returns:
-        Tuple of Pairings for each round, where each Pairings contains
-        the matches for that round and any bye player
-
-    Raises:
-        PairingException: If the number of players is not between 3-16
-
-    Example:
-        >>> players = [Player("Alice"), Player("Bob"), Player("Charlie")]
-        >>> pairings = create_round_robin_pairings(players)
-        >>> len(pairings)  # Number of rounds
-        3
-    """
-    tournament = RoundRobin(players)
-    root_logger.info("Round Robin tournament created: %s", tournament)
-    return tuple(tournament.round_pairings)
 
 
 class RoundRobin:
@@ -420,6 +397,27 @@ class RoundRobin:
                 f"rounds={self.number_of_rounds}, "
                 f"bye_player_index={self.bye_number})")
 
+def create_round_robin(players: Players) -> RoundRobin:
+    """
+    Create a complete FIDE round-robin tournament.
+
+    Args:
+        players: Collection of Player objects to be paired
+
+    Returns:
+        the created RoundRobin class
+
+    Raises:
+        PairingException: If the number of players is not between 3-16
+
+    Example:
+        >>> players = [Player("Alice"), Player("Bob"), Player("Charlie")]
+        >>> round_robin = create_round_robin(players)
+        >>> len(round_robin.players)  # Number of players
+    """
+    tournament = RoundRobin(players)
+    root_logger.info("Round Robin tournament created: %s", tournament)
+    return tournament
 
 # Example usage and testing
 if __name__ == "__main__":

@@ -35,6 +35,7 @@ from gambitpairing.core.constants import (
     B,
 )
 from gambitpairing.core.pairing_dutch_swiss import create_dutch_swiss_pairings
+from gambitpairing.core.pairing_round_robin import create_round_robin_pairings
 import logging
 import functools
 
@@ -130,12 +131,13 @@ class Tournament:
             return pairings, bye_player
         elif self.pairing_system == "round_robin":
             # check for existing round robin
-            if self.round_robin:
+            if hasattr(self, 'round_robin'):
                 return self.round_robin.get_round_pairings(current_round)
+            # else
 
             active_playrs = self._get_active_players()
             pairings, bye_player = (
-                create_round_robin_pairings(active_players)
+                create_round_robin(active_players)
             )
 
             # TODO: figure out pairing i
