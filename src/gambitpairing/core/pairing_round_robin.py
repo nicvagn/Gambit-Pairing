@@ -14,15 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from typing import List, Tuple
 from collections.abc import Iterable
 from gambitpairing.core import Pairings, Players  # These are types
 from gambitpairing.core.utils import root_logger
 from gambitpairing.core.player import Player
 from gambitpairing.core.exceptions import PairingException
-
-
 """fide handbook
 Berger Tables for Round-Robin Tournaments
 
@@ -201,9 +198,9 @@ def create_round_robin_pairings(players: Players) -> Tuple[Pairings]:
         the Pairings generated, index 0 is first round, etc.
     """
 
-    rr = RoundRobin(players)
+    round_robin = RoundRobin(players)
 
-    root_logger.info("Round Robin created %s", rr)
+    root_logger.info("Round Robin created %s", round_robin)
 
 
 class RoundRobin:
@@ -214,8 +211,8 @@ class RoundRobin:
 
         if n_players > 16 or n_players < 3:
             root_logger.error(
-                "Tried to pair round robin with invalid n_players: %s", n_players
-            )
+                "Tried to pair round robin with invalid n_players: %s",
+                n_players)
             raise PairingException(
                 "Can not pair a round robin with n=%s players, n must be less than 17 and more than 3.",
                 n_players,
@@ -276,12 +273,16 @@ class RoundRobin:
         self : RoundRobin
             A fully initalized RoundRobin
         """
-        root_logger.info(f"players: {self.players}\nBerger Table: {self.berger_table}")
+        root_logger.info(
+            f"players: {self.players}\nBerger Table: {self.berger_table}")
 
         self.round_pairings: List[Pairings] = []
         for rnd in range(self.number_of_rounds):
             self.round_pairings.append(self._pair_round_robin_round(rnd))
 
+        root_logger.info(
+            "pairings made for RoundRobin with (%s) players. Round parings -\n%s",
+            len(self.players))
 
     def _pair_round_robin_round(self, round_number: int) -> Pairings:
         """Pair one round in a round robin tournament
@@ -303,17 +304,14 @@ class RoundRobin:
         type Pairings = Tuple[List[Tuple[Player, Player]], Optional[Player]]
         """
         if round_number > len(self.berger_table) or round_number < 0:
-            raise (
-                PairingException(
-                    "round number %s not in %s berger table",
-                    round_number,
-                    self.berger_table,
-                )
-            )
+            raise (PairingException(
+                "round number %s not in %s berger table",
+                round_number,
+                self.berger_table,
+            ))
         berger_table = self.berger_table[round_number]
-        root_logger.info(
-            "Berger table for round (%s): \n%s\n |---| \n", round_number, berger_table
-        )
+        root_logger.info("Berger table for round (%s): \n%s\n |---| \n",
+                         round_number, berger_table)
         n = 1
         round_pairings = []
         bye_player = None
@@ -322,23 +320,27 @@ class RoundRobin:
             if self.bye_number and self.bye_number in match_pairing:
                 for i in match_pairing:
                     if i != self.bye_number:
-                       bye_player = self.players[i]
+                        bye_player = self.players[i]
+                        root_logger.info("Bye given to: %s. player number: %s",
+                                         bye_player, i)
                 n = n + 1
                 # continue to next entry in berger_table
                 continue
 
-            pairing = (self.players[match_pairing[0]], self.players[match_pairing[1]])
+            pairing = (self.players[match_pairing[0]],
+                       self.players[match_pairing[1]])
             root_logger.info("match pared: %s", pairing)
 
             # if the bye player is in this pairing, do not add it
             # not the bye player
             round_pairings.append(pairing)
-            root_logger.debug(
-                "round_pairings after pairing appended: (%s)", round_pairings
-            )
+            root_logger.debug("round_pairings after pairing appended: (%s)",
+                              round_pairings)
             n = n + 1
+        PAIRINGS = tuple(round_pairings), bye_player
 
-        return tuple(round_pairings), bye_player
+        root_logger.info("round_robin Pairings made: %s", PAIRINGS)
+        return PAIRINGS
 
     def get_round_pairings(self, rnd: int) -> Pairings:
         """get pairings for a given round
@@ -348,16 +350,18 @@ class RoundRobin:
         PairingException
            if rnd is not in availible pairings
 
-        Parametersfrom collections.abc import Iterable
+        Parameters
         ----------
         rnd : int
             desired round of pairings
 
         Returns
         -------
-        type Pairings = Tuple[List[Tuple[Player, Player]], Optional[Player]]
+        Pairings : Tuple[List[Tuple[Player, Player]], Optional[Player]]
             the pairings of desired round
         """
+        if not self.round_pairings():
+            raise ParingException("No round pairings")
         if rnd > len(self.round_pairings):
             raise PairingException("Round %s is not in the RoundRobin", rnd)
         return self.round_pairings[int(rnd - 1)]
@@ -377,7 +381,10 @@ class RoundRobin:
 
 
 if __name__ == "__main__":
-    p = [Player("nic"), Player("mom"), Player("ruth"),]
+    p = [
+        Player("nic"),
+        Player("mom"),
+        Player("Ruth"),
+    ]
     rr = RoundRobin(p)
-
-#  LocalWords:  RoundRobin PairingException berger
+#  LocalWords:  RoundRobin PairingException berger rr
