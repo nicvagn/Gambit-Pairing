@@ -31,6 +31,7 @@
     ```bash
     $ pip install --editable .
     ```
+    or:
     >A helper script in the git root called "install_editable_pip.sh" should automate this.
 
 # Then

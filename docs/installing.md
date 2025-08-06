@@ -24,7 +24,7 @@
 ```bash
 ./make_executable.sh
 
-cp dist/Gambit-Pairing ~/.local/bin/
+cp dist/gambit-pairing ~/.local/bin/
 ```
-now Gambit-Pairing should be executable from shell
+now gambit-pairing should be executable from shell
 * if ~/.local/bin is on path
