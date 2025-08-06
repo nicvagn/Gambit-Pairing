@@ -225,24 +225,38 @@ class RoundRobin:
         # to the correct val by starting from the top and decending
         if n_players > 14:
             self.berger_table = BERGER_TABLES["15-16"]
+            if n_players % 2 != 0:
+                self.bye_number = 15
             root_logger.info("round robin created for 15-16 players")
         elif n_players > 12:
             self.berger_table = BERGER_TABLES["13-14"]
+            if n_players % 2 != 0:
+                self.bye_number = 13
             root_logger.info("round robin created for 13-14 players")
         elif n_players > 10:
             self.berger_table = BERGER_TABLES["11-12"]
+            if n_players % 2 != 0:
+                self.bye_number = 11
             root_logger.info("round robin created for 11-12 players")
         elif n_players > 8:
             self.berger_table = BERGER_TABLES["9-10"]
+            if n_players % 2 != 0:
+                self.bye_number = 9
             root_logger.info("round robin created for 9-10 players")
         elif n_players > 6:
             self.berger_table = BERGER_TABLES["7-8"]
+            if n_players % 2 != 0:
+                self.bye_number = 7
             root_logger.info("round robin created for 7-8 players")
         elif n_players > 6:
             self.berger_table = BERGER_TABLES["5-6"]
+            if n_players % 2 != 0:
+                self.bye_number = 5
             root_logger.info("round robin created for 5-6 players")
         else:
             self.berger_table = BERGER_TABLES["3-4"]
+            if n_players % 2 != 0:
+                self.bye_number = 3
             root_logger.info("round robin created for 3-4 players")
 
         self.round_num = 1
@@ -268,6 +282,7 @@ class RoundRobin:
         for rnd in range(self.number_of_rounds):
             self.round_pairings.append(self._pair_round_robin_round(rnd))
 
+
     def _pair_round_robin_round(self, round_number: int) -> Pairings:
         """Pair one round in a round robin tournament
 
@@ -282,6 +297,10 @@ class RoundRobin:
             A fully initalized RoundRobin
         round_number : int
             round number to pair
+
+        Returns
+        -------
+        type Pairings = Tuple[List[Tuple[Player, Player]], Optional[Player]]
         """
         if round_number > len(self.berger_table) or round_number < 0:
             raise (
@@ -292,22 +311,34 @@ class RoundRobin:
                 )
             )
         berger_table = self.berger_table[round_number]
-
         root_logger.info(
             "Berger table for round (%s): \n%s\n |---| \n", round_number, berger_table
         )
         n = 1
         round_pairings = []
+        bye_player = None
         for match_pairing in berger_table:
+            # if the bye player is in this pairing, do not add it
+            if self.bye_number and self.bye_number in match_pairing:
+                for i in match_pairing:
+                    if i != self.bye_number:
+                       bye_player = self.players[i]
+                n = n + 1
+                # continue to next entry in berger_table
+                continue
+
             pairing = (self.players[match_pairing[0]], self.players[match_pairing[1]])
-            root_logger.info("game (%s): %s", n, pairing)
+            root_logger.info("match pared: %s", pairing)
+
+            # if the bye player is in this pairing, do not add it
+            # not the bye player
             round_pairings.append(pairing)
             root_logger.debug(
                 "round_pairings after pairing appended: (%s)", round_pairings
             )
             n = n + 1
 
-        return tuple(round_pairings)
+        return tuple(round_pairings), bye_player
 
     def get_round_pairings(self, rnd: int) -> Pairings:
         """get pairings for a given round
@@ -324,7 +355,7 @@ class RoundRobin:
 
         Returns
         -------
-        Pairings
+        type Pairings = Tuple[List[Tuple[Player, Player]], Optional[Player]]
             the pairings of desired round
         """
         if rnd > len(self.round_pairings):
@@ -346,5 +377,7 @@ class RoundRobin:
 
 
 if __name__ == "__main__":
-    p = [Player("nic"), Player("mom"), Player("ruth"), Player("sarah")]
+    p = [Player("nic"), Player("mom"), Player("ruth"),]
     rr = RoundRobin(p)
+
+#  LocalWords:  RoundRobin PairingException berger

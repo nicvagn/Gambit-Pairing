@@ -16,6 +16,7 @@
 
 
 from typing import List, Optional, Tuple, Set, Dict, Any
+from gambitpairing.core import Pairings # this is a type
 from gambitpairing.core.player import Player
 from gambitpairing.core.constants import (
     DEFAULT_TIEBREAK_SORT_ORDER,
@@ -110,7 +111,7 @@ class Tournament:
 
     def create_pairings(
         self, current_round: int, allow_repeat_pairing_callback=None
-    ) -> Tuple[List[Tuple[Player, Player]], Optional[Player]]:
+    ) -> Pairings:
         """Generates pairings for the next round using the selected pairing system."""
         active_players = self._get_active_players()
         if self.pairing_system == "dutch_swiss":
@@ -128,10 +129,16 @@ class Tournament:
             self.rounds_byes_ids.append(bye_player_id)
             return pairings, bye_player
         elif self.pairing_system == "round_robin":
+            # check for existing round robin
+            if self.round_robin:
+                return self.round_robin.get_round_pairings(current_round)
+
             active_playrs = self._get_active_players()
-            pairings, bye_player, round_pairings_ids, bye_player_id = (
+            pairings, bye_player = (
                 create_round_robin_pairings(active_players)
             )
+
+            # TODO: figure out pairing i
             self.rounds_pairings_ids.append(round_pairings_ids)
             self.rounds_byes_ids.append(bye_player_id)
             return pairings, bye_player
@@ -147,7 +154,7 @@ class Tournament:
 
     def get_pairings_for_round(
         self, round_index: int
-    ) -> Tuple[List[Tuple[Player, Player]], Optional[Player]]:
+    ) -> Pairings:
         """Retrieves the pairings and bye player for a given round index."""
         if not (0 <= round_index < len(self.rounds_pairings_ids)):
             return [], None
