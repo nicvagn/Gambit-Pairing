@@ -273,8 +273,8 @@ class RoundRobin:
         self : RoundRobin
             A fully initalized RoundRobin
         """
-        root_logger.info(
-            f"players: {self.players}\nBerger Table: {self.berger_table}")
+        root_logger.info("players: (%s)\nBerger Table: [%s] ", self.players,
+                         self.berger_table)
 
         self.round_pairings: List[Pairings] = []
         for rnd in range(self.number_of_rounds):
@@ -282,7 +282,7 @@ class RoundRobin:
 
         root_logger.info(
             "pairings made for RoundRobin with (%s) players. Round parings -\n%s",
-            len(self.players))
+            len(self.players), self.round_pairings)
 
     def _pair_round_robin_round(self, round_number: int) -> Pairings:
         """Pair one round in a round robin tournament
@@ -334,13 +334,14 @@ class RoundRobin:
             # if the bye player is in this pairing, do not add it
             # not the bye player
             round_pairings.append(pairing)
-            root_logger.debug("round_pairings after pairing appended: (%s)",
+            root_logger.debug("round_pairings after pairing appended: ",
                               round_pairings)
             n = n + 1
-        PAIRINGS = tuple(round_pairings), bye_player
 
-        root_logger.info("round_robin Pairings made: %s", PAIRINGS)
-        return PAIRINGS
+        root_logger.info(
+            "round_robin Pairings made: %s \n with bye player: %s",
+            round_pairings, bye_player)
+        return tuple(round_pairings), bye_player
 
     def get_round_pairings(self, rnd: int) -> Pairings:
         """get pairings for a given round
@@ -363,7 +364,7 @@ class RoundRobin:
         if not self.round_pairings():
             raise ParingException("No round pairings")
         if rnd > len(self.round_pairings):
-            raise PairingException("Round %s is not in the RoundRobin", rnd)
+            raise PairingException("Round %s is not in the RoundRobin" % rnd)
         return self.round_pairings[int(rnd - 1)]
 
     def _pair_match(
@@ -387,4 +388,4 @@ if __name__ == "__main__":
         Player("Ruth"),
     ]
     rr = RoundRobin(p)
-#  LocalWords:  RoundRobin PairingException berger rr
+#  LocalWords:  RoundRobin PairingException berger rr Berger
