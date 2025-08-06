@@ -111,6 +111,55 @@ class ResultSelector(QtWidgets.QWidget):
 
 
 class TournamentTab(QtWidgets.QWidget):
+    def _check_minimum_players(self, for_preparation=False):
+        """
+        Shared minimum player/active player checks for both tournament start and round preparation.
+        Returns True if checks pass, False if user cancels or not enough players.
+        """
+        pairing_system = getattr(self.tournament, "pairing_system", "dutch_swiss")
+        if for_preparation:
+            # Use only active players for round preparation
+            players = [p for p in self.tournament.players.values() if getattr(p, "is_active", True)]
+        else:
+            # Use all players for initial start
+            players = list(self.tournament.players.values())
+        num_players = len(players)
+        min_players = 2 ** self.tournament.num_rounds
+        if pairing_system == "round_robin":
+            if num_players < 3:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error" if not for_preparation else "Prepare Error",
+                    "Round Robin tournaments require at least three {}players.".format("active " if for_preparation else "")
+                )
+                return False
+        elif pairing_system == "dutch_swiss":
+            if num_players < 2:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error" if not for_preparation else "Prepare Error",
+                    "FIDE Dutch Swiss tournaments require at least two {}players.".format("active " if for_preparation else "")
+                )
+                return False
+            if num_players < min_players:
+                reply = QtWidgets.QMessageBox.warning(
+                    self,
+                    "Insufficient Players",
+                    f"For a {self.tournament.num_rounds}-round FIDE Dutch Swiss tournament, a minimum of {min_players} players is recommended. The tournament may not work properly. Do you want to continue anyway?",
+                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+                    QtWidgets.QMessageBox.StandardButton.No
+                )
+                if reply == QtWidgets.QMessageBox.StandardButton.No:
+                    return False
+        elif pairing_system == "manual":
+            if num_players < 2:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Start Error" if not for_preparation else "Prepare Error",
+                    "Manual pairing tournaments require at least two {}players.".format("active " if for_preparation else "")
+                )
+                return False
+        return True
     status_message = pyqtSignal(str)
     history_message = pyqtSignal(str)
     dirty = pyqtSignal()
@@ -199,55 +248,8 @@ class TournamentTab(QtWidgets.QWidget):
         if not self.tournament:
             QtWidgets.QMessageBox.warning(self, "Start Error", "No tournament loaded.")
             return
-        pairing_system = getattr(self.tournament, "pairing_system", "dutch_swiss")
-        num_players = len(self.tournament.players)
-        # Minimum player checks for each system
-        if pairing_system == "round_robin":
-            if num_players < 3:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Start Error",
-                    "Round Robin tournaments require at least three players.")
-                return
-        elif pairing_system == "dutch_swiss":
-            if num_players < 2:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Start Error",
-                    "FIDE Dutch Swiss tournaments require at least two players.")
-                return
-            min_players = 2 ** self.tournament.num_rounds
-            if num_players < min_players:
-                reply = QtWidgets.QMessageBox.warning(
-                    self,
-                    "Insufficient Players",
-                    f"For a {self.tournament.num_rounds}-round FIDE Dutch Swiss tournament, a minimum of {min_players} players is recommended. The tournament may not work properly. Do you want to continue anyway?",
-                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
-                    QtWidgets.QMessageBox.StandardButton.No
-                )
-                if reply == QtWidgets.QMessageBox.StandardButton.No:
-                    return
-        elif pairing_system == "manual":
-            if num_players < 2:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Start Error",
-                    "Manual pairing tournaments require at least two players.")
-        if len(self.tournament.players) < 2:
-            QtWidgets.QMessageBox.warning(self, "Start Error", "Add at least two players.")
+        if not self._check_minimum_players(for_preparation=False):
             return
-        # New minimum players check based on the number of rounds
-        min_players = 2 ** self.tournament.num_rounds
-        if len(self.tournament.players) < min_players:
-            reply = QtWidgets.QMessageBox.warning(
-                self,
-                "Insufficient Players",
-                f"For a {self.tournament.num_rounds}-round tournament, a minimum of {min_players} players is recommended. The tournament may not work properly. Do you want to continue anyway?",
-                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
-                QtWidgets.QMessageBox.StandardButton.No
-            )
-            if reply == QtWidgets.QMessageBox.StandardButton.No:
-                return
         reply = QtWidgets.QMessageBox.question(
             self,
             "Start Tournament",
@@ -338,23 +340,19 @@ class TournamentTab(QtWidgets.QWidget):
              self.update_ui_state()
 
     def prepare_next_round(self) -> None:
-        if not self.tournament: return
-
-        # round_to_prepare_idx is the index for rounds_pairings_ids (0 for R1, 1 for R2, etc.)
-        # This should align with self.current_round_index if it means "next round to play/pair".
-        # Or, more accurately, completed_rounds is the number of rounds whose results are IN.
-        # If current_round_index points to the round WHOSE PAIRINGS ARE SHOWN, then current_round_index = completed_rounds.
-        # For example, after R1 results recorded, current_round_index becomes 1. Completed rounds = 1.
-        # Pairings for R2 (index 1) are then generated. So pairings_generated_for_rounds = 2.
+        if not self.tournament:
+            return
 
         round_to_prepare_idx = self.current_round_index
 
+        if not self._check_minimum_players(for_preparation=True):
+            return
         if round_to_prepare_idx >= self.tournament.num_rounds:
-             QtWidgets.QMessageBox.information(self,"Tournament End", "All tournament rounds have been generated and processed.")
-             self.update_ui_state(); return
+            QtWidgets.QMessageBox.information(self, "Tournament End", "All tournament rounds have been generated and processed.")
+            self.update_ui_state()
+            return
 
         # Check if pairings for this round_to_prepare_idx already exist
-        # This happens if "Prepare Next Round" is clicked again without "Record Results"
         if round_to_prepare_idx < len(self.tournament.rounds_pairings_ids):
             reply = QtWidgets.QMessageBox.question(self, "Re-Prepare Round?",
                                                    f"Pairings for Round {round_to_prepare_idx + 1} already exist. Re-generate them?\n"
@@ -362,23 +360,19 @@ class TournamentTab(QtWidgets.QWidget):
                                                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
                                                    QtWidgets.QMessageBox.StandardButton.No)
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-                # Clear existing pairings for this round to regenerate
                 self.tournament.rounds_pairings_ids = self.tournament.rounds_pairings_ids[:round_to_prepare_idx]
                 self.tournament.rounds_byes_ids = self.tournament.rounds_byes_ids[:round_to_prepare_idx]
-                # We might need to clear previous_matches entries that were added for this specific round too.
-                # This is complex. For now, re-pairing might result in same opponent if not careful.
-                # A safer "re-prepare" might involve more state rollback.
-                # Simpler: just let create_pairings run again. It checks previous_matches.
                 self.history_message.emit(f"--- Re-preparing pairings for Round {round_to_prepare_idx + 1} ---")
-            else: # User chose not to re-prepare
-                # Just display existing pairings
+            else:
                 display_round_num = round_to_prepare_idx + 1
                 pairings_ids = self.tournament.rounds_pairings_ids[round_to_prepare_idx]
                 bye_id = self.tournament.rounds_byes_ids[round_to_prepare_idx]
                 pairings = []
                 for w_id, b_id in pairings_ids:
-                    w = self.tournament.players.get(w_id); b = self.tournament.players.get(b_id)
-                    if w and b: pairings.append((w,b))
+                    w = self.tournament.players.get(w_id)
+                    b = self.tournament.players.get(b_id)
+                    if w and b:
+                        pairings.append((w, b))
 
                 bye_player = self.tournament.players.get(bye_id) if bye_id else None
                 self.lbl_round_title.setText(f"Round {display_round_num} Pairings & Results")
@@ -386,10 +380,8 @@ class TournamentTab(QtWidgets.QWidget):
                 self.update_ui_state()
                 return
 
-
         display_round_number = self.current_round_index + 1
 
-        # Check if this is a manual pairing tournament
         if self.tournament.pairing_system == "manual":
             self._handle_manual_pairing_round(display_round_number, round_to_prepare_idx)
             return
@@ -398,19 +390,17 @@ class TournamentTab(QtWidgets.QWidget):
         QtWidgets.QApplication.processEvents()
 
         try:
-            # create_pairings expects 1-based round number for its internal logic (e.g. R1 specific)
             pairings, bye_player = self.tournament.create_pairings(
                 display_round_number,
                 allow_repeat_pairing_callback=self.prompt_repeat_pairing
             )
 
-            if not pairings and len(self.tournament._get_active_players()) > 1 and not bye_player : # Handle cases where pairing might fail
-                if len(self.tournament._get_active_players()) % 2 == 0 : # Even players, no bye expected, but no pairings
-                     QtWidgets.QMessageBox.critical(self, "Pairing Error", f"Pairing generation failed for Round {display_round_number}. No pairings returned. Check logs and player statuses.")
-                     self.status_message.emit(f"Error generating pairings for Round {display_round_number}.")
-                     self.update_ui_state()
-                     return
-                # If odd players and no bye_player, also an issue if pairings are also empty.
+            if not pairings and len(self.tournament._get_active_players()) > 1 and not bye_player:
+                if len(self.tournament._get_active_players()) % 2 == 0:
+                    QtWidgets.QMessageBox.critical(self, "Pairing Error", f"Pairing generation failed for Round {display_round_number}. No pairings returned. Check logs and player statuses.")
+                    self.status_message.emit(f"Error generating pairings for Round {display_round_number}.")
+                    self.update_ui_state()
+                    return
 
             self.lbl_round_title.setText(f"Round {display_round_number} Pairings & Results")
             self.display_pairings_for_input(pairings, bye_player)
@@ -422,7 +412,8 @@ class TournamentTab(QtWidgets.QWidget):
                 else:
                     white, black = pair
                     self.history_message.emit(f"  {white.name} (W) vs {black.name} (B)")
-            if bye_player: self.history_message.emit(f"  Bye: {bye_player.name}")
+            if bye_player:
+                self.history_message.emit(f"  Bye: {bye_player.name}")
             self.history_message.emit("-" * 20)
             self.dirty.emit()
             self.status_message.emit(f"Round {display_round_number} pairings ready. Enter results.")
@@ -431,7 +422,7 @@ class TournamentTab(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(self, "Pairing Error", f"Pairing generation failed for Round {display_round_number}:\n{e}")
             self.status_message.emit(f"Error generating pairings for Round {display_round_number}.")
         finally:
-             self.update_ui_state()
+            self.update_ui_state()
 
     def prompt_repeat_pairing(self, player1, player2):
         msg = (f"No valid new opponent found for {player1.name}.\n"
