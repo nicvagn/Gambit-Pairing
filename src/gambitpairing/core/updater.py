@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import requests
+import httpx
 import json
 from typing import Optional, Dict, Any, Tuple
 from packaging.version import parse as parse_version
@@ -45,20 +45,21 @@ class Updater:
     def check_for_updates(self) -> bool:
         logging.info("Checking for updates...")
         try:
-            response = requests.get(UPDATE_URL, timeout=10)
-            response.raise_for_status()
-            self.latest_version_info = response.json()
-            latest_version_str = self.latest_version_info.get(
-                "tag_name", "0.0.0"
-            ).lstrip("v")
-            is_newer = parse_version(latest_version_str) > parse_version(
-                self.current_version
-            )
-            logging.info(
-                f"Latest version: {latest_version_str}, Current version: {self.current_version}, Newer available: {is_newer}"
-            )
-            return is_newer
-        except requests.RequestException as e:
+            with httpx.Client(timeout=10.0) as client:
+                response = client.get(UPDATE_URL)
+                response.raise_for_status()
+                self.latest_version_info = response.json()
+                latest_version_str = self.latest_version_info.get(
+                    "tag_name", "0.0.0"
+                ).lstrip("v")
+                is_newer = parse_version(latest_version_str) > parse_version(
+                    self.current_version
+                )
+                logging.info(
+                    f"Latest version: {latest_version_str}, Current version: {self.current_version}, Newer available: {is_newer}"
+                )
+                return is_newer
+        except httpx.RequestError as e:
             logging.error(f"Update check failed: Network error - {e}")
             return False
         except Exception as e:
@@ -98,26 +99,29 @@ class Updater:
 
         if checksum_url:
             try:
-                checksum_response = requests.get(checksum_url, timeout=10)
-                self.expected_checksum = checksum_response.text.split()[0].strip()
-                logging.info(f"Expected checksum: {self.expected_checksum}")
+                with httpx.Client(timeout=10.0) as client:
+                    checksum_response = client.get(checksum_url)
+                    self.expected_checksum = checksum_response.text.split()[0].strip()
+                    logging.info(f"Expected checksum: {self.expected_checksum}")
             except Exception as e:
                 logging.warning(f"Could not download checksum: {e}")
 
         try:
-            response = requests.get(zip_url, stream=True, timeout=60)
-            total_size = int(response.headers.get("content-length", 0))
-            temp_dir = tempfile.gettempdir()
-            self.update_zip_path = os.path.join(temp_dir, "gambit_update.zip")
-            bytes_downloaded = 0
-            with open(self.update_zip_path, "wb") as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-                    bytes_downloaded += len(chunk)
-                    if progress_callback and total_size > 0:
-                        progress_callback(int((bytes_downloaded / total_size) * 100))
+            with httpx.Client(timeout=60.0) as client:
+                with client.stream("GET", zip_url) as response:
+                    response.raise_for_status()
+                    total_size = int(response.headers.get("content-length", 0))
+                    temp_dir = tempfile.gettempdir()
+                    self.update_zip_path = os.path.join(temp_dir, "gambit_update.zip")
+                    bytes_downloaded = 0
+                    with open(self.update_zip_path, "wb") as f:
+                        for chunk in response.iter_bytes(chunk_size=8192):
+                            f.write(chunk)
+                            bytes_downloaded += len(chunk)
+                            if progress_callback and total_size > 0:
+                                progress_callback(int((bytes_downloaded / total_size) * 100))
             return self.update_zip_path
-        except requests.RequestException as e:
+        except httpx.RequestError as e:
             logging.error(f"Failed to download update: {e}")
             return None
 
