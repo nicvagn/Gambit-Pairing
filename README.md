@@ -39,7 +39,7 @@ $$ |                                            \$$$$$$  |
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Chickaboo/gambit-pairing)
 
-**Important:** Gambit Pairing is in alpha development (version 0.5.0). Features and stability are not guaranteed.
+**Important:** Gambit Pairing is in alpha development (version 0.6.0). Features and stability are not guaranteed.
 
 [Join our Discord](https://discord.gg/eEnnetMDfr)
 
@@ -243,3 +243,4 @@ This project is open source and available under the GPL-v3
                         ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑                                              
                            ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑                                                 
 ```
+
