@@ -17,6 +17,7 @@
 
 from typing import List, Optional, Tuple, Set, Dict, Any
 from gambitpairing.core import Pairings # this is a type
+from gambitpairing.core.pairing_round_robin import RoundRobin
 from gambitpairing.core.player import Player
 from gambitpairing.core.constants import (
     DEFAULT_TIEBREAK_SORT_ORDER,
@@ -136,9 +137,7 @@ class Tournament:
             # else
 
             active_playrs = self._get_active_players()
-            pairings, bye_player = (
-                create_round_robin(active_players)
-            )
+            self.round_robin: RoundRobin = create_round_robin(active_players)
 
             # TODO: figure out pairing i
             self.rounds_pairings_ids.append(round_pairings_ids)
@@ -800,3 +799,5 @@ class Tournament:
 # (No changes to PlayerEditDialog, PlayerDetailDialog, SettingsDialog, unless behaviorally impacted by core changes)
 # PlayerDetailDialog: Default rating could be None, Player class handles default.
 # SettingsDialog: Tiebreak order changes are reflected.
+
+#  LocalWords:  swiss RoundRobin
