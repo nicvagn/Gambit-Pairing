@@ -91,17 +91,6 @@ def restart_application():
         root_logger.error(f"Failed to restart application: {e}")
         return False
 
-
-# --- Style Management ---
-def apply_stylesheet(widget, style_sheet: str):
-    """Apply a stylesheet to a widget."""
-    try:
-        widget.setStyleSheet(style_sheet)
-    except RuntimeError:
-        # Widget may have been deleted, ignore
-        pass
-
-
 # --- Utility Functions ---
 def generate_id(prefix: str = "item_") -> str:
     """Generates a simple unique ID."""

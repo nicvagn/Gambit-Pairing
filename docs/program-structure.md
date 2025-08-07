@@ -8,13 +8,13 @@
 ## **main**.py -- entry point
 
 - Creates the main window. Handles various OS'.
-- `from gui.mainwindow import SwissTournamentApp` imports app
+- `from gui.mainwindow import GambitPairingMainWindow` imports app
 
 # gui module -- contains the various components and QT widgets
 
 ## mainwindow.py -- in charge of the main window
 
-`class SwissTournamentApp(QtWidgets.QMainWindow):`
+`class GambitPairingMainWindow(QtWidgets.QMainWindow):`
 
 ## crosstable_tab.py
 

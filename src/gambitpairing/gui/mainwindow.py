@@ -32,6 +32,7 @@ from .dialogs import (
     NewTournamentDialog,
     UpdateDownloadDialog,
     UpdatePromptDialog,
+    AboutDialog,
 )
 from .players_tab import PlayersTab
 from .tournament_tab import TournamentTab
@@ -39,8 +40,6 @@ from .standings_tab import StandingsTab
 from .crosstable_tab import CrosstableTab
 from .history_tab import HistoryTab
 from .update_worker import UpdateWorker
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
-from PyQt6.QtGui import QPixmap
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -62,8 +61,8 @@ def resource_path(relative_path: str) -> str:
 # --- Main Application Window ---
 
 
-class SwissTournamentApp(QtWidgets.QMainWindow):
-    """Main application window for the Swiss Tournament."""
+class GambitPairingMainWindow(QtWidgets.QMainWindow):
+    """Main application window for Gambit Pairing."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -248,15 +247,12 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
         """
         toolbar = self.addToolBar("Main Toolbar")
         toolbar.setIconSize(QtCore.QSize(24, 24))
-        utils.apply_stylesheet(
-            toolbar,
-            """
+        toolbar.setStyleSheet("""
             QToolBar {
                 background: #f9fafb;
                 border-bottom: 1px solid #bbb;
             }
-        """,
-        )
+        """)
         QtGui.QIcon.setThemeName(
             "Adwaita"
         )  # Adwaita is often monochrome, fallback to system if not found
@@ -652,32 +648,8 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             return False
 
     def show_about_dialog(self):
-        """Show the About dialog with app info and about.webp image."""
-        dialog = QDialog(self)
-        dialog.setWindowTitle(f"About {APP_NAME}")
-        layout = QVBoxLayout(dialog)
-
-        # Load about.webp from resources/icons
-        image_path = resource_path(os.path.join("resources", "icons", "about.webp"))
-        if os.path.exists(image_path):
-            pixmap = QPixmap(image_path)
-            if not pixmap.isNull():
-                img_label = QLabel()
-                img_label.setPixmap(pixmap.scaledToWidth(220))
-                img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                layout.addWidget(img_label)
-        # Add app info text
-        info_label = QLabel(
-            f'<b>{APP_NAME} v{APP_VERSION}</b><br>\nSwiss Tournament Manager\n<br>Copyright © 2025\n<br>Developed by Chickaboo and Nic\n<br><br>For help, join the <a href="https://discord.gg/eEnnetMDfr">Discord</a> or contact <a href="https://www.chickaboo.net/contact">support</a>.'
-        )
-        info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        info_label.setOpenExternalLinks(True)
-        layout.addWidget(info_label)
-        # OK button
-        ok_btn = QPushButton("OK")
-        ok_btn.clicked.connect(dialog.accept)
-        layout.addWidget(ok_btn)
-        dialog.setLayout(layout)
+        """Show the About dialog."""
+        dialog = AboutDialog(self)
         dialog.exec()
 
     def check_for_pending_update(self) -> bool:

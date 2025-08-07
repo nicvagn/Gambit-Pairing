@@ -21,7 +21,6 @@ from datetime import datetime
 from typing import Optional
 
 from gambitpairing.core.player import Player
-from gambitpairing.core.utils import apply_stylesheet
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
@@ -92,9 +91,7 @@ class PlayersTab(QtWidgets.QWidget):
         self.table_players.setColumnWidth(2, 90)  # Age
         self.table_players.setColumnWidth(3, 130)  # Status
         # Add extra margin/padding to headers and cells, polish header style, and animate sort arrow
-        apply_stylesheet(
-            self.table_players,
-            """
+        self.table_players.setStyleSheet("""
 /* === Header Section === */
 QHeaderView::section {
     padding: 10px 24px;
@@ -140,8 +137,7 @@ QTableWidget {
     selection-color: #000;
 }
 
-        """,
-        )
+        """)
         header.setSortIndicatorShown(True)
         header.setSectionsClickable(True)
         header.setSectionsMovable(True)

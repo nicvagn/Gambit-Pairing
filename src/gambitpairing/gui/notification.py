@@ -14,15 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from PyQt6 import QtWidgets, QtCore
-from core.utils import apply_stylesheet
-
 
 def show_notification(parent, message: str, duration: int = 1500):
     """Show a floating notification label with fade-in/out animation over the parent widget."""
     notif = QtWidgets.QLabel(message, parent)
-    apply_stylesheet(
-        notif,
-        """
+    notif.setStyleSheet("""
         QLabel {
             background: rgba(30,30,30,220);
             color: white;
@@ -34,8 +30,7 @@ def show_notification(parent, message: str, duration: int = 1500):
             qproperty-alignment: AlignCenter;
             box-shadow: 0 4px 24px rgba(0,0,0,0.18);
         }
-    """,
-    )
+    """)
     notif.setWindowFlags(
         QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.ToolTip
     )

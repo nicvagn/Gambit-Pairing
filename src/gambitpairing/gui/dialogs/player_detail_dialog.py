@@ -1,7 +1,6 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtCore import Qt
 from typing import Dict, Any, Optional
-from gambitpairing.core.utils import apply_stylesheet
 
 
 class PlayerDetailDialog(QtWidgets.QDialog):
@@ -16,15 +15,12 @@ class PlayerDetailDialog(QtWidgets.QDialog):
         self.rating_spin.setValue(1000)  # Default if new
 
         # --- Make QSpinBox arrows black ---
-        apply_stylesheet(
-            self.rating_spin,
-            """
+        self.rating_spin.setStyleSheet("""
             QAbstractSpinBox::up-button, QAbstractSpinBox::down-button,
             QAbstractSpinBox::up-arrow, QAbstractSpinBox::down-arrow {
                 qproperty-iconColor: #111;
             }
-        """,
-        )
+        """)
 
         gender_dob_layout = QtWidgets.QHBoxLayout()
         self.gender_combo = QtWidgets.QComboBox()
@@ -41,14 +37,11 @@ class PlayerDetailDialog(QtWidgets.QDialog):
         self.dob_edit.setToolTip("Select date of birth (optional)")
 
         # --- Make QDateEdit calendar button black ---
-        apply_stylesheet(
-            self.dob_edit,
-            """
+        self.dob_edit.setStyleSheet("""
             QDateEdit::drop-down, QDateEdit::down-arrow, QDateEdit::calendarButton {
                 qproperty-iconColor: #111;
             }
-        """,
-        )
+        """)
         # self.calendar_popup = QtWidgets.QCalendarWidget() # QDateEdit has its own popup
         # self.calendar_popup.setGridVisible(True)
         # self.calendar_popup.setMaximumDate(QtCore.QDate.currentDate())
@@ -167,9 +160,7 @@ class PlayerDetailDialog(QtWidgets.QDialog):
         if hasattr(self, "_copy_notification") and self._copy_notification:
             self._copy_notification.close()
         self._copy_notification = QtWidgets.QLabel("Copied to clipboard!", self)
-        apply_stylesheet(
-            self._copy_notification,
-            """
+        self._copy_notification.setStyleSheet("""
             QLabel {
                 background: rgba(30,30,30,220);
                 color: black;
@@ -180,8 +171,7 @@ class PlayerDetailDialog(QtWidgets.QDialog):
                 min-width: 180px;
                 qproperty-alignment: AlignCenter;
             }
-        """,
-        )
+        """)
         self._copy_notification.setWindowFlags(
             QtCore.Qt.WindowType.FramelessWindowHint | QtCore.Qt.WindowType.ToolTip
         )

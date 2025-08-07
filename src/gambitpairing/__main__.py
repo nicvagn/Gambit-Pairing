@@ -22,7 +22,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QStyle
 
-from gambitpairing.gui.mainwindow import SwissTournamentApp
+from gambitpairing.gui.mainwindow import GambitPairingMainWindow
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -148,10 +148,9 @@ def run_app():
         except Exception:
             pass
 
-    window = SwissTournamentApp()
+    window = GambitPairingMainWindow()
     window.set_app_instance(app)
     window.show()
-    window.show_about_dialog()
 
     exit_code = app.exec()
     return exit_code

@@ -789,7 +789,7 @@ class Tournament:
         # If all players withdrew after R1, completed_rounds is 1.
         # If some are active with 3 results, some active with 2 (late entry?), this is tricky.
         # "Completed rounds" usually means rounds for which *all* results of *scheduled* games are in.
-        # The current_round_index in SwissTournamentApp is a better indicator of *processed* rounds.
+        # The current_round_index in GambitPairingMainWindow is a better indicator of *processed* rounds.
         # This method is okay as an approximation.
         return min(len(p.results) for p in players_with_results)
 

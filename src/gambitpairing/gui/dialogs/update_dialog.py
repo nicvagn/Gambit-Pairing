@@ -1,5 +1,4 @@
 from PyQt6 import QtWidgets, QtCore
-from gambitpairing.core.utils import apply_stylesheet
 
 class UpdateDownloadDialog(QtWidgets.QDialog):
     """Dialog to show download progress, completion, and errors with a modern look."""
@@ -8,7 +7,7 @@ class UpdateDownloadDialog(QtWidgets.QDialog):
         self.setWindowTitle("Updating Gambit Pairing")
         self.setModal(True)
         self.setMinimumWidth(400)
-        apply_stylesheet(self, '''
+        self.setStyleSheet('''
             QDialog {
                 background-color: #f9fafb;
             }
@@ -40,7 +39,7 @@ class UpdateDownloadDialog(QtWidgets.QDialog):
         self.status_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.status_label.setWordWrap(True)  # <-- Fix: allow text to wrap
         self.status_label.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)  # <-- Fix: expand horizontally
-        apply_stylesheet(self.status_label, "padding-left: 12px; padding-right: 12px;")  # <-- Fix: add horizontal padding
+        self.status_label.setStyleSheet("padding-left: 12px; padding-right: 12px;")  # <-- Fix: add horizontal padding
         self.layout.addWidget(self.status_label)
 
         self.progress_bar = QtWidgets.QProgressBar(self)

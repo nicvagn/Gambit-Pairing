@@ -7,6 +7,7 @@ from .settings_dialog import SettingsDialog
 from .manual_pairing_dialog import ManualPairingDialog
 from .update_dialog import UpdateDownloadDialog
 from .update_prompt_dialog import UpdatePromptDialog
+from .about_dialog import AboutDialog
 
 __all__ = [
     "NewTournamentDialog",
@@ -16,4 +17,5 @@ __all__ = [
     "ManualPairingDialog",
     "UpdateDownloadDialog",
     "UpdatePromptDialog",
+    "AboutDialog",
 ]

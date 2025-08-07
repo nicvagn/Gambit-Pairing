@@ -1,6 +1,5 @@
 from PyQt6 import QtWidgets
 from gambitpairing.core.constants import APP_NAME
-from gambitpairing.core.utils import apply_stylesheet
 
 class UpdatePromptDialog(QtWidgets.QDialog):
     """A modern dialog to prompt the user for an update."""
@@ -8,7 +7,7 @@ class UpdatePromptDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.setWindowTitle("Update Available")
         self.setMinimumWidth(500)
-        apply_stylesheet(self, '''
+        self.setStyleSheet('''
             QDialog {
                 background-color: #f9fafb;
             }

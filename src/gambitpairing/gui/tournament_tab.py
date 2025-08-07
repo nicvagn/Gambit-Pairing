@@ -21,7 +21,6 @@ from gambitpairing.core.constants import (BYE_SCORE, DRAW_SCORE, LOSS_SCORE,
                                           RESULT_BLACK_WIN, RESULT_DRAW,
                                           RESULT_WHITE_WIN, WIN_SCORE)
 from gambitpairing.core.player import Player
-from gambitpairing.core.utils import apply_stylesheet
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
@@ -190,7 +189,7 @@ class TournamentTab(QtWidgets.QWidget):
         self.btn_edit_pairings = QtWidgets.QPushButton("Edit Pairings")
         self.btn_edit_pairings.setToolTip("Open full pairing editor for this round")
         self.btn_edit_pairings.clicked.connect(self._edit_all_pairings)
-        apply_stylesheet(self.btn_edit_pairings, """
+        self.btn_edit_pairings.setStyleSheet("""
             min-height: 32px;
             max-height: 32px;
             padding: 5px 10px;
@@ -203,7 +202,7 @@ class TournamentTab(QtWidgets.QWidget):
         self.btn_print_pairings = QtWidgets.QPushButton(" Print Pairings")
         self.btn_print_pairings.setIcon(get_icon("export", "document-print"))
         self.btn_print_pairings.setToolTip("Print the current round\'s pairings")
-        apply_stylesheet(self.btn_print_pairings, """
+        self.btn_print_pairings.setStyleSheet("""
             min-height: 32px;
             max-height: 32px;
             padding: 5px 10px;

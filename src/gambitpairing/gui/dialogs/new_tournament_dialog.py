@@ -2,7 +2,6 @@ from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import Qt
 from typing import List, Optional, Tuple
 from gambitpairing.core.constants import TIEBREAK_NAMES, DEFAULT_TIEBREAK_SORT_ORDER
-from gambitpairing.core.utils import apply_stylesheet
 
 
 class NewTournamentDialog(QtWidgets.QDialog):
@@ -149,7 +148,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         # Sidebar (Table of Contents)
         toc = QtWidgets.QListWidget()
         toc.setMaximumWidth(200)
-        apply_stylesheet(toc, "font-size: 11pt;")
+        toc.setStyleSheet("font-size: 11pt;")
         toc.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         keys = list(info.keys())
         for k in keys:
@@ -161,17 +160,14 @@ class NewTournamentDialog(QtWidgets.QDialog):
         details_widget = QtWidgets.QWidget()
         details_layout = QtWidgets.QVBoxLayout(details_widget)
         title_label = QtWidgets.QLabel()
-        apply_stylesheet(
-            title_label, "font-size: 15pt; font-weight: bold; margin-bottom: 6px;"
-        )
+        title_label.setStyleSheet("font-size: 15pt; font-weight: bold; margin-bottom: 6px;")
         desc_label = QtWidgets.QLabel()
         desc_label.setWordWrap(True)
-        apply_stylesheet(desc_label, "font-size: 11pt; margin-bottom: 8px;")
+        desc_label.setStyleSheet("font-size: 11pt; margin-bottom: 8px;")
         html_details = QtWidgets.QTextBrowser()
         html_details.setOpenExternalLinks(True)
-        apply_stylesheet(
-            html_details,
-            "background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; font-size: 10.5pt;",
+        html_details.setStyleSheet(
+            "background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; font-size: 10.5pt;"
         )
         details_layout.addWidget(title_label)
         details_layout.addWidget(desc_label)
