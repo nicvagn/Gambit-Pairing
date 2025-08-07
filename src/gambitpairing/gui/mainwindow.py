@@ -469,9 +469,24 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             self.tournament.num_rounds, self.tournament.tiebreak_order, self
         )
         tournament_started = len(self.tournament.rounds_pairings_ids) > 0
-        # Disable rounds spinbox if round robin or tournament started
+        # Hide rounds spinbox if round robin, disable if tournament started
         if getattr(self.tournament, "pairing_system", None) == "round_robin":
-            dialog.spin_num_rounds.setEnabled(False)
+            dialog.spin_num_rounds.hide()
+            # Find and hide the label too - look through the form layout
+            rounds_group = None
+            for i in range(dialog.layout().count()):
+                item = dialog.layout().itemAt(i)
+                if item and item.widget() and isinstance(item.widget(), QtWidgets.QGroupBox):
+                    if item.widget().title() == "General":
+                        rounds_group = item.widget()
+                        break
+            
+            if rounds_group and isinstance(rounds_group.layout(), QtWidgets.QFormLayout):
+                form_layout = rounds_group.layout()
+                label = form_layout.labelForField(dialog.spin_num_rounds)
+                if label:
+                    label.hide()
+            
             dialog.spin_num_rounds.setToolTip(
                 "Number of rounds is fixed for Round Robin: players - 1."
             )
