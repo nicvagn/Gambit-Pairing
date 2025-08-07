@@ -581,9 +581,12 @@ QTableWidget {
                 self.no_players_placeholder.show()
                 self.table_players.hide()
                 self.btn_add_player_detail.hide()  # Hide until first player is added
+                # Hide the group box frame/title to create seamless wall look
+                self.player_group.hide()
             else:
                 # Tournament with players: show table and add button
                 self.no_players_placeholder.hide()
+                self.player_group.show()
                 self.table_players.show()
                 self.btn_add_player_detail.show()
                 tournament_started = len(self.tournament.rounds_pairings_ids) > 0

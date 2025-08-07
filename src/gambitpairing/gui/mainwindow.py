@@ -246,6 +246,16 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         Icons are loaded from the system theme for a native look and feel.
         """
         toolbar = self.addToolBar("Main Toolbar")
+        # Prevent detaching / floating
+        toolbar.setMovable(False)
+        try:
+            toolbar.setFloatable(False)
+        except Exception:
+            pass
+        toolbar.setAllowedAreas(
+            Qt.ToolBarArea.TopToolBarArea | Qt.ToolBarArea.BottomToolBarArea
+        )  # restrict just in case
+        toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
         toolbar.setIconSize(QtCore.QSize(24, 24))
         toolbar.setStyleSheet("""
             QToolBar {
