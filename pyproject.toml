@@ -12,7 +12,7 @@ dependencies = [
 description = "Fast, fair, and modern tournament management. Open source and cross-platform."
 readme = "README.md"
 requires-python = ">= 3.8"
-license = "MIT"
+license = "GPL-3.0-or-later"
 license-files = ["licenses/LICENSE", "licenses/license.rtf"]
 authors = [{name = "Chickaboo", email="support@chickaboo.net"}, {name="Nic"}]
 maintainers = [{name = "Chickaboo", email="support@chickaboo.net"}, {name="Nic"}]
@@ -33,6 +33,7 @@ dev = [
   "build",
   "pyinstaller",
   "black",
+  "pytest",
 ]
 
 [project.gui-scripts]

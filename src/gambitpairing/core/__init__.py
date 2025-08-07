@@ -3,6 +3,10 @@
 from typing import List, Tuple, Optional, Set, Dict, Any
 from gambitpairing.core.player import Player
 
-type Pairings = Tuple[List[Tuple[Player, Player]], Optional[Player]]
-type MaybePlayer = Optional[Player]
-type Players = List[Players]
+MatchPairing = Tuple[int, int]  # Tuple of player indices
+RoundSchedule = Tuple[MatchPairing, ...]  # All pairings for one round
+Pairings = Tuple[List[Tuple[Player, Player]], Optional[Player]]
+MaybePlayer = Optional[Player]
+Players = List[Player]
+
+#  LocalWords:  MatchPairing RoundSchedule
