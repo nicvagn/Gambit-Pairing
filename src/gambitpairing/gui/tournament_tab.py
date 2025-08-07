@@ -26,6 +26,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
 from .dialogs import ManualPairingDialog
+from .notournament_placeholder import NoTournamentPlaceholder
 
 
 def get_icon(icon_name: str, fallback_theme_name: str = None) -> QtGui.QIcon:
@@ -231,6 +232,13 @@ class TournamentTab(QtWidgets.QWidget):
         self.lbl_bye = QtWidgets.QLabel("Bye: None")
         self.main_layout.addWidget(self.lbl_bye)
 
+        # Add no tournament placeholder
+        self.no_tournament_placeholder = NoTournamentPlaceholder(self, "Tournament")
+        self.no_tournament_placeholder.create_tournament_requested.connect(self._trigger_create_tournament)
+        self.no_tournament_placeholder.import_tournament_requested.connect(self._trigger_import_tournament)
+        self.no_tournament_placeholder.hide()
+        self.main_layout.addWidget(self.no_tournament_placeholder)
+
         # Set initial UI state
         self.update_ui_state()
 
@@ -289,7 +297,7 @@ class TournamentTab(QtWidgets.QWidget):
 
                 bye_player = self.tournament.players.get(bye_id) if bye_id else None
                 self.lbl_round_title.setText(f"Round {display_round_num} Pairings & Results")
-                self.display_pairings_for_input(pairings, bye_player)
+                self.display_pairings_for_input(pairings, [bye_player] if bye_player else [])
                 self.update_ui_state()
                 return
 
@@ -319,7 +327,7 @@ class TournamentTab(QtWidgets.QWidget):
                 # If odd players and no bye_player, also an issue if pairings are also empty.
 
             self.lbl_round_title.setText(f"Round {display_round_number} Pairings & Results")
-            self.display_pairings_for_input(pairings, bye_player)
+            self.display_pairings_for_input(pairings, [bye_player] if bye_player else [])
             self.history_message.emit(f"--- Round {display_round_number} Pairings Generated ---")
             for pair in pairings:
                 if len(pair) == 3:
@@ -376,7 +384,7 @@ class TournamentTab(QtWidgets.QWidget):
 
                 bye_player = self.tournament.players.get(bye_id) if bye_id else None
                 self.lbl_round_title.setText(f"Round {display_round_num} Pairings & Results")
-                self.display_pairings_for_input(pairings, bye_player)
+                self.display_pairings_for_input(pairings, [bye_player] if bye_player else [])
                 self.update_ui_state()
                 return
 
@@ -403,7 +411,7 @@ class TournamentTab(QtWidgets.QWidget):
                     return
 
             self.lbl_round_title.setText(f"Round {display_round_number} Pairings & Results")
-            self.display_pairings_for_input(pairings, bye_player)
+            self.display_pairings_for_input(pairings, [bye_player] if bye_player else [])
             self.history_message.emit(f"--- Round {display_round_number} Pairings Generated ---")
             for pair in pairings:
                 if len(pair) == 3:
@@ -436,7 +444,7 @@ class TournamentTab(QtWidgets.QWidget):
         )
         return reply == QtWidgets.QMessageBox.StandardButton.Yes
 
-    def display_pairings_for_input(self, pairings: List[Tuple[Player, Player]], bye_player: Optional[Player]):
+    def display_pairings_for_input(self, pairings: List[Tuple[Player, Player]], bye_players: List[Player]):
         self.table_pairings.clearContents()
         self.table_pairings.setRowCount(len(pairings))
 
@@ -492,13 +500,42 @@ class TournamentTab(QtWidgets.QWidget):
 
             self.table_pairings.setCellWidget(row, 2, result_selector)
 
-        if bye_player:
-            status = " (Inactive)" if not bye_player.is_active else ""
-            bye_score_info = BYE_SCORE if bye_player.is_active else 0.0 # Reflects score based on active status
-            self.lbl_bye.setText(f"Bye: {bye_player.name} ({bye_player.rating}){status} - Receives {bye_score_info} point")
+        # Handle multiple bye players
+        if bye_players:
+            if len(bye_players) == 1:
+                # Single bye player - keep existing format for consistency
+                player = bye_players[0]
+                status = " (Inactive)" if not player.is_active else ""
+                bye_score_info = BYE_SCORE if player.is_active else 0.0
+                self.lbl_bye.setText(f"Bye: {player.name} ({player.rating}){status} - Receives {bye_score_info} point")
+            else:
+                # Multiple bye players - show count and details
+                active_byes = [p for p in bye_players if p.is_active]
+                inactive_byes = [p for p in bye_players if not p.is_active]
+                
+                bye_text = f"Byes ({len(bye_players)} players): "
+                player_details = []
+                
+                for player in bye_players:
+                    status = " (Inactive)" if not player.is_active else ""
+                    player_details.append(f"{player.name} ({player.rating}){status}")
+                
+                bye_text += ", ".join(player_details)
+                
+                # Add scoring information
+                if active_byes and inactive_byes:
+                    bye_text += f" - {len(active_byes)} receive {BYE_SCORE} points, {len(inactive_byes)} receive 0 points"
+                elif active_byes:
+                    bye_text += f" - Each receives {BYE_SCORE} point{'s' if BYE_SCORE != 1 else ''}"
+                elif inactive_byes:
+                    bye_text += " - Each receives 0 points"
+                
+                self.lbl_bye.setText(bye_text)
+            
             self.lbl_bye.setVisible(True)
         else:
-            self.lbl_bye.setText("Bye: None"); self.lbl_bye.setVisible(False)
+            self.lbl_bye.setText("Bye: None")
+            self.lbl_bye.setVisible(False)
 
         self.table_pairings.resizeColumnsToContents()
         self.table_pairings.resizeRowsToContents()
@@ -638,7 +675,7 @@ class TournamentTab(QtWidgets.QWidget):
                                   b = self.tournament.players.get(b_id)
                                   if w and b: refreshed_pairings.append((w,b))
                              refreshed_bye_player = self.tournament.players.get(current_bye_id) if current_bye_id else None
-                             self.display_pairings_for_input(refreshed_pairings, refreshed_bye_player)
+                             self.display_pairings_for_input(refreshed_pairings, [refreshed_bye_player] if refreshed_bye_player else [])
                              self.dirty.emit()
                         else:
                              QtWidgets.QMessageBox.critical(self, "Adjust Error", "Manual pairing adjustment failed. Check logs. Pairings might be inconsistent.")
@@ -889,7 +926,7 @@ class TournamentTab(QtWidgets.QWidget):
 
             bye_player_to_redisplay = self.tournament.players.get(bye_id_to_redisplay) if bye_id_to_redisplay else None
 
-            self.display_pairings_for_input(pairings_to_redisplay, bye_player_to_redisplay)
+            self.display_pairings_for_input(pairings_to_redisplay, [bye_player_to_redisplay] if bye_player_to_redisplay else [])
             self.tabs.setCurrentWidget(self.tournament_tab)
 
             self.standings_update_requested.emit() # Reflect reverted scores
@@ -930,6 +967,23 @@ class TournamentTab(QtWidgets.QWidget):
 
     def update_ui_state(self):
         tournament_exists = self.tournament is not None
+        
+        # Show/hide placeholder based on tournament existence
+        if not tournament_exists:
+            self.no_tournament_placeholder.show()
+            self.lbl_round_title.hide()
+            self.btn_edit_pairings.hide()
+            self.btn_print_pairings.hide()
+            self.table_pairings.hide()
+            self.lbl_bye.hide()
+            return
+        else:
+            self.no_tournament_placeholder.hide()
+            self.lbl_round_title.show()
+            self.btn_print_pairings.show()
+            self.table_pairings.show()
+            self.lbl_bye.show()
+        
         pairings_generated = len(self.tournament.rounds_pairings_ids) if tournament_exists else 0
         results_recorded = self.current_round_index if hasattr(self, 'current_round_index') else 0
         total_rounds = self.tournament.num_rounds if tournament_exists else 0
@@ -1004,19 +1058,27 @@ class TournamentTab(QtWidgets.QWidget):
         )
 
         if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
-            pairings, bye_player = dialog.get_pairings_and_bye()
+            pairings, bye_players = dialog.get_pairings_and_bye()
+
+            # For now, handle legacy compatibility by using the first bye player
+            # TODO: Update tournament logic to handle multiple bye players
+            bye_player = bye_players[0] if bye_players else None
 
             # Set the manual pairings in the tournament
             if self.tournament.set_manual_pairings(round_to_prepare_idx, pairings, bye_player):
                 self.lbl_round_title.setText(f"Round {display_round_number} Pairings & Results")
-                self.display_pairings_for_input(pairings, bye_player)
+                self.display_pairings_for_input(pairings, bye_players)
 
                 # Log the pairings
                 self.history_message.emit(f"--- Round {display_round_number} Manual Pairings Set ---")
                 for i, (white, black) in enumerate(pairings, 1):
                     self.history_message.emit(f"  Board {i}: {white.name} (W) vs {black.name} (B)")
-                if bye_player:
-                    self.history_message.emit(f"  Bye: {bye_player.name}")
+                if bye_players:
+                    if len(bye_players) == 1:
+                        self.history_message.emit(f"  Bye: {bye_players[0].name}")
+                    else:
+                        bye_names = ", ".join([p.name for p in bye_players])
+                        self.history_message.emit(f"  Byes ({len(bye_players)}): {bye_names}")
                 self.history_message.emit("-" * 20)
 
                 self.dirty.emit()
@@ -1063,19 +1125,27 @@ class TournamentTab(QtWidgets.QWidget):
         )
 
         if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
-            pairings, bye_player = dialog.get_pairings_and_bye()
+            pairings, bye_players = dialog.get_pairings_and_bye()
+
+            # For now, handle legacy compatibility by using the first bye player
+            # TODO: Update tournament logic to handle multiple bye players
+            bye_player = bye_players[0] if bye_players else None
 
             # Set the manual pairings in the tournament
             if self.tournament.set_manual_pairings(self.current_round_index, pairings, bye_player):
-                self.display_pairings_for_input(pairings, bye_player)
+                self.display_pairings_for_input(pairings, bye_players)
 
                 # Log the updated pairings
                 pairing_type = "Manual" if self.tournament.pairing_system == "manual" else "Edited"
                 self.history_message.emit(f"--- Round {display_round_number} {pairing_type} Pairings Updated ---")
                 for i, (white, black) in enumerate(pairings, 1):
                     self.history_message.emit(f"  Board {i}: {white.name} (W) vs {black.name} (B)")
-                if bye_player:
-                    self.history_message.emit(f"  Bye: {bye_player.name}")
+                if bye_players:
+                    if len(bye_players) == 1:
+                        self.history_message.emit(f"  Bye: {bye_players[0].name}")
+                    else:
+                        bye_names = ", ".join([p.name for p in bye_players])
+                        self.history_message.emit(f"  Byes ({len(bye_players)}): {bye_names}")
                 self.history_message.emit("-" * 20)
 
                 self.dirty.emit()
@@ -1084,3 +1154,19 @@ class TournamentTab(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.critical(self, "Error", "Failed to update pairings.")
 
         self.update_ui_state()
+    
+    def _trigger_create_tournament(self):
+        parent = self.parent()
+        while parent is not None:
+            if hasattr(parent, "prompt_new_tournament"):
+                parent.prompt_new_tournament()
+                return
+            parent = parent.parent()
+
+    def _trigger_import_tournament(self):
+        parent = self.parent()
+        while parent is not None:
+            if hasattr(parent, "load_tournament"):
+                parent.load_tournament()
+                return
+            parent = parent.parent()

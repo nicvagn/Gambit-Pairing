@@ -26,6 +26,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
 from .dialogs import PlayerDetailDialog
+from .notournament_placeholder import NoTournamentPlaceholder, PlayerPlaceholder
 
 
 class NumericTableWidgetItem(QtWidgets.QTableWidgetItem):
@@ -53,9 +54,9 @@ class PlayersTab(QtWidgets.QWidget):
         super().__init__(parent)
         self.tournament = None
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        player_group = QtWidgets.QGroupBox("Players")
-        player_group.setToolTip("Manage players. Right-click a row for actions.")
-        player_group_layout = QtWidgets.QVBoxLayout(player_group)
+        self.player_group = QtWidgets.QGroupBox("Players")
+        self.player_group.setToolTip("Manage players. Right-click a row for actions.")
+        player_group_layout = QtWidgets.QVBoxLayout(self.player_group)
 
         # --- Player Table ---
         self.table_players = QtWidgets.QTableWidget()
@@ -152,6 +153,7 @@ QTableWidget {
             pass
 
         player_group_layout.addWidget(self.table_players)
+        self.table_players.hide()  # Hide table initially
 
         self.btn_add_player_detail = QtWidgets.QPushButton(" Add New Player...")
         self.btn_add_player_detail.setToolTip(
@@ -159,7 +161,7 @@ QTableWidget {
         )
         self.btn_add_player_detail.clicked.connect(self.add_player_detailed)
         player_group_layout.addWidget(self.btn_add_player_detail)
-        self.main_layout.addWidget(player_group)
+        self.main_layout.addWidget(self.player_group)
 
         # --- Compatibility: Legacy list_players for reset_tournament_state() ---
         self.list_players = QtWidgets.QListWidget()
@@ -169,6 +171,20 @@ QTableWidget {
         vheader = self.table_players.verticalHeader()
         vheader.setDefaultSectionSize(38)  # Increase default row height
         vheader.setMinimumSectionSize(38)
+        
+        # Initialize placeholders
+        self.no_tournament_placeholder = NoTournamentPlaceholder(self, "Players")
+        self.no_tournament_placeholder.create_tournament_requested.connect(self._trigger_create_tournament)
+        self.no_tournament_placeholder.import_tournament_requested.connect(self._trigger_import_tournament)
+        self.no_players_placeholder = PlayerPlaceholder(self)
+        self.no_players_placeholder.import_players_requested.connect(self.import_players_csv)
+        self.no_players_placeholder.add_player_requested.connect(self.add_player_detailed)
+
+        # Hide placeholders initially
+        self.no_tournament_placeholder.hide()
+        self.no_players_placeholder.hide()
+        self.main_layout.addWidget(self.no_tournament_placeholder)
+        self.main_layout.addWidget(self.no_players_placeholder)
 
     def _calculate_age(self, dob_str: Optional[str]) -> Optional[int]:
         """Calculates age from a date of birth string (YYYY-MM-DD)."""
@@ -549,22 +565,64 @@ QTableWidget {
     def set_tournament(self, tournament):
         self.tournament = tournament
         self.refresh_player_list()
+        self._update_visibility()
+        
+    def _update_visibility(self):
+        """Show/hide content based on tournament existence."""
+        if not self.tournament:
+            # No tournament: show only the placeholder
+            self.no_tournament_placeholder.show()
+            self.no_players_placeholder.hide()
+            self.table_players.hide()
+            self.btn_add_player_detail.hide()  # Completely hide the button
+            self.player_group.hide()  # Hide the group box title for perfect wall
+        else:
+            # Tournament exists: hide placeholder and show appropriate content
+            self.no_tournament_placeholder.hide()
+            self.player_group.show()
+            if not self.tournament.players:
+                # Tournament but no players: show player placeholder
+                self.no_players_placeholder.show()
+                self.table_players.hide()
+                self.btn_add_player_detail.hide()  # Hide until first player is added
+            else:
+                # Tournament with players: show table and add button
+                self.no_players_placeholder.hide()
+                self.table_players.show()
+                self.btn_add_player_detail.show()
+                tournament_started = len(self.tournament.rounds_pairings_ids) > 0
+                self.btn_add_player_detail.setEnabled(not tournament_started)
 
     def update_ui_state(self):
-        tournament_started = (
-            self.tournament and len(self.tournament.rounds_pairings_ids) > 0
-        )
-        self.btn_add_player_detail.setEnabled(not tournament_started)
-        if self.tournament:
-            self.table_players.setEnabled(True)
-        else:
-            self.table_players.setEnabled(False)
+        self._update_visibility()
 
     def refresh_player_list(self):
         self.table_players.setSortingEnabled(False)
         self.table_players.setRowCount(0)
-        if not self.tournament or not self.tournament.players:
-            return
-        for player in sorted(self.tournament.players.values(), key=lambda p: p.name):
-            self.add_player_to_table(player)
-        self.table_players.setSortingEnabled(True)
+        
+        # Use the visibility method to handle all states
+        self._update_visibility()
+        
+        # Only populate table if tournament exists and has players
+        if self.tournament and self.tournament.players:
+            for player in sorted(self.tournament.players.values(), key=lambda p: p.name):
+                self.add_player_to_table(player)
+            self.table_players.setSortingEnabled(True)
+
+    def _trigger_create_tournament(self):
+        # Walk up the parent chain to find the main window
+        parent = self.parent()
+        while parent is not None:
+            if hasattr(parent, "prompt_new_tournament"):
+                parent.prompt_new_tournament()
+                return
+            parent = parent.parent()
+
+    def _trigger_import_tournament(self):
+        # Walk up the parent chain to find the main window
+        parent = self.parent()
+        while parent is not None:
+            if hasattr(parent, "load_tournament"):
+                parent.load_tournament()
+                return
+            parent = parent.parent()

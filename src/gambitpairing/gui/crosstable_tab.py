@@ -19,6 +19,8 @@ from PyQt6.QtCore import Qt
 import functools
 from gambitpairing.core.constants import WIN_SCORE, DRAW_SCORE, LOSS_SCORE
 
+from .notournament_placeholder import NoTournamentPlaceholder
+
 
 class CrosstableTab(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -37,15 +39,32 @@ class CrosstableTab(QtWidgets.QWidget):
         self.table_crosstable.setFont(font)
         crosstable_layout.addWidget(self.table_crosstable)
         self.main_layout.addWidget(self.crosstable_group)
+        
+        # Add no tournament placeholder
+        self.no_tournament_placeholder = NoTournamentPlaceholder(self, "Crosstable")
+        self.no_tournament_placeholder.create_tournament_requested.connect(self._trigger_create_tournament)
+        self.no_tournament_placeholder.import_tournament_requested.connect(self._trigger_import_tournament)
+        self.no_tournament_placeholder.hide()
+        self.main_layout.addWidget(self.no_tournament_placeholder)
 
     def set_tournament(self, tournament):
         self.tournament = tournament
         self.update_ui_state()
+        self._update_visibility()
+        
+    def _update_visibility(self):
+        """Show/hide content based on tournament existence."""
+        if not self.tournament:
+            self.no_tournament_placeholder.show()
+            self.crosstable_group.hide()
+        else:
+            self.no_tournament_placeholder.hide()
+            self.crosstable_group.show()
 
     def update_crosstable(self):
+        self._update_visibility()
+        
         if not self.tournament or not self.tournament.players:
-            self.table_crosstable.setRowCount(0)
-            self.table_crosstable.setColumnCount(0)
             return
 
         sorted_players = self.tournament.get_standings()
@@ -136,3 +155,20 @@ class CrosstableTab(QtWidgets.QWidget):
 
     def update_ui_state(self):
         self.update_crosstable()
+        self._update_visibility()
+    
+    def _trigger_create_tournament(self):
+        parent = self.parent()
+        while parent is not None:
+            if hasattr(parent, "prompt_new_tournament"):
+                parent.prompt_new_tournament()
+                return
+            parent = parent.parent()
+
+    def _trigger_import_tournament(self):
+        parent = self.parent()
+        while parent is not None:
+            if hasattr(parent, "load_tournament"):
+                parent.load_tournament()
+                return
+            parent = parent.parent()

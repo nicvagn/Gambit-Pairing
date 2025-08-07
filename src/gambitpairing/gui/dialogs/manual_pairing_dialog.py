@@ -183,10 +183,11 @@ class DraggableListWidget(QtWidgets.QListWidget):
         self.parent_dialog._save_state_for_undo()
 
         # Check if player is in bye position
-        if (self.parent_dialog.bye_player and
-            self.parent_dialog.bye_player.id == player_id):
-            self.parent_dialog.bye_player = None
-            player_found = True
+        for bye_player in self.parent_dialog.bye_players:
+            if bye_player.id == player_id:
+                self.parent_dialog.bye_players.remove(bye_player)
+                player_found = True
+                break
 
         # Find and remove player from all pairings
         for i, (white, black) in enumerate(self.parent_dialog.pairings):
@@ -212,106 +213,161 @@ class DraggableListWidget(QtWidgets.QListWidget):
         self.dragLeaveEvent(event)
 
 
-class DroppableLabel(QtWidgets.QLabel):
-    """Custom label widget for bye player that supports drag and drop."""
+class DroppableByeListWidget(DraggableListWidget):
+    """Custom list widget for bye players that supports drag and drop operations."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.parent_dialog = parent
-        self.setAcceptDrops(True)
-        self.default_style = (
-            "padding: 15px; font-size: 12pt; background-color: #f8f9fa; "
-            "border: 2px dashed #e3e7ee; border-radius: 8px;"
-        )
-        self.setStyleSheet(self.default_style)
+        self.setMinimumHeight(60)
+        self.setMaximumHeight(120)
+        self.setStyleSheet("""
+            QListWidget {
+                background-color: #fff3cd;
+                border: 2px dashed #e2c290;
+                border-radius: 8px;
+                padding: 4px;
+            }
+            QListWidget::item {
+                padding: 6px 8px;
+                margin: 1px;
+                border-radius: 3px;
+                background-color: #fff8e1;
+                border: 1px solid #e2c290;
+                color: #8b5c2b;
+                font-weight: bold;
+            }
+            QListWidget::item:hover {
+                background-color: #ffecb3;
+                border-color: #d4ac0d;
+            }
+            QListWidget::item:selected {
+                background-color: #d4ac0d;
+                color: white;
+                border-color: #b7950b;
+            }
+        """)
 
-    def mousePressEvent(self, event):
-        """Handle mouse press to start drag operations for bye player."""
-        super().mousePressEvent(event)
+    def startDrag(self, supported_actions):
+        """Start drag operation from bye pool."""
+        current_item = self.currentItem()
+        if not current_item:
+            return
 
-        if (event.button() == Qt.MouseButton.LeftButton and
-            self.parent_dialog.bye_player):
+        player = current_item.data(Qt.ItemDataRole.UserRole)
+        if not player:
+            return
 
-            # Start drag from bye area
-            drag = QDrag(self)
-            mime_data = QMimeData()
-            mime_data.setText(f"player:{self.parent_dialog.bye_player.id}")
-            drag.setMimeData(mime_data)
+        # Create drag for bye player
+        drag = QDrag(self)
+        mime_data = QMimeData()
+        mime_data.setText(f"player:{player.id}")
+        drag.setMimeData(mime_data)
 
-            # Create drag pixmap for bye player
-            pixmap = QtGui.QPixmap(250, 35)
-            pixmap.fill(QtGui.QColor(255, 255, 255, 200))
-            painter = QtGui.QPainter(pixmap)
-            painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        # Create drag pixmap for bye player
+        pixmap = QtGui.QPixmap(250, 35)
+        pixmap.fill(QtGui.QColor(255, 255, 255, 200))
+        painter = QtGui.QPainter(pixmap)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
 
-            # Draw border - special color for bye player
-            border_color = QtGui.QColor(255, 193, 7)  # Warning yellow for bye
-            bg_color = QtGui.QColor(255, 248, 220, 180)
+        # Draw border - special color for bye player
+        border_color = QtGui.QColor(255, 193, 7)  # Warning yellow for bye
+        bg_color = QtGui.QColor(255, 248, 220, 180)
 
-            painter.setPen(QtGui.QPen(border_color, 2))
-            painter.setBrush(QtGui.QBrush(bg_color))
-            painter.drawRoundedRect(1, 1, 248, 33, 4, 4)
+        painter.setPen(QtGui.QPen(border_color, 2))
+        painter.setBrush(QtGui.QBrush(bg_color))
+        painter.drawRoundedRect(1, 1, 248, 33, 4, 4)
 
-            # Draw text
-            painter.setPen(QtGui.QColor(0, 0, 0))
-            font = painter.font()
-            font.setPointSize(10)
-            painter.setFont(font)
+        # Draw text
+        painter.setPen(QtGui.QColor(0, 0, 0))
+        font = painter.font()
+        font.setPointSize(10)
+        painter.setFont(font)
 
-            text = f"{self.parent_dialog.bye_player.name} (Bye)"
-            painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, text)
-            painter.end()
+        text = f"{player.name} (Bye)"
+        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, text)
+        painter.end()
 
-            drag.setPixmap(pixmap)
-            drag.setHotSpot(QtCore.QPoint(125, 17))
+        drag.setPixmap(pixmap)
+        drag.setHotSpot(QtCore.QPoint(125, 17))
 
-            drag.exec(Qt.DropAction.MoveAction)
+        drag.exec(supported_actions)
 
     def dragEnterEvent(self, event):
-        """Handle drag enter events for bye area."""
+        """Handle drag enter events for bye pool."""
         if event.mimeData().hasText() and event.mimeData().text().startswith("player:"):
             event.acceptProposedAction()
-            self.setStyleSheet(
-                "padding: 15px; font-size: 12pt; background-color: #fff3cd; "
-                "border: 2px dashed #e2c290; border-radius: 8px; "
-                "color: #8b5c2b;"
-            )
+            # Visual feedback for drag enter
+            self.setStyleSheet("""
+                QListWidget {
+                    background-color: #e8f5e8;
+                    border: 2px dashed #4caf50;
+                    border-radius: 8px;
+                    padding: 4px;
+                }
+                QListWidget::item {
+                    padding: 6px 8px;
+                    margin: 1px;
+                    border-radius: 3px;
+                    background-color: #fff8e1;
+                    border: 1px solid #e2c290;
+                    color: #8b5c2b;
+                    font-weight: bold;
+                }
+            """)
         else:
             event.ignore()
 
     def dragLeaveEvent(self, event):
         """Handle drag leave events."""
-        self.setStyleSheet(self.default_style)
+        # Reset to normal styling
+        self.setStyleSheet("""
+            QListWidget {
+                background-color: #fff3cd;
+                border: 2px dashed #e2c290;
+                border-radius: 8px;
+                padding: 4px;
+            }
+            QListWidget::item {
+                padding: 6px 8px;
+                margin: 1px;
+                border-radius: 3px;
+                background-color: #fff8e1;
+                border: 1px solid #e2c290;
+                color: #8b5c2b;
+                font-weight: bold;
+            }
+            QListWidget::item:hover {
+                background-color: #ffecb3;
+                border-color: #d4ac0d;
+            }
+            QListWidget::item:selected {
+                background-color: #d4ac0d;
+                color: white;
+                border-color: #b7950b;
+            }
+        """)
 
     def dropEvent(self, event):
-        """Handle drop events for bye area - comprehensive handling."""
+        """Handle drop events for bye pool."""
         if not event.mimeData().hasText():
+            self.dragLeaveEvent(event)
             return
 
         data = event.mimeData().text()
         if not data.startswith("player:"):
+            self.dragLeaveEvent(event)
             return
 
         player_id = data.split(":", 1)[1]
-        player = None
-
-        # Save state before any modifications
-        self.parent_dialog._save_state_for_undo()
-
-        # Find the player object from all possible sources
         player = next((p for p in self.parent_dialog.players if p.id == player_id), None)
 
         if not player:
-            # Player not found, revert undo state
-            if self.parent_dialog.pairing_history:
-                self.parent_dialog.pairing_history.pop()
             event.ignore()
             self.dragLeaveEvent(event)
             return
 
-        # If someone else has bye, they'll be returned to available players automatically
-        if self.parent_dialog.bye_player and self.parent_dialog.bye_player.id != player_id:
-            pass  # Will be handled by population refresh
+        # Save state before any modifications
+        self.parent_dialog._save_state_for_undo()
 
         # Remove player from any existing pairing
         for i, (white, black) in enumerate(self.parent_dialog.pairings):
@@ -326,8 +382,9 @@ class DroppableLabel(QtWidgets.QLabel):
         self.parent_dialog.pairings = [(w, b) for w, b in self.parent_dialog.pairings
                                      if w is not None or b is not None]
 
-        # Set new bye player
-        self.parent_dialog.bye_player = player
+        # Add player to bye pool if not already there
+        if player not in self.parent_dialog.bye_players:
+            self.parent_dialog.bye_players.append(player)
 
         # Update all displays
         self.parent_dialog._populate_player_pool()
@@ -337,8 +394,6 @@ class DroppableLabel(QtWidgets.QLabel):
         self.parent_dialog._update_validation()
 
         event.acceptProposedAction()
-
-        # Reset styling
         self.dragLeaveEvent(event)
 
 
@@ -607,7 +662,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
         self.round_number = round_number
         self.tournament = tournament
         self.pairings = []  # List of (Player, Player) tuples
-        self.bye_player = None
+        self.bye_players = []  # List of players with byes
 
         # Click-to-place functionality
         self._selected_for_placement = None
@@ -620,7 +675,11 @@ class ManualPairingDialog(QtWidgets.QDialog):
         if existing_pairings:
             self.pairings = list(existing_pairings)
         if existing_bye:
-            self.bye_player = existing_bye
+            # Handle both single bye player (legacy) and list of bye players
+            if isinstance(existing_bye, list):
+                self.bye_players = list(existing_bye)
+            else:
+                self.bye_players = [existing_bye] if existing_bye else []
 
         self._setup_ui()
         self._setup_shortcuts()
@@ -837,19 +896,18 @@ class ManualPairingDialog(QtWidgets.QDialog):
         return player_pool
 
     def _create_bye_section(self):
-        """Create the bye player section."""
-        bye_group = QtWidgets.QGroupBox("Bye Player")
+        """Create the bye players section."""
+        bye_group = QtWidgets.QGroupBox("Bye Players")
         bye_layout = QVBoxLayout(bye_group)
 
-        self.bye_label = DroppableLabel(self)
-        self.bye_label.setText("Drop a player here for bye\n(or None if no bye)")
-        self.bye_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.bye_label.setStyleSheet(
-            "padding: 15px; font-size: 11pt; background-color: #f8f9fa; "
-            "border: 2px dashed #e3e7ee; border-radius: 8px; color: #6b7280;"
-        )
-        self.bye_label.setToolTip("Drag a player here to assign them a bye for this round\nDrag bye player back to pool or pairings to remove")
-        bye_layout.addWidget(self.bye_label)
+        # Instructions
+        bye_info = QtWidgets.QLabel("Drop players here to assign byes • Drag back to remove")
+        bye_info.setStyleSheet("color: #6b7280; font-style: italic; padding: 5px; font-size: 10pt;")
+        bye_layout.addWidget(bye_info)
+
+        self.bye_list = DroppableByeListWidget(self)
+        self.bye_list.setToolTip("Drag players here to assign them a bye for this round\nDrag bye players back to pool or pairings to remove")
+        bye_layout.addWidget(self.bye_list)
 
         return bye_group
 
@@ -1041,9 +1099,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
             if black:
                 paired_players.add(black.id)
 
-        # Add bye player to paired set
-        if self.bye_player:
-            paired_players.add(self.bye_player.id)
+        # Add bye players to paired set
+        for bye_player in self.bye_players:
+            paired_players.add(bye_player.id)
 
         # Separate active and withdrawn players
         active_unpaired = []
@@ -1135,7 +1193,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
         
         paired_players = sum(1 for white, black in self.pairings if white and black) * 2
         incomplete_pairings = sum(1 for white, black in self.pairings if not (white and black))
-        bye_count = 1 if self.bye_player else 0
+        bye_count = len(self.bye_players)
         remaining_active_players = active_players - paired_players - bye_count
 
         stats_text = (
@@ -1147,9 +1205,17 @@ class ManualPairingDialog(QtWidgets.QDialog):
         if withdrawn_players > 0:
             stats_text += f" • {withdrawn_players} withdrawn"
 
-        if self.bye_player:
-            status = " (Withdrawn)" if not self.bye_player.is_active else ""
-            stats_text += f" • Bye: {self.bye_player.name}{status}"
+        if self.bye_players:
+            if len(self.bye_players) == 1:
+                status = " (Withdrawn)" if not self.bye_players[0].is_active else ""
+                stats_text += f" • Bye: {self.bye_players[0].name}{status}"
+            else:
+                active_byes = [p for p in self.bye_players if p.is_active]
+                withdrawn_byes = [p for p in self.bye_players if not p.is_active]
+                bye_text = f" • Byes: {len(self.bye_players)} players"
+                if withdrawn_byes:
+                    bye_text += f" ({len(withdrawn_byes)} withdrawn)"
+                stats_text += bye_text
 
         self.stats_label.setText(stats_text)
 
@@ -1173,9 +1239,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
             if black:
                 accounted_players.add(black.id)
         
-        # Add bye player
-        if self.bye_player:
-            accounted_players.add(self.bye_player.id)
+        # Add bye players
+        for bye_player in self.bye_players:
+            accounted_players.add(bye_player.id)
         
         # Find active players not accounted for
         for player in self.players:
@@ -1230,7 +1296,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
         """Save current state for undo functionality."""
         current_state = (
             [tuple(pair) for pair in self.pairings],
-            self.bye_player
+            list(self.bye_players)
         )
         self.pairing_history.append(current_state)
 
@@ -1246,9 +1312,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
             self.undo_btn.setEnabled(False)
             return
 
-        previous_pairings, previous_bye = self.pairing_history.pop()
+        previous_pairings, previous_byes = self.pairing_history.pop()
         self.pairings = list(previous_pairings)
-        self.bye_player = previous_bye
+        self.bye_players = list(previous_byes)
 
         self._populate_player_pool()
         self._update_pairings_display()
@@ -1262,12 +1328,12 @@ class ManualPairingDialog(QtWidgets.QDialog):
 
     def _clear_all_pairings(self):
         """Clear all pairings and return players to pool."""
-        if not self.pairings and not self.bye_player:
+        if not self.pairings and not self.bye_players:
             return
 
         self._save_state_for_undo()
         self.pairings.clear()
-        self.bye_player = None
+        self.bye_players.clear()
         self._populate_player_pool()
         self._update_pairings_display()
         self._update_bye_display()
@@ -1360,7 +1426,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
             self._save_state_for_undo()
             self.pairings.extend(auto_pairings)
             if auto_bye:
-                self.bye_player = auto_bye
+                self.bye_players.append(auto_bye)
 
             self._populate_player_pool()
             self._update_pairings_display()
@@ -1382,8 +1448,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
                 return False
 
         # Check if bye player
-        if self.bye_player and self.bye_player.id == player.id:
-            return False
+        for bye_player in self.bye_players:
+            if bye_player.id == player.id:
+                return False
 
         return True
 
@@ -1443,30 +1510,23 @@ class ManualPairingDialog(QtWidgets.QDialog):
                     item.setHidden(not visible)
 
     def _update_bye_display(self):
-        """Update the bye player display using chess color scheme."""
-        if self.bye_player:
-            status_text = " (Withdrawn)" if not self.bye_player.is_active else ""
-            self.bye_label.setText(f"{self.bye_player.name}\n({self.bye_player.rating}){status_text}")
+        """Update the bye players display."""
+        self.bye_list.clear()
+        
+        for bye_player in self.bye_players:
+            item = QtWidgets.QListWidgetItem()
+            status_text = " (Withdrawn)" if not bye_player.is_active else ""
+            item.setText(f"{bye_player.name} ({bye_player.rating}){status_text}")
+            item.setData(Qt.ItemDataRole.UserRole, bye_player)
             
-            if self.bye_player.is_active:
-                self.bye_label.setStyleSheet(
-                    "padding: 15px; font-size: 11pt; background-color: #fff3cd; "
-                    "border: 2px solid #e2c290; border-radius: 8px; "
-                    "color: #8b5c2b; font-weight: bold;"
-                )
-            else:
-                # Different styling for withdrawn bye player
-                self.bye_label.setStyleSheet(
-                    "padding: 15px; font-size: 11pt; background-color: #f5f5f5; "
-                    "border: 2px solid #cccccc; border-radius: 8px; "
-                    "color: #666666; font-weight: bold; font-style: italic;"
-                )
-        else:
-            self.bye_label.setText("Drop a player here for bye\n(or None if no bye)")
-            self.bye_label.setStyleSheet(
-                "padding: 15px; font-size: 11pt; background-color: #f8f9fa; "
-                "border: 2px dashed #e3e7ee; border-radius: 8px; color: #6b7280;"
-            )
+            # Apply special styling for withdrawn bye players
+            if not bye_player.is_active:
+                font = item.font()
+                font.setItalic(True)
+                item.setFont(font)
+                item.setForeground(QtGui.QColor("gray"))
+            
+            self.bye_list.addItem(item)
 
     # === Export/Import Methods ===
 
@@ -1491,10 +1551,10 @@ class ManualPairingDialog(QtWidgets.QDialog):
                         }
                         for white, black in self.pairings
                     ],
-                    "bye_player": {
-                        "id": self.bye_player.id,
-                        "name": self.bye_player.name
-                    } if self.bye_player else None
+                    "bye_players": [
+                        {"id": player.id, "name": player.name}
+                        for player in self.bye_players
+                    ]
                 }
 
                 with open(filename, 'w', encoding='utf-8') as f:
@@ -1534,16 +1594,25 @@ class ManualPairingDialog(QtWidgets.QDialog):
 
                     imported_pairings.append((white, black))
 
-                # Import bye player
-                imported_bye = None
-                bye_data = import_data.get("bye_player")
-                if bye_data:
-                    imported_bye = player_lookup.get(bye_data["id"])
+                # Import bye players - handle both legacy single bye and new multi-bye format
+                imported_byes = []
+                if "bye_players" in import_data:
+                    # New format with multiple bye players
+                    for bye_data in import_data["bye_players"]:
+                        bye_player = player_lookup.get(bye_data["id"])
+                        if bye_player:
+                            imported_byes.append(bye_player)
+                elif "bye_player" in import_data and import_data["bye_player"]:
+                    # Legacy format with single bye player
+                    bye_data = import_data["bye_player"]
+                    bye_player = player_lookup.get(bye_data["id"])
+                    if bye_player:
+                        imported_byes.append(bye_player)
 
                 # Apply imported data
                 self._save_state_for_undo()
                 self.pairings = imported_pairings
-                self.bye_player = imported_bye
+                self.bye_players = imported_byes
 
                 self._populate_player_pool()
                 self._update_pairings_display()
@@ -1598,12 +1667,13 @@ class ManualPairingDialog(QtWidgets.QDialog):
         menu.exec(self.pairings_table.mapToGlobal(position))
 
     def _set_player_as_bye(self, player: Player):
-        """Set a player as the bye player."""
-        self._save_state_for_undo()
-        self.bye_player = player
-        self._populate_player_pool()
-        self._update_bye_display()
-        self._update_stats()
+        """Set a player as a bye player."""
+        if player not in self.bye_players:
+            self._save_state_for_undo()
+            self.bye_players.append(player)
+            self._populate_player_pool()
+            self._update_bye_display()
+            self._update_stats()
 
     def _toggle_player_withdrawal(self, player: Player):
         """Toggle a player's withdrawal status."""
@@ -1613,8 +1683,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
         # If withdrawing a player, remove them from any pairings or bye
         if not player.is_active:
             # Remove from bye position
-            if self.bye_player and self.bye_player.id == player.id:
-                self.bye_player = None
+            if player in self.bye_players:
+                self.bye_players.remove(player)
             
             # Remove from pairings
             for i, (white, black) in enumerate(self.pairings):
@@ -1694,8 +1764,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
     def _remove_player_from_all_positions(self, player_id: str):
         """Remove a player from all current positions (pairings and bye)."""
         # Remove from bye position
-        if self.bye_player and self.bye_player.id == player_id:
-            self.bye_player = None
+        self.bye_players = [p for p in self.bye_players if p.id != player_id]
         
         # Remove from pairings
         for i, (white, black) in enumerate(self.pairings):
@@ -1732,8 +1801,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
             elif black and black.id == player_id:
                 self.pairings[i] = (white, None)
 
-        if self.bye_player and self.bye_player.id == player_id:
-            self.bye_player = None
+        # Remove from bye players
+        self.bye_players = [p for p in self.bye_players if p.id != player_id]
 
         self.pairings = [(w, b) for w, b in self.pairings if w is not None or b is not None]
 
@@ -1770,8 +1839,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
                 accounted_players.add(white.id)
             if black:
                 accounted_players.add(black.id)
-        if self.bye_player:
-            accounted_players.add(self.bye_player.id)
+        for bye_player in self.bye_players:
+            accounted_players.add(bye_player.id)
 
         # Find players in pairings with no opponent (single player on a board)
         for i, (white, black) in enumerate(self.pairings):
@@ -1826,13 +1895,13 @@ class ManualPairingDialog(QtWidgets.QDialog):
 
     # === Public Interface ===
 
-    def get_pairings_and_bye(self) -> Tuple[List[Tuple[Player, Player]], Optional[Player]]:
-        """Get the final pairings and bye player."""
+    def get_pairings_and_bye(self) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
+        """Get the final pairings and bye players."""
         complete_pairings = [
             (white, black) for white, black in self.pairings
             if white is not None and black is not None
         ]
-        return complete_pairings, self.bye_player
+        return complete_pairings, self.bye_players
 
     # === Dock Widget Management ===
 

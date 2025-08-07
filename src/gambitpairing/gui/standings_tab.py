@@ -30,6 +30,8 @@ from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 import csv
 import logging
 
+from .notournament_placeholder import NoTournamentPlaceholder
+
 
 class StandingsTab(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -71,6 +73,13 @@ class StandingsTab(QtWidgets.QWidget):
         standings_layout.addWidget(self.btn_print_standings)
         self.main_layout.addWidget(self.standings_group)
         self.btn_print_standings.clicked.connect(self.print_standings)
+        
+        # Add no tournament placeholder
+        self.no_tournament_placeholder = NoTournamentPlaceholder(self, "Standings")
+        self.no_tournament_placeholder.create_tournament_requested.connect(self._trigger_create_tournament)
+        self.no_tournament_placeholder.import_tournament_requested.connect(self._trigger_import_tournament)
+        self.no_tournament_placeholder.hide()
+        self.main_layout.addWidget(self.no_tournament_placeholder)
 
     def set_tournament(self, tournament):
         self.tournament = tournament
@@ -79,6 +88,16 @@ class StandingsTab(QtWidgets.QWidget):
             self.standings_group.setTitle(f"Standings - {tournament.name}")
         else:
             self.standings_group.setTitle("Standings")
+        self._update_visibility()
+        
+    def _update_visibility(self):
+        """Show/hide content based on tournament existence."""
+        if not self.tournament:
+            self.no_tournament_placeholder.show()
+            self.standings_group.hide()
+        else:
+            self.no_tournament_placeholder.hide()
+            self.standings_group.show()
 
     def _get_current_round_info(self):
         """Get current round information for display in titles/headers."""
@@ -151,10 +170,19 @@ class StandingsTab(QtWidgets.QWidget):
         header.setMinimumSectionSize(minimum_width)
         self.table_standings.setColumnWidth(1, minimum_width)
 
-    def update_standings_table(self) -> None:
+    def _update_visibility(self):
+        """Show/hide content based on tournament existence."""
         if not self.tournament:
-            self.table_standings.setRowCount(0)
-            self.lbl_round_info.setText("")
+            self.no_tournament_placeholder.show()
+            self.standings_group.hide()
+        else:
+            self.no_tournament_placeholder.hide()
+            self.standings_group.show()
+
+    def update_standings_table(self) -> None:
+        self._update_visibility()
+        
+        if not self.tournament:
             return
 
         try:
@@ -482,3 +510,20 @@ class StandingsTab(QtWidgets.QWidget):
             self.tournament is not None and self.table_standings.rowCount() > 0
         )
         self.btn_print_standings.setEnabled(has_standings)
+        self._update_visibility()
+    
+    def _trigger_create_tournament(self):
+        parent = self.parent()
+        while parent is not None:
+            if hasattr(parent, "prompt_new_tournament"):
+                parent.prompt_new_tournament()
+                return
+            parent = parent.parent()
+
+    def _trigger_import_tournament(self):
+        parent = self.parent()
+        while parent is not None:
+            if hasattr(parent, "load_tournament"):
+                parent.load_tournament()
+                return
+            parent = parent.parent()

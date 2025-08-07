@@ -149,12 +149,6 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             lambda: self.save_tournament(save_as=True),
             "Ctrl+Shift+S",
         )
-        self.import_players_action = self._create_action(
-            "&Import Players from CSV...", self.players_tab.import_players_csv
-        )
-        self.export_players_action = self._create_action(
-            "&Export Players to CSV...", self.players_tab.export_players_csv
-        )
         self.export_standings_action = self._create_action(
             "&Export Standings...", self.standings_tab.export_standings
         )
@@ -167,13 +161,9 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             [self.new_action, self.load_action, self.save_action, self.save_as_action]
         )
         file_menu.addSeparator()
-        file_menu.addActions(
-            [
-                self.import_players_action,
-                self.export_players_action,
-                self.export_standings_action,
-            ]
-        )
+        file_menu.addActions([
+            self.export_standings_action,
+        ])
         file_menu.addSeparator()
         file_menu.addAction(self.settings_action)
         file_menu.addSeparator()
@@ -208,6 +198,17 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
             "&Add Player...", self.players_tab.add_player_detailed
         )
         player_menu.addAction(self.add_player_action)
+        self.import_players_action = self._create_action(
+            "&Import Players from CSV...", self.players_tab.import_players_csv
+        )
+        self.export_players_action = self._create_action(
+            "&Export Players to CSV...", self.players_tab.export_players_csv
+        )
+        player_menu.addSeparator()
+        player_menu.addActions([
+            self.import_players_action,
+            self.export_players_action,
+        ])
 
         # Help Menu
         help_menu = menu_bar.addMenu("&Help")
@@ -576,7 +577,7 @@ class SwissTournamentApp(QtWidgets.QMainWindow):
                 pairings, bye_player = self.tournament.get_pairings_for_round(
                     self.current_round_index
                 )
-                self.tournament_tab.display_pairings_for_input(pairings, bye_player)
+                self.tournament_tab.display_pairings_for_input(pairings, [bye_player] if bye_player else [])
             else:
                 self.tournament_tab.clear_pairings_display()
 
