@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import QStyle
 from gambitpairing.gui.mainwindow import GambitPairingMainWindow
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+logging.info("BASE_DIR set to: %s", BASE_DIR)
 
 def main():
     """Entry point"""
