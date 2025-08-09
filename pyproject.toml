@@ -32,7 +32,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -60,6 +59,7 @@ dev = [
     "pyinstaller",
     "black",
     "pytest",
+    "pre-commit",
 ]
 
 # Setuptools configuration
@@ -77,7 +77,7 @@ include = ["gambitpairing*"]
 
 # Tool configurations
 [tool.black]
-target-version = ['py38', 'py39', 'py310', 'py311']
+target-version = ['py39', 'py310', 'py311', "py312", "py313"]
 line-length = 88
 
 [tool.isort]
