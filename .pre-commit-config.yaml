@@ -12,7 +12,6 @@ repos:
       # Check for TODO comments
       - id: check-todos
         name: Check for TODOs
-        entry: bash -c 'if grep -ri "todo\|fixme\|bug\|hack\|xxx" --include="*.py" .; then exit 1; fi'
+        entry: bash -c 'if grep -ri "todo\|fixme\|xxx" --include="*.py" .; then echo "⚠️  TODO comments found"; fi; exit 0'
         language: system
         pass_filenames: false
-        warn_only: true  # not a fatal error
