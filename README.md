@@ -35,7 +35,7 @@ $$ |                                            \$$$$$$  |
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Chickaboo/gambit-pairing)
 
-**Important:** Gambit Pairing is in alpha development (version 0.6.1). Features and stability are not guaranteed.
+**Important:** Gambit Pairing is in alpha development. Features and stability are not guaranteed.
 
 [Join our Discord](https://discord.gg/eEnnetMDfr)
 
@@ -44,7 +44,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 ## Features
 
 - **Modern User Interface**
-  - Polished, high-contrast, accessible UI with custom stylesheets.
+  - Polished, high-contrast, accessible UI with custom style-sheets.
   - Tabbed interface: Players, Tournament Control, Standings, Cross-Table, History Log.
   - Tooltips, context menus, and responsive layouts.
   - Print preview dialogs for pairings and standings.
@@ -95,6 +95,7 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 
 - [Program Structure](docs/program-structure.md)
 - [Installation Guide](docs/installing.md)
+- [Before you commit](docs/before_you_commit.md)
 - [Developer Hacking Guide](docs/HACKING.md)
 - [Manual Pairing Guide](docs/manual-pairing-guide.md)
 
@@ -106,7 +107,7 @@ it will parse the pyproject.toml and install all the runtime and development dep
 ## Usage
 
 1. Install the application:
-- see: [installing.md])docs/installing.md)
+- see: [installing.md](docs/installing.md)
 
 2. **Create or Load a Tournament:**
     - Use "File > New Tournament..." or "File > Load Tournament..." to start.
@@ -144,11 +145,11 @@ it will parse the pyproject.toml and install all the runtime and development dep
 - Tiebreak order is fully configurable and reflected in the standings and printouts.
 - Manual pairing adjustments are logged and cannot be undone automatically.
 - Tournament data is saved in `.json` files (JSON format).
-- This is an alpha version (0.5.0); please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an issue on Github.
+- This is still an alpha; please report bugs or suggestions via [Discord](https://discord.gg/eEnnetMDfr) or make an [issue on Github](https://github.com/Chickaboo/gambit-pairing/issues)
 
 ## License
 
-This project is open source and available under the GPL-v3
+This project is open source and available under the GPL-3.0-or-later
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Screenshots
