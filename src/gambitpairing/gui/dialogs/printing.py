@@ -1,9 +1,9 @@
-from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
+from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QDateTime
+from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 
 from gambitpairing.core.constants import TIEBREAK_NAMES
-from gambitpairing.core.print_utils import TournamentPrintUtils, PrintOptionsDialog
+from gambitpairing.core.print_utils import PrintOptionsDialog, TournamentPrintUtils
 
 
 def print_pairings(self):
@@ -13,12 +13,14 @@ def print_pairings(self):
             self, "Print Pairings", "No pairings to print."
         )
         return
-    
+
     # Always include tournament name
     tournament_name = ""
-    if hasattr(self, 'tournament') and self.tournament and self.tournament.name:
+    if hasattr(self, "tournament") and self.tournament and self.tournament.name:
         tournament_name = self.tournament.name
-    printer, preview = TournamentPrintUtils.create_print_preview_dialog(self, "Print Preview - Pairings")
+    printer, preview = TournamentPrintUtils.create_print_preview_dialog(
+        self, "Print Preview - Pairings"
+    )
     include_tournament_name = True
 
     def render_preview(printer_obj):
@@ -26,15 +28,19 @@ def print_pairings(self):
         # Use unified utility for clean round title
         round_title = ""
         if hasattr(self, "lbl_round_title") and hasattr(self.lbl_round_title, "text"):
-            round_title = TournamentPrintUtils.get_clean_print_title(self.lbl_round_title.text())
+            round_title = TournamentPrintUtils.get_clean_print_title(
+                self.lbl_round_title.text()
+            )
         elif hasattr(self, "round_group") and hasattr(self.round_group, "title"):
-            round_title = TournamentPrintUtils.get_clean_print_title(self.round_group.title())
-        
+            round_title = TournamentPrintUtils.get_clean_print_title(
+                self.round_group.title()
+            )
+
         # Build title with optional tournament name
         main_title = "Pairings"
         if include_tournament_name and tournament_name:
             main_title += f" - {tournament_name}"
-        
+
         html = f"""
         <html>
         <head>
@@ -143,12 +149,14 @@ def print_standings(self):
             self, "Print Standings", "No standings to print."
         )
         return
-    
+
     # Always include tournament name
     tournament_name = ""
-    if hasattr(self, 'tournament') and self.tournament and self.tournament.name:
+    if hasattr(self, "tournament") and self.tournament and self.tournament.name:
         tournament_name = self.tournament.name
-    printer, preview = TournamentPrintUtils.create_print_preview_dialog(self, "Print Preview - Standings")
+    printer, preview = TournamentPrintUtils.create_print_preview_dialog(
+        self, "Print Preview - Standings"
+    )
     include_tournament_name = True
 
     def render_preview(printer_obj):
@@ -159,7 +167,7 @@ def print_standings(self):
             subtitle = self.lbl_round_title.text()
         elif hasattr(self, "round_group") and hasattr(self.round_group, "title"):
             subtitle = self.round_group.title()
-        
+
         # Build title with optional tournament name
         main_title = "Standings"
         if include_tournament_name and tournament_name:

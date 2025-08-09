@@ -1,13 +1,19 @@
 from PyQt6 import QtWidgets
+
 from gambitpairing.core.constants import APP_NAME
+
 
 class UpdatePromptDialog(QtWidgets.QDialog):
     """A modern dialog to prompt the user for an update."""
-    def __init__(self, new_version: str, current_version: str, release_notes: str, parent=None):
+
+    def __init__(
+        self, new_version: str, current_version: str, release_notes: str, parent=None
+    ):
         super().__init__(parent)
         self.setWindowTitle("Update Available")
         self.setMinimumWidth(500)
-        self.setStyleSheet('''
+        self.setStyleSheet(
+            """
             QDialog {
                 background-color: #f9fafb;
             }
@@ -28,7 +34,8 @@ class UpdatePromptDialog(QtWidgets.QDialog):
                 font-size: 10pt;
                 border-radius: 4px;
             }
-        ''')
+        """
+        )
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.main_layout.setContentsMargins(20, 20, 20, 20)
@@ -43,7 +50,9 @@ class UpdatePromptDialog(QtWidgets.QDialog):
         self.main_layout.addWidget(title_label)
 
         # Version Info
-        version_info_label = QtWidgets.QLabel(f"You are on version <b>{current_version}</b>. Version <b>{new_version}</b> is available.")
+        version_info_label = QtWidgets.QLabel(
+            f"You are on version <b>{current_version}</b>. Version <b>{new_version}</b> is available."
+        )
         self.main_layout.addWidget(version_info_label)
 
         # Release Notes
@@ -59,8 +68,12 @@ class UpdatePromptDialog(QtWidgets.QDialog):
 
         # Buttons
         self.button_box = QtWidgets.QDialogButtonBox()
-        self.download_button = self.button_box.addButton("Download", QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole)
-        self.later_button = self.button_box.addButton("Later", QtWidgets.QDialogButtonBox.ButtonRole.RejectRole)
+        self.download_button = self.button_box.addButton(
+            "Download", QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole
+        )
+        self.later_button = self.button_box.addButton(
+            "Later", QtWidgets.QDialogButtonBox.ButtonRole.RejectRole
+        )
 
         self.download_button.setDefault(True)
 

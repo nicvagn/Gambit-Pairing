@@ -1,27 +1,52 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "gambit-pairing"
-version = "0.6.0"
+version = "0.6.1"
+description = "Fast, fair, and modern tournament management. Open source and cross-platform."
+readme = "README.md"
+requires-python = ">=3.9"
 dependencies = [
     "PyQt6",
     "httpx",
-    "packaging",]
-description = "Fast, fair, and modern tournament management. Open source and cross-platform."
-readme = "README.md"
-requires-python = ">= 3.8"
-license = "GPL-3.0-or-later"
-license-files = ["licenses/LICENSE", "licenses/license.rtf"]
-authors = [{name = "Chickaboo", email="support@chickaboo.net"}, {name="Nic"}]
-maintainers = [{name = "Chickaboo", email="support@chickaboo.net"}, {name="Nic"}]
+    "packaging",
+    "importlib-resources",
+]
+license = {text = "GPL-3.0-or-later"}
+
+# Authors & maintainers
+authors = [
+    {name = "Chickaboo", email = "support@chickaboo.net"},
+    {name = "Nic", email = "nic@example.com"}
+]
+maintainers = [
+    {name = "Chickaboo", email = "support@chickaboo.net"},
+    {name = "Nic", email = "nic@example.com"}
+]
+
+# Keywords and classifiers
 keywords = ["Gambit", "Open", "Source", "Pairing", "Chess"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "Programming Language :: Python",
-    "Operating System :: OS Independent"]
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+]
+
+# Entry points
+[project.gui-scripts]
+gambit-pairing = "gambitpairing.__main__:main"
+
+[project.scripts]
+format = "gambitpairing.resources.scripts.formatting:format"
 
 [project.urls]
 Homepage = "https://www.chickaboo.net/gambit-pairing/"
@@ -30,21 +55,31 @@ Issues = "https://github.com/Chickaboo/gambit-pairing/issues"
 
 [project.optional-dependencies]
 dev = [
-  "build",
-  "pyinstaller",
-  "black",
-  "pytest",
+    "build",
+    "pyinstaller",
+    "black",
+    "pytest",
+    "pre-commit",
 ]
 
-[project.gui-scripts]
-gambit-pairing = "gambitpairing:main"
-
+# Setuptools configuration
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gambitpairing*"]
 
 [tool.setuptools.package-data]
-gambitpairing = [
-  "src/gambitpairing/resources/styles.qss",
-  "src/gambitpairing/resources/icon.ico",
-  "src/gambitpairing/resources/icon.png",
-]
+"gambitpairing.resources" = ["styles.qss"]
+"gambitpairing.resources.icons" = ["*.png", "*.ico", "*.webp", "*.svg"]
+
+# Tool configurations
+[tool.black]
+target-version = ['py39', 'py310', 'py311', "py312", "py313"]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+py_version = 38

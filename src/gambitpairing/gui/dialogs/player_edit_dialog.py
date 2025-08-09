@@ -1,5 +1,6 @@
-from PyQt6 import QtWidgets
 from typing import Tuple
+
+from PyQt6 import QtWidgets
 
 
 class PlayerEditDialog(QtWidgets.QDialog):

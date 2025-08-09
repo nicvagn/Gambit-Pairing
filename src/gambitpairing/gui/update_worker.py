@@ -14,14 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6 import QtCore
 import logging
+
+from PyQt6 import QtCore
+
 
 class UpdateWorker(QtCore.QObject):
     """Worker thread for handling the update process in the background."""
+
     progress = QtCore.pyqtSignal(int)
     status = QtCore.pyqtSignal(str)
-    finished = QtCore.pyqtSignal(str) # Returns extracted path
+    finished = QtCore.pyqtSignal(str)  # Returns extracted path
     error = QtCore.pyqtSignal(str)
     done = QtCore.pyqtSignal(bool, str)  # (success, message or extracted_path)
 
@@ -44,7 +47,9 @@ class UpdateWorker(QtCore.QObject):
             self.status.emit("Verifying checksum...")
             verified = self.updater.verify_checksum(zip_path)
             if not verified:
-                self.error.emit("Checksum verification failed. The file may be corrupted or tampered with.")
+                self.error.emit(
+                    "Checksum verification failed. The file may be corrupted or tampered with."
+                )
                 self.done.emit(False, "Checksum verification failed.")
                 return
 

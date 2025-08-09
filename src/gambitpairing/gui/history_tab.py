@@ -28,7 +28,7 @@ class HistoryTab(QtWidgets.QWidget):
         super().__init__(parent)
         self.tournament = None
         self.main_layout = QtWidgets.QVBoxLayout(self)
-        
+
         # History group
         self.history_group = QtWidgets.QGroupBox("Tournament Log")
         history_layout = QtWidgets.QVBoxLayout(self.history_group)
@@ -39,18 +39,22 @@ class HistoryTab(QtWidgets.QWidget):
         self.history_view.setFont(font)
         history_layout.addWidget(self.history_view)
         self.main_layout.addWidget(self.history_group)
-        
+
         # Add no tournament placeholder
         self.no_tournament_placeholder = NoTournamentPlaceholder(self, "History")
-        self.no_tournament_placeholder.create_tournament_requested.connect(self._trigger_create_tournament)
-        self.no_tournament_placeholder.import_tournament_requested.connect(self._trigger_import_tournament)
+        self.no_tournament_placeholder.create_tournament_requested.connect(
+            self._trigger_create_tournament
+        )
+        self.no_tournament_placeholder.import_tournament_requested.connect(
+            self._trigger_import_tournament
+        )
         self.no_tournament_placeholder.hide()
         self.main_layout.addWidget(self.no_tournament_placeholder)
 
     def set_tournament(self, tournament):
         self.tournament = tournament
         self._update_visibility()
-        
+
     def _update_visibility(self):
         """Show/hide content based on tournament existence."""
         if not self.tournament:
@@ -64,11 +68,13 @@ class HistoryTab(QtWidgets.QWidget):
         if self.tournament:  # Only log when tournament exists
             timestamp = QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss")
             self.history_view.appendPlainText(f"[{timestamp}] {message}")
-            logging.info(f"UI_LOG: {message}")  # Distinguish from backend logging if needed
+            logging.info(
+                f"UI_LOG: {message}"
+            )  # Distinguish from backend logging if needed
 
     def update_ui_state(self):
         self._update_visibility()
-    
+
     def _trigger_create_tournament(self):
         parent = self.parent()
         while parent is not None:

@@ -16,9 +16,10 @@
 
 
 import logging
-from typing import List, Optional, Dict, Any, Tuple
-from gambitpairing.core.utils import generate_id
+from typing import Any, Dict, List, Optional, Tuple
+
 from gambitpairing.core.constants import B, W
+from gambitpairing.core.utils import generate_id
 
 
 class Player:

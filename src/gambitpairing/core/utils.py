@@ -91,6 +91,7 @@ def restart_application():
         root_logger.error(f"Failed to restart application: {e}")
         return False
 
+
 # --- Utility Functions ---
 def generate_id(prefix: str = "item_") -> str:
     """Generates a simple unique ID."""

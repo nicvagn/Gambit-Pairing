@@ -15,10 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from typing import List, Tuple, Optional, Set, Dict, Any
 from enum import Enum
 from itertools import permutations
-from gambitpairing.core.constants import W, B
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from gambitpairing.core.constants import B, W
 from gambitpairing.core.player import Player
 
 

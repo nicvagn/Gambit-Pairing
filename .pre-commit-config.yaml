@@ -1,0 +1,17 @@
+repos:
+  - repo: local
+    hooks:
+      # Option 1: Run as a Python module (recommended)
+      - id: custom-formatting
+        name: Custom Formatting Script
+        entry: python -m gambitpairing.resources.scripts.formatting
+        language: system
+        pass_filenames: false
+        require_serial: true
+
+      # Check for TODO comments
+      - id: check-todos
+        name: Check for TODOs
+        entry: bash -c 'if grep -ri "todo\|fixme\|xxx" --include="*.py" .; then echo "⚠️  TODO comments found"; fi; exit 0'
+        language: system
+        pass_filenames: false
