@@ -1,6 +1,7 @@
 """Types used in Gambit Pairing"""
 
-from typing import List, Tuple, Optional, Set, Dict, Any
+from typing import Any, Dict, List, Optional, Set, Tuple
+
 from gambitpairing.core.player import Player
 
 MatchPairing = Tuple[int, int]  # Tuple of player indices

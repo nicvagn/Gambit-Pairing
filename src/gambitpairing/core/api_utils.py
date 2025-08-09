@@ -1,4 +1,5 @@
 """utilities for talking with CFC API"""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -92,13 +93,13 @@ def get_cfc_player_info(cfc_id: str):
         return api_info["player"]
 
     except httpx.HTTPError as e:
-        raise httpx.HTTPError(
-            f"HTTP error: {e}")
+        raise httpx.HTTPError(f"HTTP error: {e}")
 
 
 def get_uscf_player_info(uscf_id):
     """Get the player info from uscf API"""
     raise NotImplementedError()
+
 
 def get_fide_player_info(fide_id):
     """Get the player info from fide API"""

@@ -14,10 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import Qt
 import functools
-from gambitpairing.core.constants import WIN_SCORE, DRAW_SCORE, LOSS_SCORE
+
+from PyQt6 import QtGui, QtWidgets
+from PyQt6.QtCore import Qt
+
+from gambitpairing.core.constants import DRAW_SCORE, LOSS_SCORE, WIN_SCORE
 
 from .notournament_placeholder import NoTournamentPlaceholder
 
@@ -39,11 +41,15 @@ class CrosstableTab(QtWidgets.QWidget):
         self.table_crosstable.setFont(font)
         crosstable_layout.addWidget(self.table_crosstable)
         self.main_layout.addWidget(self.crosstable_group)
-        
+
         # Add no tournament placeholder
         self.no_tournament_placeholder = NoTournamentPlaceholder(self, "Crosstable")
-        self.no_tournament_placeholder.create_tournament_requested.connect(self._trigger_create_tournament)
-        self.no_tournament_placeholder.import_tournament_requested.connect(self._trigger_import_tournament)
+        self.no_tournament_placeholder.create_tournament_requested.connect(
+            self._trigger_create_tournament
+        )
+        self.no_tournament_placeholder.import_tournament_requested.connect(
+            self._trigger_import_tournament
+        )
         self.no_tournament_placeholder.hide()
         self.main_layout.addWidget(self.no_tournament_placeholder)
 
@@ -51,7 +57,7 @@ class CrosstableTab(QtWidgets.QWidget):
         self.tournament = tournament
         self.update_ui_state()
         self._update_visibility()
-        
+
     def _update_visibility(self):
         """Show/hide content based on tournament existence."""
         if not self.tournament:
@@ -63,7 +69,7 @@ class CrosstableTab(QtWidgets.QWidget):
 
     def update_crosstable(self):
         self._update_visibility()
-        
+
         if not self.tournament or not self.tournament.players:
             return
 
@@ -156,7 +162,7 @@ class CrosstableTab(QtWidgets.QWidget):
     def update_ui_state(self):
         self.update_crosstable()
         self._update_visibility()
-    
+
     def _trigger_create_tournament(self):
         parent = self.parent()
         while parent is not None:

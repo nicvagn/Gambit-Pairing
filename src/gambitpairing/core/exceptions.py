@@ -1,4 +1,5 @@
 """Exceptions for use in Gambit-Pairing"""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -18,4 +19,5 @@
 
 class PairingException(Exception):
     """Error producing pairings"""
+
     pass

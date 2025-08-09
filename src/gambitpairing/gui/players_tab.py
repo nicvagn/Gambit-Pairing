@@ -20,9 +20,10 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from gambitpairing.core.player import Player
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
+
+from gambitpairing.core.player import Player
 
 from .dialogs import PlayerDetailDialog
 from .notournament_placeholder import NoTournamentPlaceholder, PlayerPlaceholder
@@ -91,7 +92,8 @@ class PlayersTab(QtWidgets.QWidget):
         self.table_players.setColumnWidth(2, 90)  # Age
         self.table_players.setColumnWidth(3, 130)  # Status
         # Add extra margin/padding to headers and cells, polish header style, and animate sort arrow
-        self.table_players.setStyleSheet("""
+        self.table_players.setStyleSheet(
+            """
 /* === Header Section === */
 QHeaderView::section {
     padding: 10px 24px;
@@ -137,7 +139,8 @@ QTableWidget {
     selection-color: #000;
 }
 
-        """)
+        """
+        )
         header.setSortIndicatorShown(True)
         header.setSectionsClickable(True)
         header.setSectionsMovable(True)
@@ -167,14 +170,22 @@ QTableWidget {
         vheader = self.table_players.verticalHeader()
         vheader.setDefaultSectionSize(38)  # Increase default row height
         vheader.setMinimumSectionSize(38)
-        
+
         # Initialize placeholders
         self.no_tournament_placeholder = NoTournamentPlaceholder(self, "Players")
-        self.no_tournament_placeholder.create_tournament_requested.connect(self._trigger_create_tournament)
-        self.no_tournament_placeholder.import_tournament_requested.connect(self._trigger_import_tournament)
+        self.no_tournament_placeholder.create_tournament_requested.connect(
+            self._trigger_create_tournament
+        )
+        self.no_tournament_placeholder.import_tournament_requested.connect(
+            self._trigger_import_tournament
+        )
         self.no_players_placeholder = PlayerPlaceholder(self)
-        self.no_players_placeholder.import_players_requested.connect(self.import_players_csv)
-        self.no_players_placeholder.add_player_requested.connect(self.add_player_detailed)
+        self.no_players_placeholder.import_players_requested.connect(
+            self.import_players_csv
+        )
+        self.no_players_placeholder.add_player_requested.connect(
+            self.add_player_detailed
+        )
 
         # Hide placeholders initially
         self.no_tournament_placeholder.hide()
@@ -562,7 +573,7 @@ QTableWidget {
         self.tournament = tournament
         self.refresh_player_list()
         self._update_visibility()
-        
+
     def _update_visibility(self):
         """Show/hide content based on tournament existence."""
         if not self.tournament:
@@ -598,13 +609,15 @@ QTableWidget {
     def refresh_player_list(self):
         self.table_players.setSortingEnabled(False)
         self.table_players.setRowCount(0)
-        
+
         # Use the visibility method to handle all states
         self._update_visibility()
-        
+
         # Only populate table if tournament exists and has players
         if self.tournament and self.tournament.players:
-            for player in sorted(self.tournament.players.values(), key=lambda p: p.name):
+            for player in sorted(
+                self.tournament.players.values(), key=lambda p: p.name
+            ):
                 self.add_player_to_table(player)
             self.table_players.setSortingEnabled(True)
 

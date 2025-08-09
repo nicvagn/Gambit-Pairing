@@ -6,21 +6,19 @@ FIDE-compliant round-robin tournaments with proper pairings, bye handling,
 and tournament structure validation.
 """
 
+from collections import Counter, defaultdict
+from typing import List, Optional, Set, Tuple
+
 import pytest
-from typing import List, Set, Tuple, Optional
-from collections import defaultdict, Counter
 
-
-from gambitpairing.core import RoundRobin, create_round_robin_pairings, BERGER_TABLES
-
-from gambitpairing.core.player import Player
+from gambitpairing.core import BERGER_TABLES, RoundRobin, create_round_robin_pairings
 from gambitpairing.core.exceptions import PairingException
-
 from gambitpairing.core.pairing_round_robin import (
+    BERGER_TABLES,
     RoundRobin,
     create_round_robin_pairings,
-    BERGER_TABLES,
 )
+from gambitpairing.core.player import Player
 
 
 class TestRoundRobinBasic:

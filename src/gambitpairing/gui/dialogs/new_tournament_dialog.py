@@ -1,7 +1,9 @@
-from PyQt6 import QtWidgets, QtCore
-from PyQt6.QtCore import Qt
 from typing import List, Optional, Tuple
-from gambitpairing.core.constants import TIEBREAK_NAMES, DEFAULT_TIEBREAK_SORT_ORDER
+
+from PyQt6 import QtCore, QtWidgets
+from PyQt6.QtCore import Qt
+
+from gambitpairing.core.constants import DEFAULT_TIEBREAK_SORT_ORDER, TIEBREAK_NAMES
 
 
 class NewTournamentDialog(QtWidgets.QDialog):
@@ -160,7 +162,9 @@ class NewTournamentDialog(QtWidgets.QDialog):
         details_widget = QtWidgets.QWidget()
         details_layout = QtWidgets.QVBoxLayout(details_widget)
         title_label = QtWidgets.QLabel()
-        title_label.setStyleSheet("font-size: 15pt; font-weight: bold; margin-bottom: 6px;")
+        title_label.setStyleSheet(
+            "font-size: 15pt; font-weight: bold; margin-bottom: 6px;"
+        )
         desc_label = QtWidgets.QLabel()
         desc_label.setWordWrap(True)
         desc_label.setStyleSheet("font-size: 11pt; margin-bottom: 8px;")

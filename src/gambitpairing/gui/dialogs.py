@@ -14,15 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from .dialogs.about_dialog import AboutDialog
+from .dialogs.manual_pairing_dialog import ManualPairingDialog
+
 # Import all dialogs from their separate modules
 from .dialogs.new_tournament_dialog import NewTournamentDialog
-from .dialogs.player_edit_dialog import PlayerEditDialog
 from .dialogs.player_detail_dialog import PlayerDetailDialog
+from .dialogs.player_edit_dialog import PlayerEditDialog
 from .dialogs.settings_dialog import SettingsDialog
-from .dialogs.manual_pairing_dialog import ManualPairingDialog
 from .dialogs.update_dialog import UpdateDownloadDialog
 from .dialogs.update_prompt_dialog import UpdatePromptDialog
-from .dialogs.about_dialog import AboutDialog
 
 # Re-export for backward compatibility
 __all__ = [

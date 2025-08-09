@@ -15,19 +15,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import httpx
+import hashlib
 import json
-from typing import Optional, Dict, Any, Tuple
-from packaging.version import parse as parse_version
+import logging
 import os
+import shutil
+import subprocess
+import sys
 import tempfile
 import zipfile
-import shutil
-import logging
-import sys
-import subprocess
 from pathlib import Path
-import hashlib
+from typing import Any, Dict, Optional, Tuple
+
+import httpx
+from packaging.version import parse as parse_version
 
 # Fallback update URL if not defined elsewhere
 UPDATE_URL = "https://api.github.com/repos/Chickaboo/Gambit-Pairing/releases/latest"
@@ -119,7 +120,9 @@ class Updater:
                             f.write(chunk)
                             bytes_downloaded += len(chunk)
                             if progress_callback and total_size > 0:
-                                progress_callback(int((bytes_downloaded / total_size) * 100))
+                                progress_callback(
+                                    int((bytes_downloaded / total_size) * 100)
+                                )
             return self.update_zip_path
         except httpx.RequestError as e:
             logging.error(f"Failed to download update: {e}")

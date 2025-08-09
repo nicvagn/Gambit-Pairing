@@ -21,14 +21,15 @@ import os
 import sys
 from typing import List, Optional, Tuple
 
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtCore import QFileInfo, Qt
+from PyQt6.QtGui import QAction, QCloseEvent
+
 from gambitpairing.core import utils
 from gambitpairing.core.constants import APP_NAME, APP_VERSION
 from gambitpairing.core.tournament import Tournament
 from gambitpairing.core.updater import Updater
 from gambitpairing.core.utils import root_logger
-from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtCore import QFileInfo, Qt
-from PyQt6.QtGui import QAction, QCloseEvent
 
 from .crosstable_tab import CrosstableTab
 from .dialogs import (

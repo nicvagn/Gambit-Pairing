@@ -34,13 +34,18 @@ Example:
     >>> print(first_round)
 """
 
-from typing import List, Tuple, Optional, Iterable
 from collections.abc import Sequence
-from gambitpairing.core import Pairings, Players, RoundSchedule, MatchPairing   # These are types
-from gambitpairing.core.utils import root_logger
-from gambitpairing.core.player import Player
-from gambitpairing.core.exceptions import PairingException
+from typing import Iterable, List, Optional, Tuple
 
+from gambitpairing.core import (  # These are types
+    MatchPairing,
+    Pairings,
+    Players,
+    RoundSchedule,
+)
+from gambitpairing.core.exceptions import PairingException
+from gambitpairing.core.player import Player
+from gambitpairing.core.utils import root_logger
 
 # Type aliases for clarity
 BergerTable = Tuple[RoundSchedule, ...]  # Complete tournament schedule
@@ -132,8 +137,6 @@ BERGER_TABLES: dict[str, BergerTable] = {
         ((7, 15), (8, 6), (9, 5), (10, 4), (11, 3), (12, 2), (13, 1), (14, 0)),
     ),
 }
-
-
 
 
 class RoundRobin:
@@ -239,8 +242,11 @@ class RoundRobin:
 
     def _generate_all_pairings(self) -> None:
         """Generate pairings for all rounds in the tournament."""
-        root_logger.info("Generating pairings for %d players using table: %s",
-                        len(self.players), self.berger_table)
+        root_logger.info(
+            "Generating pairings for %d players using table: %s",
+            len(self.players),
+            self.berger_table,
+        )
 
         self.round_pairings: List[Pairings] = []
 
@@ -248,8 +254,11 @@ class RoundRobin:
             pairings = self._generate_round_pairings(round_idx)
             self.round_pairings.append(pairings)
 
-        root_logger.info("Generated pairings for %d rounds with %d players",
-                        len(self.round_pairings), len(self.players))
+        root_logger.info(
+            "Generated pairings for %d rounds with %d players",
+            len(self.round_pairings),
+            len(self.players),
+        )
 
     def _generate_round_pairings(self, round_idx: int) -> Pairings:
         """
@@ -282,27 +291,32 @@ class RoundRobin:
             # Check if this pairing involves the bye slot
             if self.bye_number is not None and self.bye_number in match_pairing:
                 # Find the real player (not the bye number)
-                real_player_idx = (player1_idx if player1_idx != self.bye_number
-                                 else player2_idx)
+                real_player_idx = (
+                    player1_idx if player1_idx != self.bye_number else player2_idx
+                )
 
                 # Only assign bye if the player exists in our tournament
                 if real_player_idx < len(self.players):
                     bye_player = self.players[real_player_idx]
-                    root_logger.debug("Bye assigned to player %d: %s",
-                                    real_player_idx, bye_player)
+                    root_logger.debug(
+                        "Bye assigned to player %d: %s", real_player_idx, bye_player
+                    )
                 continue
 
             # Both players must exist in our tournament
-            if (player1_idx < len(self.players) and
-                player2_idx < len(self.players)):
+            if player1_idx < len(self.players) and player2_idx < len(self.players):
 
                 match = (self.players[player1_idx], self.players[player2_idx])
                 matches.append(match)
-                root_logger.debug("Match created: %s vs %s",
-                                self.players[player1_idx], self.players[player2_idx])
+                root_logger.debug(
+                    "Match created: %s vs %s",
+                    self.players[player1_idx],
+                    self.players[player2_idx],
+                )
 
-        root_logger.info("Round %d: %d matches, bye: %s",
-                        round_idx + 1, len(matches), bye_player)
+        root_logger.info(
+            "Round %d: %d matches, bye: %s", round_idx + 1, len(matches), bye_player
+        )
 
         return (tuple(matches), bye_player)
 
@@ -377,7 +391,9 @@ class RoundRobin:
 
     def __str__(self) -> str:
         """String representation of the tournament."""
-        lines = [f"Round Robin Tournament: {len(self.players)} players, {self.number_of_rounds} rounds"]
+        lines = [
+            f"Round Robin Tournament: {len(self.players)} players, {self.number_of_rounds} rounds"
+        ]
 
         for i, (matches, bye_player) in enumerate(self.round_pairings):
             round_num = i + 1
@@ -393,9 +409,12 @@ class RoundRobin:
 
     def __repr__(self) -> str:
         """Detailed representation of the tournament."""
-        return (f"RoundRobin(players={len(self.players)}, "
-                f"rounds={self.number_of_rounds}, "
-                f"bye_player_index={self.bye_number})")
+        return (
+            f"RoundRobin(players={len(self.players)}, "
+            f"rounds={self.number_of_rounds}, "
+            f"bye_player_index={self.bye_number})"
+        )
+
 
 def create_round_robin(players: Players) -> RoundRobin:
     """
@@ -419,14 +438,11 @@ def create_round_robin(players: Players) -> RoundRobin:
     root_logger.info("Round Robin tournament created: %s", tournament)
     return tournament
 
+
 # Example usage and testing
 if __name__ == "__main__":
     # Test with 3 players (odd number)
-    players_3 = [
-        Player("Alice"),
-        Player("Bob"),
-        Player("Charlie")
-    ]
+    players_3 = [Player("Alice"), Player("Bob"), Player("Charlie")]
 
     print("=== 3 Player Tournament ===")
     tournament = RoundRobin(players_3)
@@ -434,12 +450,7 @@ if __name__ == "__main__":
     print(f"\nAlice's schedule: {tournament.get_player_schedule(players_3[0])}")
 
     # Test with 4 players (even number)
-    players_4 = [
-        Player("Alice"),
-        Player("Bob"),
-        Player("Charlie"),
-        Player("David")
-    ]
+    players_4 = [Player("Alice"), Player("Bob"), Player("Charlie"), Player("David")]
 
     print("\n=== 4 Player Tournament ===")
     tournament_4 = RoundRobin(players_4)

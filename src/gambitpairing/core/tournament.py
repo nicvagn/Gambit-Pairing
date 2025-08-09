@@ -15,30 +15,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from typing import List, Optional, Tuple, Set, Dict, Any
-from gambitpairing.core import Pairings # this is a type
-from gambitpairing.core.pairing_round_robin import RoundRobin
-from gambitpairing.core.player import Player
+import functools
+import logging
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from gambitpairing.core import Pairings  # this is a type
 from gambitpairing.core.constants import (
-    DEFAULT_TIEBREAK_SORT_ORDER,
-    WIN_SCORE,
     BYE_SCORE,
+    DEFAULT_TIEBREAK_SORT_ORDER,
     DRAW_SCORE,
-    TB_MEDIAN,
+    LOSS_SCORE,
     TB_CUMULATIVE,
-    TB_SOLKOFF,
-    TB_SONNENBORN_BERGER,
-    TB_MOST_BLACKS,
     TB_CUMULATIVE_OPP,
     TB_HEAD_TO_HEAD,
-    LOSS_SCORE,
-    W,
+    TB_MEDIAN,
+    TB_MOST_BLACKS,
+    TB_SOLKOFF,
+    TB_SONNENBORN_BERGER,
+    WIN_SCORE,
     B,
+    W,
 )
 from gambitpairing.core.pairing_dutch_swiss import create_dutch_swiss_pairings
-from gambitpairing.core.pairing_round_robin import create_round_robin
-import logging
-import functools
+from gambitpairing.core.pairing_round_robin import RoundRobin, create_round_robin
+from gambitpairing.core.player import Player
 
 
 class Tournament:
@@ -132,11 +132,11 @@ class Tournament:
             return pairings, bye_player
         elif self.pairing_system == "round_robin":
             # Check if we already have a round robin
-            if hasattr(self, 'round_robin'):
+            if hasattr(self, "round_robin"):
                 # Get the pairings for this round
                 pairings_result = self.round_robin.get_round_pairings(current_round)
                 pairings, bye_player = pairings_result
-                
+
                 # Check if we've already stored these pairings
                 round_idx = current_round - 1  # Convert to 0-indexed
                 if round_idx >= len(self.rounds_pairings_ids):
@@ -144,47 +144,49 @@ class Tournament:
                     round_pairings_ids = []
                     for player1, player2 in pairings:
                         round_pairings_ids.append((player1.id, player2.id))
-                    
+
                     bye_player_id = bye_player.id if bye_player else None
-                    
+
                     # Ensure we have enough rounds stored
                     while len(self.rounds_pairings_ids) <= round_idx:
                         self.rounds_pairings_ids.append([])
                     while len(self.rounds_byes_ids) <= round_idx:
                         self.rounds_byes_ids.append(None)
-                    
+
                     self.rounds_pairings_ids[round_idx] = round_pairings_ids
                     self.rounds_byes_ids[round_idx] = bye_player_id
-                
+
                 return pairings, bye_player
-            
+
             # else create new round robin
             active_players = self._get_active_players()
             self.round_robin: RoundRobin = create_round_robin(active_players)
-            
+
             # Update tournament rounds to match round robin requirements
             if self.num_rounds != self.round_robin.number_of_rounds:
-                logging.info(f"Updating tournament rounds from {self.num_rounds} to {self.round_robin.number_of_rounds} for round robin")
+                logging.info(
+                    f"Updating tournament rounds from {self.num_rounds} to {self.round_robin.number_of_rounds} for round robin"
+                )
                 self.num_rounds = self.round_robin.number_of_rounds
-            
+
             # Get the pairings for this round
             pairings_result = self.round_robin.get_round_pairings(current_round)
             pairings, bye_player = pairings_result
-            
+
             # Convert to player IDs for storage
             round_pairings_ids = []
             for player1, player2 in pairings:
                 round_pairings_ids.append((player1.id, player2.id))
-            
+
             bye_player_id = bye_player.id if bye_player else None
-            
+
             # Ensure we have the right number of rounds
             round_idx = current_round - 1  # Convert to 0-indexed
             while len(self.rounds_pairings_ids) <= round_idx:
                 self.rounds_pairings_ids.append([])
             while len(self.rounds_byes_ids) <= round_idx:
                 self.rounds_byes_ids.append(None)
-                
+
             self.rounds_pairings_ids[round_idx] = round_pairings_ids
             self.rounds_byes_ids[round_idx] = bye_player_id
             return pairings, bye_player
@@ -198,9 +200,7 @@ class Tournament:
                 f"Pairing system '{self.pairing_system}' is not implemented."
             )
 
-    def get_pairings_for_round(
-        self, round_index: int
-    ) -> Pairings:
+    def get_pairings_for_round(self, round_index: int) -> Pairings:
         """Retrieves the pairings and bye player for a given round index."""
         if not (0 <= round_index < len(self.rounds_pairings_ids)):
             return [], None

@@ -2,12 +2,12 @@ import json
 from typing import List, Optional, Tuple
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtCore import Qt, QMimeData, pyqtSignal
+from PyQt6.QtCore import QMimeData, Qt, pyqtSignal
 from PyQt6.QtGui import QDrag
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QDockWidget
+from PyQt6.QtWidgets import QDockWidget, QHBoxLayout, QVBoxLayout, QWidget
 
-from gambitpairing.core.player import Player
 from gambitpairing.core.pairing_dutch_swiss import create_dutch_swiss_pairings
+from gambitpairing.core.player import Player
 
 
 class DraggableListWidget(QtWidgets.QListWidget):
@@ -20,11 +20,12 @@ class DraggableListWidget(QtWidgets.QListWidget):
         self.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         self.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
-        
+
         # For touch/click pairing functionality
         self.selected_player = None
-        
-        self.setStyleSheet("""
+
+        self.setStyleSheet(
+            """
             QListWidget {
                 background-color: #f8f9fa;
                 border: 1px solid #dee2e6;
@@ -47,7 +48,8 @@ class DraggableListWidget(QtWidgets.QListWidget):
                 color: white;
                 border-color: #1565c0;
             }
-        """)
+        """
+        )
 
     def startDrag(self, supported_actions):
         """Start drag operation from player pool."""
@@ -63,11 +65,11 @@ class DraggableListWidget(QtWidgets.QListWidget):
         if not player.is_active:
             # Show a message that withdrawn players cannot be paired
             QtWidgets.QToolTip.showText(
-                QtGui.QCursor.pos(), 
+                QtGui.QCursor.pos(),
                 "Withdrawn players cannot be paired. Right-click to reactivate.",
                 self,
                 QtCore.QRect(),
-                2000  # Show for 2 seconds
+                2000,  # Show for 2 seconds
             )
             return
 
@@ -92,7 +94,11 @@ class DraggableListWidget(QtWidgets.QListWidget):
         font = painter.font()
         font.setPointSize(10)
         painter.setFont(font)
-        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, f"{player.name} ({player.rating})")
+        painter.drawText(
+            pixmap.rect(),
+            Qt.AlignmentFlag.AlignCenter,
+            f"{player.name} ({player.rating})",
+        )
         painter.end()
 
         drag.setPixmap(pixmap)
@@ -100,16 +106,18 @@ class DraggableListWidget(QtWidgets.QListWidget):
 
         # Execute drag
         drag.exec(supported_actions)
-        
+
     def mousePressEvent(self, event):
         """Handle mouse press for click-to-select functionality."""
         super().mousePressEvent(event)
-        
+
         if event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
             if item:
                 player = item.data(Qt.ItemDataRole.UserRole)
-                if player and player.is_active:  # Only allow selection of active players
+                if (
+                    player and player.is_active
+                ):  # Only allow selection of active players
                     # Select the player for placement
                     self.selected_player = player
                     self.setCurrentItem(item)
@@ -127,18 +135,22 @@ class DraggableListWidget(QtWidgets.QListWidget):
         """Handle drag enter events for player pool."""
         if event.mimeData().hasText() and event.mimeData().text().startswith("player:"):
             event.acceptProposedAction()
-            self.setStyleSheet(self.styleSheet() + """
+            self.setStyleSheet(
+                self.styleSheet()
+                + """
                 QListWidget {
                     border: 2px dashed #4caf50;
                     background-color: #e8f5e8;
                 }
-            """)
+            """
+            )
         else:
             event.ignore()
 
     def dragLeaveEvent(self, event):
         """Handle drag leave events."""
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QListWidget {
                 background-color: #f8f9fa;
                 border: 1px solid #dee2e6;
@@ -161,7 +173,8 @@ class DraggableListWidget(QtWidgets.QListWidget):
                 color: white;
                 border-color: #1565c0;
             }
-        """)
+        """
+        )
 
     def dropEvent(self, event):
         """Handle drop events for player pool - comprehensive handling."""
@@ -199,8 +212,11 @@ class DraggableListWidget(QtWidgets.QListWidget):
                 player_found = True
 
         # Remove empty pairings
-        self.parent_dialog.pairings = [(w, b) for w, b in self.parent_dialog.pairings
-                                     if w is not None or b is not None]
+        self.parent_dialog.pairings = [
+            (w, b)
+            for w, b in self.parent_dialog.pairings
+            if w is not None or b is not None
+        ]
 
         # Update all displays
         self.parent_dialog._populate_player_pool()
@@ -220,7 +236,8 @@ class DroppableByeListWidget(DraggableListWidget):
         super().__init__(parent)
         self.setMinimumHeight(60)
         self.setMaximumHeight(120)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QListWidget {
                 background-color: #fff3cd;
                 border: 2px dashed #e2c290;
@@ -245,7 +262,8 @@ class DroppableByeListWidget(DraggableListWidget):
                 color: white;
                 border-color: #b7950b;
             }
-        """)
+        """
+        )
 
     def startDrag(self, supported_actions):
         """Start drag operation from bye pool."""
@@ -297,7 +315,8 @@ class DroppableByeListWidget(DraggableListWidget):
         if event.mimeData().hasText() and event.mimeData().text().startswith("player:"):
             event.acceptProposedAction()
             # Visual feedback for drag enter
-            self.setStyleSheet("""
+            self.setStyleSheet(
+                """
                 QListWidget {
                     background-color: #e8f5e8;
                     border: 2px dashed #4caf50;
@@ -313,14 +332,16 @@ class DroppableByeListWidget(DraggableListWidget):
                     color: #8b5c2b;
                     font-weight: bold;
                 }
-            """)
+            """
+            )
         else:
             event.ignore()
 
     def dragLeaveEvent(self, event):
         """Handle drag leave events."""
         # Reset to normal styling
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QListWidget {
                 background-color: #fff3cd;
                 border: 2px dashed #e2c290;
@@ -345,7 +366,8 @@ class DroppableByeListWidget(DraggableListWidget):
                 color: white;
                 border-color: #b7950b;
             }
-        """)
+        """
+        )
 
     def dropEvent(self, event):
         """Handle drop events for bye pool."""
@@ -359,7 +381,9 @@ class DroppableByeListWidget(DraggableListWidget):
             return
 
         player_id = data.split(":", 1)[1]
-        player = next((p for p in self.parent_dialog.players if p.id == player_id), None)
+        player = next(
+            (p for p in self.parent_dialog.players if p.id == player_id), None
+        )
 
         if not player:
             event.ignore()
@@ -379,8 +403,11 @@ class DroppableByeListWidget(DraggableListWidget):
                 break
 
         # Remove empty pairings
-        self.parent_dialog.pairings = [(w, b) for w, b in self.parent_dialog.pairings
-                                     if w is not None or b is not None]
+        self.parent_dialog.pairings = [
+            (w, b)
+            for w, b in self.parent_dialog.pairings
+            if w is not None or b is not None
+        ]
 
         # Add player to bye pool if not already there
         if player not in self.parent_dialog.bye_players:
@@ -409,14 +436,15 @@ class DroppableTableWidget(QtWidgets.QTableWidget):
         self.setDropIndicatorShown(True)
         self.drag_preview_row = -1
         self.drag_preview_col = -1
-        
+
         # Auto-scroll timer for drag operations
         self.auto_scroll_timer = QtCore.QTimer(self)
         self.auto_scroll_timer.timeout.connect(self._auto_scroll)
         self.auto_scroll_direction = 0  # -1 for up, 1 for down, 0 for no scroll
 
         # Style the table for better visual feedback
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QTableWidget {
                 gridline-color: #dee2e6;
                 background-color: white;
@@ -438,7 +466,8 @@ class DroppableTableWidget(QtWidgets.QTableWidget):
                 border-bottom: 2px solid #dee2e6;
                 font-weight: bold;
             }
-        """)
+        """
+        )
 
     def dragEnterEvent(self, event):
         """Handle drag enter events for pairings table."""
@@ -458,17 +487,21 @@ class DroppableTableWidget(QtWidgets.QTableWidget):
 
             row = self.rowAt(pos.y())
             col = self.columnAt(pos.x())
-            
+
             # Auto-scroll logic
             scroll_margin = 30  # pixels from edge to start scrolling
             viewport_height = self.viewport().height()
-            
+
             if pos.y() < scroll_margin and self.verticalScrollBar().value() > 0:
                 # Near top, scroll up
                 self.auto_scroll_direction = -1
                 if not self.auto_scroll_timer.isActive():
                     self.auto_scroll_timer.start(50)  # 50ms intervals
-            elif pos.y() > (viewport_height - scroll_margin) and self.verticalScrollBar().value() < self.verticalScrollBar().maximum():
+            elif (
+                pos.y() > (viewport_height - scroll_margin)
+                and self.verticalScrollBar().value()
+                < self.verticalScrollBar().maximum()
+            ):
                 # Near bottom, scroll down
                 self.auto_scroll_direction = 1
                 if not self.auto_scroll_timer.isActive():
@@ -492,7 +525,7 @@ class DroppableTableWidget(QtWidgets.QTableWidget):
         else:
             self.auto_scroll_timer.stop()
             event.ignore()
-            
+
     def _auto_scroll(self):
         """Perform auto-scrolling during drag operations."""
         if self.auto_scroll_direction == -1:
@@ -520,8 +553,10 @@ class DroppableTableWidget(QtWidgets.QTableWidget):
     def _clear_drag_preview(self):
         """Clear drag preview highlighting."""
         if self.drag_preview_row >= 0 and self.drag_preview_col >= 0:
-            if (self.drag_preview_row < self.rowCount() and
-                self.drag_preview_col < self.columnCount()):
+            if (
+                self.drag_preview_row < self.rowCount()
+                and self.drag_preview_col < self.columnCount()
+            ):
                 item = self.item(self.drag_preview_row, self.drag_preview_col)
                 if item:
                     item.setBackground(QtGui.QColor())  # Clear background
@@ -543,7 +578,9 @@ class DroppableTableWidget(QtWidgets.QTableWidget):
             return
 
         player_id = data.split(":", 1)[1]
-        player = next((p for p in self.parent_dialog.players if p.id == player_id), None)
+        player = next(
+            (p for p in self.parent_dialog.players if p.id == player_id), None
+        )
 
         if not player:
             event.ignore()
@@ -591,15 +628,18 @@ class DroppableTableWidget(QtWidgets.QTableWidget):
                 pos = event.pos()
 
             item = self.itemAt(pos)
-            
+
             # Check if we're in click-to-place mode
-            if hasattr(self.parent_dialog, '_selected_for_placement') and self.parent_dialog._selected_for_placement:
+            if (
+                hasattr(self.parent_dialog, "_selected_for_placement")
+                and self.parent_dialog._selected_for_placement
+            ):
                 if item and item.column() in [1, 2]:  # White or Black column
                     row = item.row()
                     color = "white" if item.column() == 1 else "black"
                     self.parent_dialog._place_selected_player(row, color)
                     return
-            
+
             # Normal drag functionality
             if item and item.column() > 0:  # White or Black column
                 # Check if there's a player in the cell
@@ -650,8 +690,15 @@ class ManualPairingDialog(QtWidgets.QDialog):
     # Signal to notify when player status changes
     player_status_changed = pyqtSignal()
 
-    def __init__(self, players: List[Player], existing_pairings=None, existing_bye=None,
-                 round_number=1, parent=None, tournament=None):
+    def __init__(
+        self,
+        players: List[Player],
+        existing_pairings=None,
+        existing_bye=None,
+        round_number=1,
+        parent=None,
+        tournament=None,
+    ):
         super().__init__(parent)
         self.setWindowTitle(f"Edit Pairings - Round {round_number}")
         self.setMinimumSize(900, 650)
@@ -697,14 +744,15 @@ class ManualPairingDialog(QtWidgets.QDialog):
     def closeEvent(self, event):
         """Handle dialog close event - ensure floating dock closes too."""
         # Close any floating dock widget
-        if hasattr(self, 'player_pool_dock'):
+        if hasattr(self, "player_pool_dock"):
             self.player_pool_dock.close()
         super().closeEvent(event)
 
     def _setup_ui(self):
         """Setup the user interface."""
         # Apply dialog-wide styling using the chess color scheme
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QDialog {
                 background: #f9fafb;
                 color: #23272f;
@@ -733,17 +781,20 @@ class ManualPairingDialog(QtWidgets.QDialog):
             QLabel {
                 color: #23272f;
             }
-        """)
+        """
+        )
 
         main_layout = QVBoxLayout(self)
 
         # Create a main window widget for proper dock widget support
         self.main_window_widget = QtWidgets.QMainWindow()
-        self.main_window_widget.setStyleSheet("""
+        self.main_window_widget.setStyleSheet(
+            """
             QMainWindow {
                 background: #f9fafb;
             }
-        """)
+        """
+        )
 
         # Create detachable player pool
         self._create_detachable_player_pool()
@@ -752,7 +803,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
         self.main_window_widget.setCentralWidget(self._create_pairings_panel())
 
         # Add the dock widget to the main window
-        self.main_window_widget.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.player_pool_dock)
+        self.main_window_widget.addDockWidget(
+            Qt.DockWidgetArea.LeftDockWidgetArea, self.player_pool_dock
+        )
 
         # Add the main window widget to the dialog's layout
         main_layout.addWidget(self.main_window_widget)
@@ -760,7 +813,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
         # Add validation panel and dialog buttons below the main content
         main_layout.addWidget(self._create_validation_panel())
         main_layout.addWidget(self._create_dialog_buttons())
-        
+
         # Track selected player for click-to-place functionality
         self._selected_for_placement = None
 
@@ -770,20 +823,21 @@ class ManualPairingDialog(QtWidgets.QDialog):
 
         # Enable docking features but disable closing (we'll handle X button differently)
         self.player_pool_dock.setFeatures(
-            QDockWidget.DockWidgetFeature.DockWidgetMovable |
-            QDockWidget.DockWidgetFeature.DockWidgetFloatable
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
         )
 
         # Allow docking to all sides
         self.player_pool_dock.setAllowedAreas(
-            Qt.DockWidgetArea.LeftDockWidgetArea |
-            Qt.DockWidgetArea.RightDockWidgetArea |
-            Qt.DockWidgetArea.TopDockWidgetArea |
-            Qt.DockWidgetArea.BottomDockWidgetArea
+            Qt.DockWidgetArea.LeftDockWidgetArea
+            | Qt.DockWidgetArea.RightDockWidgetArea
+            | Qt.DockWidgetArea.TopDockWidgetArea
+            | Qt.DockWidgetArea.BottomDockWidgetArea
         )
 
         # Style the dock widget with chess theme but keep normal title bar
-        self.player_pool_dock.setStyleSheet("""
+        self.player_pool_dock.setStyleSheet(
+            """
             QDockWidget {
                 background: #fff;
                 border: 1px solid #e3e7ee;
@@ -818,7 +872,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
             QDockWidget::close-button:pressed, QDockWidget::float-button:pressed {
                 background: #b0b0b0;
             }
-        """)
+        """
+        )
 
         # Connect dock widget events for reattachment functionality
         self.player_pool_dock.topLevelChanged.connect(self._on_dock_detached)
@@ -827,8 +882,12 @@ class ManualPairingDialog(QtWidgets.QDialog):
         pool_layout = QVBoxLayout(pool_widget)
 
         # Instructions
-        pool_info = QtWidgets.QLabel("Drag players to create pairings\nDouble-click to auto-pair • Right-click for options")
-        pool_info.setStyleSheet("color: #6b7280; font-style: italic; padding: 5px; font-size: 10pt;")
+        pool_info = QtWidgets.QLabel(
+            "Drag players to create pairings\nDouble-click to auto-pair • Right-click for options"
+        )
+        pool_info.setStyleSheet(
+            "color: #6b7280; font-style: italic; padding: 5px; font-size: 10pt;"
+        )
         pool_layout.addWidget(pool_info)
 
         # Search functionality
@@ -857,7 +916,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
         self.search_box.textChanged.connect(self._filter_player_pool)
 
         # Style the search box with chess theme
-        self.search_box.setStyleSheet("""
+        self.search_box.setStyleSheet(
+            """
             QLineEdit {
                 background: #fff;
                 border: 1.5px solid #e3e7ee;
@@ -875,7 +935,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
                 color: #a1a7b3;
                 border-color: #e5e7eb;
             }
-        """)
+        """
+        )
 
         search_layout.addWidget(self.search_box)
 
@@ -884,7 +945,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
     def _create_player_list(self):
         """Create the player pool list widget."""
         player_pool = DraggableListWidget(self)
-        player_pool.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        player_pool.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
+        )
         player_pool.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         player_pool.setDefaultDropAction(Qt.DropAction.MoveAction)
 
@@ -901,12 +964,18 @@ class ManualPairingDialog(QtWidgets.QDialog):
         bye_layout = QVBoxLayout(bye_group)
 
         # Instructions
-        bye_info = QtWidgets.QLabel("Drop players here to assign byes • Drag back to remove")
-        bye_info.setStyleSheet("color: #6b7280; font-style: italic; padding: 5px; font-size: 10pt;")
+        bye_info = QtWidgets.QLabel(
+            "Drop players here to assign byes • Drag back to remove"
+        )
+        bye_info.setStyleSheet(
+            "color: #6b7280; font-style: italic; padding: 5px; font-size: 10pt;"
+        )
         bye_layout.addWidget(bye_info)
 
         self.bye_list = DroppableByeListWidget(self)
-        self.bye_list.setToolTip("Drag players here to assign them a bye for this round\nDrag bye players back to pool or pairings to remove")
+        self.bye_list.setToolTip(
+            "Drag players here to assign them a bye for this round\nDrag bye players back to pool or pairings to remove"
+        )
         bye_layout.addWidget(self.bye_list)
 
         return bye_group
@@ -923,7 +992,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
         pairings_group = QtWidgets.QGroupBox("Pairings")
         pairings_group_layout = QVBoxLayout(pairings_group)
 
-        pairings_info = QtWidgets.QLabel("Drag players between White/Black columns or back to pool")
+        pairings_info = QtWidgets.QLabel(
+            "Drag players between White/Black columns or back to pool"
+        )
         pairings_info.setStyleSheet("color: #666; font-style: italic; padding: 5px;")
         pairings_group_layout.addWidget(pairings_info)
 
@@ -950,14 +1021,12 @@ class ManualPairingDialog(QtWidgets.QDialog):
         self.clear_all_btn = self._create_button(
             "Clear All",
             "Remove all pairings and return players to pool",
-            self._clear_all_pairings
+            self._clear_all_pairings,
         )
         toolbar_layout.addWidget(self.clear_all_btn)
 
         self.undo_btn = self._create_button(
-            "Undo",
-            "Undo the last pairing action",
-            self._undo_last_action
+            "Undo", "Undo the last pairing action", self._undo_last_action
         )
         self.undo_btn.setEnabled(False)
         toolbar_layout.addWidget(self.undo_btn)
@@ -966,7 +1035,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
         self.auto_pair_btn = self._create_button(
             "Auto Pair",
             "Auto-pair all remaining players using Dutch algorithm (Ctrl+A)",
-            self._auto_pair_remaining
+            self._auto_pair_remaining,
         )
         toolbar_layout.addWidget(self.auto_pair_btn)
 
@@ -974,16 +1043,12 @@ class ManualPairingDialog(QtWidgets.QDialog):
 
         # Utility controls
         self.export_btn = self._create_button(
-            "Export",
-            "Export current pairings to file",
-            self._export_pairings
+            "Export", "Export current pairings to file", self._export_pairings
         )
         toolbar_layout.addWidget(self.export_btn)
 
         self.import_btn = self._create_button(
-            "Import",
-            "Import pairings from file",
-            self._import_pairings
+            "Import", "Import pairings from file", self._import_pairings
         )
         toolbar_layout.addWidget(self.import_btn)
 
@@ -996,7 +1061,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
         button.clicked.connect(callback)
 
         # Style the button using the chess-inspired color scheme from styles.qss
-        button.setStyleSheet("""
+        button.setStyleSheet(
+            """
             QPushButton {
                 background: #fff;
                 color: #111;
@@ -1023,7 +1089,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
                 color: #a1a7b3;
                 border-color: #e5e7eb;
             }
-        """)
+        """
+        )
 
         return button
 
@@ -1036,11 +1103,15 @@ class ManualPairingDialog(QtWidgets.QDialog):
 
         # Configure headers
         header = table.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(
+            0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents
+        )
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
-        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        table.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
+        )
         table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         table.customContextMenuRequested.connect(self._show_pairing_context_menu)
 
@@ -1050,14 +1121,16 @@ class ManualPairingDialog(QtWidgets.QDialog):
         """Create the validation information panel."""
         self.validation_label = QtWidgets.QLabel()
         self.validation_label.setWordWrap(True)
-        self.validation_label.setStyleSheet("padding: 10px; border-radius: 5px; font-weight: bold;")
+        self.validation_label.setStyleSheet(
+            "padding: 10px; border-radius: 5px; font-weight: bold;"
+        )
         return self.validation_label
 
     def _create_dialog_buttons(self):
         """Create the dialog button box."""
         buttons = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok |
-            QtWidgets.QDialogButtonBox.StandardButton.Cancel
+            QtWidgets.QDialogButtonBox.StandardButton.Ok
+            | QtWidgets.QDialogButtonBox.StandardButton.Cancel
         )
         buttons.accepted.connect(self._confirm_finalize_pairings)
         buttons.rejected.connect(self.reject)
@@ -1068,7 +1141,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
             self,
             "Finalize Pairings",
             "Are you sure you want to finalize these pairings?",
-            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
+            QtWidgets.QMessageBox.StandardButton.Yes
+            | QtWidgets.QMessageBox.StandardButton.No,
         )
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
             self.accept()
@@ -1106,7 +1180,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
         # Separate active and withdrawn players
         active_unpaired = []
         withdrawn_unpaired = []
-        
+
         for player in self.players:
             if player.id not in paired_players:
                 if player.is_active:
@@ -1126,16 +1200,16 @@ class ManualPairingDialog(QtWidgets.QDialog):
             item = QtWidgets.QListWidgetItem()
             item.setText(f"{player.name} ({player.rating}) - Withdrawn")
             item.setData(Qt.ItemDataRole.UserRole, player)
-            
+
             # Apply visual styling for withdrawn players
             font = item.font()
             font.setItalic(True)
             item.setFont(font)
             item.setForeground(QtGui.QColor("gray"))
-            
+
             # Set a different background color
             item.setBackground(QtGui.QColor(245, 245, 245))
-            
+
             self.player_pool.addItem(item)
 
     def _update_pairings_display(self):
@@ -1190,9 +1264,11 @@ class ManualPairingDialog(QtWidgets.QDialog):
         total_players = len(self.players)
         active_players = len([p for p in self.players if p.is_active])
         withdrawn_players = total_players - active_players
-        
+
         paired_players = sum(1 for white, black in self.pairings if white and black) * 2
-        incomplete_pairings = sum(1 for white, black in self.pairings if not (white and black))
+        incomplete_pairings = sum(
+            1 for white, black in self.pairings if not (white and black)
+        )
         bye_count = len(self.bye_players)
         remaining_active_players = active_players - paired_players - bye_count
 
@@ -1201,7 +1277,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
             f"{remaining_active_players} active remaining • "
             f"{incomplete_pairings} incomplete boards"
         )
-        
+
         if withdrawn_players > 0:
             stats_text += f" • {withdrawn_players} withdrawn"
 
@@ -1224,39 +1300,48 @@ class ManualPairingDialog(QtWidgets.QDialog):
         warnings = []
 
         # Check for incomplete pairings
-        incomplete_count = sum(1 for white, black in self.pairings if not (white and black))
+        incomplete_count = sum(
+            1 for white, black in self.pairings if not (white and black)
+        )
         if incomplete_count > 0:
             warnings.append(f"{incomplete_count} incomplete boards need completion")
 
         # Check for unpaired active players
         active_unpaired = []
         accounted_players = set()
-        
+
         # Add players in pairings
         for white, black in self.pairings:
             if white:
                 accounted_players.add(white.id)
             if black:
                 accounted_players.add(black.id)
-        
+
         # Add bye players
         for bye_player in self.bye_players:
             accounted_players.add(bye_player.id)
-        
+
         # Find active players not accounted for
         for player in self.players:
             if player.is_active and player.id not in accounted_players:
                 active_unpaired.append(player)
-        
+
         if active_unpaired:
             player_names = ", ".join([p.name for p in active_unpaired])
-            warnings.append(f"{len(active_unpaired)} active player(s) not paired: {player_names}")
+            warnings.append(
+                f"{len(active_unpaired)} active player(s) not paired: {player_names}"
+            )
 
         # Check for repeat pairings
-        if hasattr(self.tournament, 'previous_matches') and self.tournament.previous_matches:
+        if (
+            hasattr(self.tournament, "previous_matches")
+            and self.tournament.previous_matches
+        ):
             repeat_boards = self._check_repeat_pairings()
             if repeat_boards:
-                warnings.append(f"Repeat pairings on boards: {', '.join(repeat_boards)}")
+                warnings.append(
+                    f"Repeat pairings on boards: {', '.join(repeat_boards)}"
+                )
 
         # Update display
         if warnings:
@@ -1281,10 +1366,12 @@ class ManualPairingDialog(QtWidgets.QDialog):
             if white and black:
                 # Check against previous matches (frozensets of player IDs)
                 for player_pair in self.tournament.previous_matches:
-                    if (isinstance(player_pair, frozenset) and
-                        len(player_pair) == 2 and
-                        white.id in player_pair and
-                        black.id in player_pair):
+                    if (
+                        isinstance(player_pair, frozenset)
+                        and len(player_pair) == 2
+                        and white.id in player_pair
+                        and black.id in player_pair
+                    ):
                         repeat_boards.append(str(i + 1))
                         break
 
@@ -1296,7 +1383,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
         """Save current state for undo functionality."""
         current_state = (
             [tuple(pair) for pair in self.pairings],
-            list(self.bye_players)
+            list(self.bye_players),
         )
         self.pairing_history.append(current_state)
 
@@ -1365,13 +1452,14 @@ class ManualPairingDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.information(
                 self,
                 "Auto-Pair",
-                f"Cannot auto-pair withdrawn player {player.name}. Reactivate them first."
+                f"Cannot auto-pair withdrawn player {player.name}. Reactivate them first.",
             )
             return
 
         # Get remaining active players
         remaining_players = [
-            p for p in self.players
+            p
+            for p in self.players
             if p.id not in {player.id} and self._is_player_available(p)
         ]
 
@@ -1379,13 +1467,15 @@ class ManualPairingDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.information(
                 self,
                 "Auto-Pair",
-                f"No available active players to pair with {player.name}."
+                f"No available active players to pair with {player.name}.",
             )
             return
 
         # Use Dutch algorithm to find best pairing
         try:
-            auto_pairings, auto_bye = self._get_dutch_pairings([player] + remaining_players)
+            auto_pairings, auto_bye = self._get_dutch_pairings(
+                [player] + remaining_players
+            )
 
             # Find the pairing containing our selected player
             for white, black in auto_pairings:
@@ -1398,7 +1488,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
                     break
 
         except Exception as e:
-            QtWidgets.QMessageBox.warning(self, "Auto-Pair Error", f"Could not auto-pair: {str(e)}")
+            QtWidgets.QMessageBox.warning(
+                self, "Auto-Pair Error", f"Could not auto-pair: {str(e)}"
+            )
 
     def _auto_pair_remaining(self):
         """Auto-pair all remaining players using Dutch algorithm."""
@@ -1407,16 +1499,16 @@ class ManualPairingDialog(QtWidgets.QDialog):
         if len(remaining_players) < 2:
             if len(remaining_players) == 1:
                 QtWidgets.QMessageBox.information(
-                    self, 
-                    "Auto-Pair", 
+                    self,
+                    "Auto-Pair",
                     f"Only 1 active player ({remaining_players[0].name}) remaining. "
-                    f"Assign them a bye or pair them manually."
+                    f"Assign them a bye or pair them manually.",
                 )
             else:
                 QtWidgets.QMessageBox.information(
-                    self, 
-                    "Auto-Pair", 
-                    "Need at least 2 remaining active players to auto-pair."
+                    self,
+                    "Auto-Pair",
+                    "Need at least 2 remaining active players to auto-pair.",
                 )
             return
 
@@ -1434,14 +1526,18 @@ class ManualPairingDialog(QtWidgets.QDialog):
             self._update_validation()
 
         except Exception as e:
-            QtWidgets.QMessageBox.warning(self, "Auto-Pair Error", f"Could not auto-pair remaining players: {str(e)}")
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Auto-Pair Error",
+                f"Could not auto-pair remaining players: {str(e)}",
+            )
 
     def _is_player_available(self, player: Player) -> bool:
         """Check if a player is available for pairing."""
         # Withdrawn players are not available for pairing
         if not player.is_active:
             return False
-            
+
         # Check if in current pairings
         for white, black in self.pairings:
             if (white and white.id == player.id) or (black and black.id == player.id):
@@ -1473,17 +1569,23 @@ class ManualPairingDialog(QtWidgets.QDialog):
         def get_eligible_bye_player(players):
             """Simple bye player selection - pick lowest rated player who hasn't had bye."""
             for player in sorted(players, key=lambda p: p.rating):
-                if not hasattr(player, 'has_had_bye') or not player.has_had_bye:
+                if not hasattr(player, "has_had_bye") or not player.has_had_bye:
                     return player
             return players[0] if players else None
 
-        pairings, bye_player, round_pairings_ids, bye_player_id = create_dutch_swiss_pairings(
-            available_players,
-            self.round_number,
-            self.tournament.previous_matches if hasattr(self.tournament, 'previous_matches') else set(),
-            get_eligible_bye_player,
-            None,  # allow_repeat_pairing_callback
-            self.tournament.num_rounds if self.tournament else 5
+        pairings, bye_player, round_pairings_ids, bye_player_id = (
+            create_dutch_swiss_pairings(
+                available_players,
+                self.round_number,
+                (
+                    self.tournament.previous_matches
+                    if hasattr(self.tournament, "previous_matches")
+                    else set()
+                ),
+                get_eligible_bye_player,
+                None,  # allow_repeat_pairing_callback
+                self.tournament.num_rounds if self.tournament else 5,
+            )
         )
 
         # Return only the values expected by callers
@@ -1501,31 +1603,36 @@ class ManualPairingDialog(QtWidgets.QDialog):
                 player = item.data(Qt.ItemDataRole.UserRole)
                 if player:
                     visible = (
-                        not search_text or
-                        search_text in player.name.lower() or
-                        search_text in str(player.rating) or
-                        search_text in str(player.score) or
-                        (not player.is_active and ("withdrawn" in search_text or "inactive" in search_text))
+                        not search_text
+                        or search_text in player.name.lower()
+                        or search_text in str(player.rating)
+                        or search_text in str(player.score)
+                        or (
+                            not player.is_active
+                            and (
+                                "withdrawn" in search_text or "inactive" in search_text
+                            )
+                        )
                     )
                     item.setHidden(not visible)
 
     def _update_bye_display(self):
         """Update the bye players display."""
         self.bye_list.clear()
-        
+
         for bye_player in self.bye_players:
             item = QtWidgets.QListWidgetItem()
             status_text = " (Withdrawn)" if not bye_player.is_active else ""
             item.setText(f"{bye_player.name} ({bye_player.rating}){status_text}")
             item.setData(Qt.ItemDataRole.UserRole, bye_player)
-            
+
             # Apply special styling for withdrawn bye players
             if not bye_player.is_active:
                 font = item.font()
                 font.setItalic(True)
                 item.setFont(font)
                 item.setForeground(QtGui.QColor("gray"))
-            
+
             self.bye_list.addItem(item)
 
     # === Export/Import Methods ===
@@ -1537,7 +1644,10 @@ class ManualPairingDialog(QtWidgets.QDialog):
             return
 
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Export Pairings", f"pairings_round_{self.round_number}.json", "JSON Files (*.json)"
+            self,
+            "Export Pairings",
+            f"pairings_round_{self.round_number}.json",
+            "JSON Files (*.json)",
         )
 
         if filename:
@@ -1546,24 +1656,32 @@ class ManualPairingDialog(QtWidgets.QDialog):
                     "round_number": self.round_number,
                     "pairings": [
                         {
-                            "white": {"id": white.id, "name": white.name} if white else None,
-                            "black": {"id": black.id, "name": black.name} if black else None
+                            "white": (
+                                {"id": white.id, "name": white.name} if white else None
+                            ),
+                            "black": (
+                                {"id": black.id, "name": black.name} if black else None
+                            ),
                         }
                         for white, black in self.pairings
                     ],
                     "bye_players": [
                         {"id": player.id, "name": player.name}
                         for player in self.bye_players
-                    ]
+                    ],
                 }
 
-                with open(filename, 'w', encoding='utf-8') as f:
+                with open(filename, "w", encoding="utf-8") as f:
                     json.dump(export_data, f, indent=2, ensure_ascii=False)
 
-                QtWidgets.QMessageBox.information(self, "Export Complete", f"Pairings exported to {filename}")
+                QtWidgets.QMessageBox.information(
+                    self, "Export Complete", f"Pairings exported to {filename}"
+                )
 
             except Exception as e:
-                QtWidgets.QMessageBox.warning(self, "Export Error", f"Failed to export pairings: {str(e)}")
+                QtWidgets.QMessageBox.warning(
+                    self, "Export Error", f"Failed to export pairings: {str(e)}"
+                )
 
     def _import_pairings(self):
         """Import pairings from a JSON file."""
@@ -1573,7 +1691,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
 
         if filename:
             try:
-                with open(filename, 'r', encoding='utf-8') as f:
+                with open(filename, "r", encoding="utf-8") as f:
                     import_data = json.load(f)
 
                 # Validate import data
@@ -1618,10 +1736,14 @@ class ManualPairingDialog(QtWidgets.QDialog):
                 self._update_pairings_display()
                 self._update_bye_display()
 
-                QtWidgets.QMessageBox.information(self, "Import Complete", f"Pairings imported from {filename}")
+                QtWidgets.QMessageBox.information(
+                    self, "Import Complete", f"Pairings imported from {filename}"
+                )
 
             except Exception as e:
-                QtWidgets.QMessageBox.warning(self, "Import Error", f"Failed to import pairings: {str(e)}")
+                QtWidgets.QMessageBox.warning(
+                    self, "Import Error", f"Failed to import pairings: {str(e)}"
+                )
 
     # === Context Menu Methods ===
 
@@ -1638,7 +1760,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
         menu = QtWidgets.QMenu(self)
 
         auto_pair_action = menu.addAction("Auto-pair this player")
-        auto_pair_action.triggered.connect(lambda: self._auto_pair_selected_player(item))
+        auto_pair_action.triggered.connect(
+            lambda: self._auto_pair_selected_player(item)
+        )
 
         set_bye_action = menu.addAction("Set as bye player")
         set_bye_action.triggered.connect(lambda: self._set_player_as_bye(player))
@@ -1646,7 +1770,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
         # Add withdraw/reactivate player option
         withdraw_text = "Withdraw Player" if player.is_active else "Reactivate Player"
         withdraw_action = menu.addAction(withdraw_text)
-        withdraw_action.triggered.connect(lambda: self._toggle_player_withdrawal(player))
+        withdraw_action.triggered.connect(
+            lambda: self._toggle_player_withdrawal(player)
+        )
 
         menu.exec(self.player_pool.mapToGlobal(position))
 
@@ -1679,33 +1805,36 @@ class ManualPairingDialog(QtWidgets.QDialog):
         """Toggle a player's withdrawal status."""
         self._save_state_for_undo()
         player.is_active = not player.is_active
-        
+
         # If withdrawing a player, remove them from any pairings or bye
         if not player.is_active:
             # Remove from bye position
             if player in self.bye_players:
                 self.bye_players.remove(player)
-            
+
             # Remove from pairings
             for i, (white, black) in enumerate(self.pairings):
-                if (white and white.id == player.id) or (black and black.id == player.id):
+                if (white and white.id == player.id) or (
+                    black and black.id == player.id
+                ):
                     if white and white.id == player.id:
                         self.pairings[i] = (None, black)
                     elif black and black.id == player.id:
                         self.pairings[i] = (white, None)
                     break
-            
+
             # Remove empty pairings
-            self.pairings = [(w, b) for w, b in self.pairings
-                           if w is not None or b is not None]
-        
+            self.pairings = [
+                (w, b) for w, b in self.pairings if w is not None or b is not None
+            ]
+
         # Update all displays
         self._populate_player_pool()
         self._update_pairings_display()
         self._update_bye_display()
         self._update_stats()
         self._update_validation()
-        
+
         # Emit signal to notify parent that player status has changed
         self.player_status_changed.emit()
 
@@ -1714,27 +1843,29 @@ class ManualPairingDialog(QtWidgets.QDialog):
         self._selected_for_placement = player
         # Change cursor to indicate placement mode
         self.pairings_table.setCursor(Qt.CursorShape.PointingHandCursor)
-        
+
     def _place_selected_player(self, row: int, color: str):
         """Place the selected player in the specified position."""
         if not self._selected_for_placement:
             return
-            
+
         self._save_state_for_undo()
-        
+
         # Get the current player in the target position (if any)
         current_pairings = list(self.pairings)
-        
+
         # Ensure we have enough pairings
         while len(current_pairings) <= row:
             current_pairings.append((None, None))
-        
+
         # Get current players in the row
-        white, black = current_pairings[row] if row < len(current_pairings) else (None, None)
-        
+        white, black = (
+            current_pairings[row] if row < len(current_pairings) else (None, None)
+        )
+
         # Remove selected player from current positions first
         self._remove_player_from_all_positions(self._selected_for_placement.id)
-        
+
         # Place the selected player and handle displaced player
         if color == "white":
             if white:
@@ -1746,26 +1877,26 @@ class ManualPairingDialog(QtWidgets.QDialog):
                 # Black position occupied, send current black player back to pool
                 pass  # They'll automatically appear in pool when we update
             current_pairings[row] = (white, self._selected_for_placement)
-        
+
         # Update pairings
         self.pairings = current_pairings
-        
+
         # Clear selection mode
         self._selected_for_placement = None
         self.pairings_table.setCursor(Qt.CursorShape.ArrowCursor)
         self.player_pool.clearSelection()
-        
+
         # Update displays
         self._populate_player_pool()
         self._update_pairings_display()
         self._update_stats()
         self._update_validation()
-        
+
     def _remove_player_from_all_positions(self, player_id: str):
         """Remove a player from all current positions (pairings and bye)."""
         # Remove from bye position
         self.bye_players = [p for p in self.bye_players if p.id != player_id]
-        
+
         # Remove from pairings
         for i, (white, black) in enumerate(self.pairings):
             if (white and white.id == player_id) or (black and black.id == player_id):
@@ -1773,9 +1904,11 @@ class ManualPairingDialog(QtWidgets.QDialog):
                     self.pairings[i] = (None, black)
                 elif black and black.id == player_id:
                     self.pairings[i] = (white, None)
-        
+
         # Clean up empty pairings
-        self.pairings = [(w, b) for w, b in self.pairings if w is not None or b is not None]
+        self.pairings = [
+            (w, b) for w, b in self.pairings if w is not None or b is not None
+        ]
 
     def _swap_colors_at_row(self, row: int):
         """Swap colors for pairing at specified row."""
@@ -1804,7 +1937,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
         # Remove from bye players
         self.bye_players = [p for p in self.bye_players if p.id != player_id]
 
-        self.pairings = [(w, b) for w, b in self.pairings if w is not None or b is not None]
+        self.pairings = [
+            (w, b) for w, b in self.pairings if w is not None or b is not None
+        ]
 
         # Ensure we have enough pairings
         while len(self.pairings) <= row:
@@ -1826,7 +1961,6 @@ class ManualPairingDialog(QtWidgets.QDialog):
         self._update_stats()
         self._update_validation()
 
-
     def accept(self):
         """Override accept to validate all players are accounted for, then finalize immediately."""
         # Find unresolved active players: not paired, not bye, and also those in pairings with no opponent
@@ -1844,9 +1978,9 @@ class ManualPairingDialog(QtWidgets.QDialog):
 
         # Find players in pairings with no opponent (single player on a board)
         for i, (white, black) in enumerate(self.pairings):
-            if (white and not black and white.is_active):
+            if white and not black and white.is_active:
                 unresolved_players.add(white)
-            if (black and not white and black.is_active):
+            if black and not white and black.is_active:
                 unresolved_players.add(black)
 
         # Find active players not accounted for at all
@@ -1857,17 +1991,15 @@ class ManualPairingDialog(QtWidgets.QDialog):
         if unresolved_players:
             player_names = [f"• {p.name} ({p.rating})" for p in unresolved_players]
             names_text = "\n".join(player_names)
-            message = (
-                f"The following {len(unresolved_players)} active player(s) are not paired, given a bye, or withdrawn:\n\n{names_text}\n\nWould you like to withdraw all these players from the tournament?"
-            )
+            message = f"The following {len(unresolved_players)} active player(s) are not paired, given a bye, or withdrawn:\n\n{names_text}\n\nWould you like to withdraw all these players from the tournament?"
             reply = QtWidgets.QMessageBox.question(
                 self,
                 "Unpaired Active Players",
                 message,
-                QtWidgets.QMessageBox.StandardButton.Yes |
-                QtWidgets.QMessageBox.StandardButton.No |
+                QtWidgets.QMessageBox.StandardButton.Yes
+                | QtWidgets.QMessageBox.StandardButton.No
+                | QtWidgets.QMessageBox.StandardButton.Cancel,
                 QtWidgets.QMessageBox.StandardButton.Cancel,
-                QtWidgets.QMessageBox.StandardButton.Cancel
             )
             if reply == QtWidgets.QMessageBox.StandardButton.Yes:
                 # Withdraw all unresolved active players
@@ -1884,7 +2016,7 @@ class ManualPairingDialog(QtWidgets.QDialog):
                 QtWidgets.QMessageBox.information(
                     self,
                     "Pairings Incomplete",
-                    "Please pair all active players, assign them a bye, or withdraw them before finalizing."
+                    "Please pair all active players, assign them a bye, or withdraw them before finalizing.",
                 )
                 return
             else:  # Cancel
@@ -1898,7 +2030,8 @@ class ManualPairingDialog(QtWidgets.QDialog):
     def get_pairings_and_bye(self) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
         """Get the final pairings and bye players."""
         complete_pairings = [
-            (white, black) for white, black in self.pairings
+            (white, black)
+            for white, black in self.pairings
             if white is not None and black is not None
         ]
         return complete_pairings, self.bye_players
@@ -1919,4 +2052,3 @@ class ManualPairingDialog(QtWidgets.QDialog):
         # This method provides a hook for future floating window management
         # Currently not needed as Qt handles floating dock widgets automatically
         pass
-

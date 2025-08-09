@@ -1,6 +1,8 @@
+from typing import List, Tuple
+
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
-from typing import List, Tuple
+
 from gambitpairing.core.constants import TIEBREAK_NAMES
 
 

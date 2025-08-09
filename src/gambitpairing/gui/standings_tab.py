@@ -14,21 +14,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt6 import QtWidgets, QtGui
-from gambitpairing.core.constants import (
-    TIEBREAK_NAMES,
-    TB_MEDIAN,
-    TB_SOLKOFF,
-    TB_CUMULATIVE,
-    TB_CUMULATIVE_OPP,
-    TB_SONNENBORN_BERGER,
-    TB_MOST_BLACKS,
-    CSV_FILTER,
-)
-from PyQt6.QtCore import Qt, QDateTime
-from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 import csv
 import logging
+
+from PyQt6 import QtGui, QtWidgets
+from PyQt6.QtCore import QDateTime, Qt
+from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
+
+from gambitpairing.core.constants import (
+    CSV_FILTER,
+    TB_CUMULATIVE,
+    TB_CUMULATIVE_OPP,
+    TB_MEDIAN,
+    TB_MOST_BLACKS,
+    TB_SOLKOFF,
+    TB_SONNENBORN_BERGER,
+    TIEBREAK_NAMES,
+)
 
 from .notournament_placeholder import NoTournamentPlaceholder
 
@@ -73,11 +75,15 @@ class StandingsTab(QtWidgets.QWidget):
         standings_layout.addWidget(self.btn_print_standings)
         self.main_layout.addWidget(self.standings_group)
         self.btn_print_standings.clicked.connect(self.print_standings)
-        
+
         # Add no tournament placeholder
         self.no_tournament_placeholder = NoTournamentPlaceholder(self, "Standings")
-        self.no_tournament_placeholder.create_tournament_requested.connect(self._trigger_create_tournament)
-        self.no_tournament_placeholder.import_tournament_requested.connect(self._trigger_import_tournament)
+        self.no_tournament_placeholder.create_tournament_requested.connect(
+            self._trigger_create_tournament
+        )
+        self.no_tournament_placeholder.import_tournament_requested.connect(
+            self._trigger_import_tournament
+        )
         self.no_tournament_placeholder.hide()
         self.main_layout.addWidget(self.no_tournament_placeholder)
 
@@ -89,7 +95,7 @@ class StandingsTab(QtWidgets.QWidget):
         else:
             self.standings_group.setTitle("Standings")
         self._update_visibility()
-        
+
     def _update_visibility(self):
         """Show/hide content based on tournament existence."""
         if not self.tournament:
@@ -143,28 +149,28 @@ class StandingsTab(QtWidgets.QWidget):
         """Set minimum width for player column based on longest player name."""
         if not self.tournament or self.table_standings.rowCount() == 0:
             return
-            
+
         # Get font metrics for accurate width calculation
         font_metrics = self.table_standings.fontMetrics()
-        
+
         # Find the longest player name text
         max_width = 0
         header_text = "Player"  # Include header text in calculation
         max_width = max(max_width, font_metrics.horizontalAdvance(header_text))
-        
+
         for row in range(self.table_standings.rowCount()):
             item = self.table_standings.item(row, 1)  # Player column is index 1
             if item:
                 text_width = font_metrics.horizontalAdvance(item.text())
                 max_width = max(max_width, text_width)
-        
+
         # Add padding for cell margins and some extra space
         padding = 40  # Account for cell padding and some breathing room
         minimum_width = max_width + padding
-        
+
         # Ensure a reasonable minimum (at least 150 pixels)
         minimum_width = max(minimum_width, 150)
-        
+
         # Set the minimum width for the player column
         header = self.table_standings.horizontalHeader()
         header.setMinimumSectionSize(minimum_width)
@@ -181,7 +187,7 @@ class StandingsTab(QtWidgets.QWidget):
 
     def update_standings_table(self) -> None:
         self._update_visibility()
-        
+
         if not self.tournament:
             return
 
@@ -257,7 +263,7 @@ class StandingsTab(QtWidgets.QWidget):
 
             self.table_standings.resizeColumnsToContents()
             self.table_standings.resizeRowsToContents()
-            
+
             # Set minimum width for player column based on longest name
             self._set_player_column_minimum_width()
 
@@ -346,8 +352,8 @@ class StandingsTab(QtWidgets.QWidget):
     def print_standings(self):
         """Print the current standings table in a clean, ink-friendly, professional format with a polished legend."""
         from gambitpairing.core.print_utils import (
-            TournamentPrintUtils,
             PrintOptionsDialog,
+            TournamentPrintUtils,
         )
 
         if self.table_standings.rowCount() == 0:
@@ -511,7 +517,7 @@ class StandingsTab(QtWidgets.QWidget):
         )
         self.btn_print_standings.setEnabled(has_standings)
         self._update_visibility()
-    
+
     def _trigger_create_tournament(self):
         parent = self.parent()
         while parent is not None:

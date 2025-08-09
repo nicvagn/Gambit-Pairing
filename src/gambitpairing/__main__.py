@@ -27,6 +27,7 @@ from gambitpairing.gui.mainwindow import GambitPairingMainWindow
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 logging.info("BASE_DIR set to: %s", BASE_DIR)
 
+
 def main():
     """Entry point"""
     logging.basicConfig(
@@ -36,9 +37,11 @@ def main():
     logging.info("run_app() exited with code: %s", exit_code)
     sys.exit(exit_code)
 
+
 def resource_path(relative_path):
     """Get absolute path to resource, works for dev and standard deployments"""
     return os.path.join(BASE_DIR, relative_path)
+
 
 def get_cross_platform_icon():
     """
@@ -50,8 +53,8 @@ def get_cross_platform_icon():
     # First, try custom icons in preferred order
     icon_folder = resource_path(os.path.join("resources", "icons"))
     custom_icon_files = [
-        "icon.png",    # Cross-platform
-        "icon.ico",    # Windows preferred
+        "icon.png",  # Cross-platform
+        "icon.ico",  # Windows preferred
     ]
 
     for icon_file in custom_icon_files:
@@ -64,8 +67,7 @@ def get_cross_platform_icon():
     theme_icons = [
         "preferences-system",
         "application-default-icon",
-        "applications-system"
-        "applications-games",
+        "applications-system" "applications-games",
     ]
 
     for theme_name in theme_icons:
@@ -78,6 +80,7 @@ def get_cross_platform_icon():
     logging.info("Using Qt standard system icon as fallback")
     return None  # Will be handled by get_icon_path()
 
+
 def get_icon_path():
     """Get the icon path with cross-platform support"""
     # Try to get cross-platform icon first
@@ -86,6 +89,7 @@ def get_icon_path():
         return cross_platform_icon
 
     return None
+
 
 def set_application_icon(app):
     """Set application icon with multiple fallback strategies"""
@@ -109,7 +113,7 @@ def set_application_icon(app):
         fallback_icons = [
             QStyle.StandardPixmap.SP_DesktopIcon,
             QStyle.StandardPixmap.SP_FileDialogDetailedView,
-            QStyle.StandardPixmap.SP_DialogOkButton
+            QStyle.StandardPixmap.SP_DialogOkButton,
         ]
 
         for fallback in fallback_icons:
@@ -124,6 +128,7 @@ def set_application_icon(app):
 
     logging.warning("No suitable application icon found")
     return False
+
 
 def run_app():
     app = QtWidgets.QApplication(sys.argv)
@@ -155,6 +160,7 @@ def run_app():
 
     exit_code = app.exec()
     return exit_code
+
 
 if __name__ == "__main__":
     main()

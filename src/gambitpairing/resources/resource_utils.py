@@ -26,6 +26,7 @@ if sys.version_info >= (3, 9):
 else:
     import importlib_resources as resources
 
+
 def get_resource_path(resource_name: str, subpackage: str = "") -> Path:
     """
     Get the path to a resource file.
@@ -54,7 +55,7 @@ def get_resource_path(resource_name: str, subpackage: str = "") -> Path:
 
     try:
         # Modern approach (Python 3.9+)
-        if hasattr(resources, 'files'):
+        if hasattr(resources, "files"):
             resource_files = resources.files(package_path)
             return resource_files / resource_name
 
@@ -64,9 +65,14 @@ def get_resource_path(resource_name: str, subpackage: str = "") -> Path:
                 return resource_path
 
     except (ModuleNotFoundError, FileNotFoundError) as e:
-        raise FileNotFoundError(f"Resource '{resource_name}' not found in package '{package_path}'") from e
+        raise FileNotFoundError(
+            f"Resource '{resource_name}' not found in package '{package_path}'"
+        ) from e
 
-def read_resource_text(resource_name: str, subpackage: str = "", encoding: str = "utf-8") -> str:
+
+def read_resource_text(
+    resource_name: str, subpackage: str = "", encoding: str = "utf-8"
+) -> str:
     """
     Read a text resource file.
 
@@ -97,7 +103,10 @@ def read_resource_text(resource_name: str, subpackage: str = "", encoding: str =
     try:
         return resources.read_text(package_path, resource_name, encoding=encoding)
     except (ModuleNotFoundError, FileNotFoundError) as e:
-        raise FileNotFoundError(f"Resource '{resource_name}' not found in package '{package_path}'") from e
+        raise FileNotFoundError(
+            f"Resource '{resource_name}' not found in package '{package_path}'"
+        ) from e
+
 
 def read_resource_binary(resource_name: str, subpackage: str = "") -> bytes:
     """
@@ -128,7 +137,10 @@ def read_resource_binary(resource_name: str, subpackage: str = "") -> bytes:
     try:
         return resources.read_binary(package_path, resource_name)
     except (ModuleNotFoundError, FileNotFoundError) as e:
-        raise FileNotFoundError(f"Resource '{resource_name}' not found in package '{package_path}'") from e
+        raise FileNotFoundError(
+            f"Resource '{resource_name}' not found in package '{package_path}'"
+        ) from e
+
 
 def get_resource_context(resource_name: str, subpackage: str = ""):
     """
@@ -160,7 +172,7 @@ def get_resource_context(resource_name: str, subpackage: str = ""):
 
     try:
         # Modern approach (Python 3.9+)
-        if hasattr(resources, 'as_file') and hasattr(resources, 'files'):
+        if hasattr(resources, "as_file") and hasattr(resources, "files"):
             resource_files = resources.files(package_path)
             return resources.as_file(resource_files / resource_name)
 
@@ -169,7 +181,10 @@ def get_resource_context(resource_name: str, subpackage: str = ""):
             return resources.path(package_path, resource_name)
 
     except (ModuleNotFoundError, FileNotFoundError) as e:
-        raise FileNotFoundError(f"Resource '{resource_name}' not found in package '{package_path}'") from e
+        raise FileNotFoundError(
+            f"Resource '{resource_name}' not found in package '{package_path}'"
+        ) from e
+
 
 # Convenience functions for your specific use case
 def get_style_sheet() -> str:
@@ -182,6 +197,7 @@ def get_style_sheet() -> str:
         Content of the styles.qss file
     """
     return read_resource_text("styles.qss")
+
 
 def get_icon_path(icon_type: str = "png"):
     """
@@ -200,6 +216,7 @@ def get_icon_path(icon_type: str = "png"):
     filename = f"icon.{icon_type}"
     return get_resource_context(filename, "icons")
 
+
 def get_icon_binary(icon_type: str = "png") -> bytes:
     """
     Get the icon as binary data.
@@ -217,6 +234,7 @@ def get_icon_binary(icon_type: str = "png") -> bytes:
     filename = f"icon.{icon_type}"
     return read_resource_binary(filename, "icons")
 
+
 def get_ui_icon_path(icon_name: str):
     """
     Get path to a UI icon (arrow-up.svg, arrow-down.svg, etc.).
@@ -233,6 +251,7 @@ def get_ui_icon_path(icon_name: str):
     """
     return get_resource_context(icon_name, "icons")
 
+
 def get_ui_icon_binary(icon_name: str) -> bytes:
     """
     Get a UI icon as binary data.
@@ -248,5 +267,6 @@ def get_ui_icon_binary(icon_name: str) -> bytes:
         Binary content of the icon file
     """
     return read_resource_binary(icon_name, "icons")
+
 
 #  LocalWords:  importlib
