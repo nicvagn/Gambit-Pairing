@@ -1,15 +1,16 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "gambit-pairing"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
     "PyQt6",
     "httpx",
-    "importlib_resources",
-    "packaging",]
+    "importlib_resources; python_version<'3.9'",
+    "packaging",
+]
 description = "Fast, fair, and modern tournament management. Open source and cross-platform."
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -38,13 +39,18 @@ dev = [
 ]
 
 [project.gui-scripts]
-gambit-pairing = "gambitpairing:main"
+gambit-pairing = "gambitpairing.__main__:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 include-package-data = true
 
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gambitpairing*"]
+
 [tool.setuptools.package-data]
-gambitpairing = ["*.webp", "*.svg", "*.ico", "*.png", "*.qss"]
+"gambitpairing.resources" = ["styles.qss"]
+"gambitpairing.resources.icons" = ["*.png", "*.ico", "*.webp", "*.svg"]
 
 #  LocalWords:  importlib

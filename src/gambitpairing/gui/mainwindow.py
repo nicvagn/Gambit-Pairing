@@ -15,52 +15,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from PyQt6 import QtWidgets, QtCore, QtGui
-from PyQt6.QtGui import QAction, QCloseEvent
-from PyQt6.QtCore import QFileInfo, Qt
-from typing import List, Tuple, Optional
-import sys
-import os
-from gambitpairing.core.updater import Updater
 import json
-from gambitpairing.core.tournament import Tournament
-from gambitpairing.core.constants import APP_NAME, APP_VERSION
-from gambitpairing.core import utils
+import logging
+import os
+import sys
+from typing import List, Optional, Tuple
 
+from gambitpairing.core import utils
+from gambitpairing.core.constants import APP_NAME, APP_VERSION
+from gambitpairing.core.tournament import Tournament
+from gambitpairing.core.updater import Updater
+from gambitpairing.core.utils import root_logger
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtCore import QFileInfo, Qt
+from PyQt6.QtGui import QAction, QCloseEvent
+
+from .crosstable_tab import CrosstableTab
 from .dialogs import (
-    SettingsDialog,
+    AboutDialog,
     NewTournamentDialog,
+    SettingsDialog,
     UpdateDownloadDialog,
     UpdatePromptDialog,
-    AboutDialog,
 )
-from .players_tab import PlayersTab
-from .tournament_tab import TournamentTab
-from .standings_tab import StandingsTab
-from .crosstable_tab import CrosstableTab
 from .history_tab import HistoryTab
+from .players_tab import PlayersTab
+from .standings_tab import StandingsTab
+from .tournament_tab import TournamentTab
 from .update_worker import UpdateWorker
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-def resource_path(relative_path: str) -> str:
-    """Get absolute path to resource, works for dev and for cx_Freeze"""
-    if getattr(sys, "frozen", False):
-        # The application is frozen
-        base_path = os.path.dirname(sys.executable)
-    else:
-        # The application is not frozen
-        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-    return os.path.join(base_path, relative_path)
 
 
 # --- Main Application Window ---
-
-
 class GambitPairingMainWindow(QtWidgets.QMainWindow):
     """Main application window for Gambit Pairing."""
 
@@ -160,9 +145,11 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             [self.new_action, self.load_action, self.save_action, self.save_as_action]
         )
         file_menu.addSeparator()
-        file_menu.addActions([
-            self.export_standings_action,
-        ])
+        file_menu.addActions(
+            [
+                self.export_standings_action,
+            ]
+        )
         file_menu.addSeparator()
         file_menu.addAction(self.settings_action)
         file_menu.addSeparator()
@@ -204,10 +191,12 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             "&Export Players to CSV...", self.players_tab.export_players_csv
         )
         player_menu.addSeparator()
-        player_menu.addActions([
-            self.import_players_action,
-            self.export_players_action,
-        ])
+        player_menu.addActions(
+            [
+                self.import_players_action,
+                self.export_players_action,
+            ]
+        )
 
         # Help Menu
         help_menu = menu_bar.addMenu("&Help")
@@ -257,12 +246,14 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         )  # restrict just in case
         toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
         toolbar.setIconSize(QtCore.QSize(24, 24))
-        toolbar.setStyleSheet("""
+        toolbar.setStyleSheet(
+            """
             QToolBar {
                 background: #f9fafb;
                 border-bottom: 1px solid #bbb;
             }
-        """)
+        """
+        )
         QtGui.QIcon.setThemeName(
             "Adwaita"
         )  # Adwaita is often monochrome, fallback to system if not found
@@ -482,17 +473,23 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             rounds_group = None
             for i in range(dialog.layout().count()):
                 item = dialog.layout().itemAt(i)
-                if item and item.widget() and isinstance(item.widget(), QtWidgets.QGroupBox):
+                if (
+                    item
+                    and item.widget()
+                    and isinstance(item.widget(), QtWidgets.QGroupBox)
+                ):
                     if item.widget().title() == "General":
                         rounds_group = item.widget()
                         break
-            
-            if rounds_group and isinstance(rounds_group.layout(), QtWidgets.QFormLayout):
+
+            if rounds_group and isinstance(
+                rounds_group.layout(), QtWidgets.QFormLayout
+            ):
                 form_layout = rounds_group.layout()
                 label = form_layout.labelForField(dialog.spin_num_rounds)
                 if label:
                     label.hide()
-            
+
             dialog.spin_num_rounds.setToolTip(
                 "Number of rounds is fixed for Round Robin: players - 1."
             )
@@ -598,7 +595,9 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
                 pairings, bye_player = self.tournament.get_pairings_for_round(
                     self.current_round_index
                 )
-                self.tournament_tab.display_pairings_for_input(pairings, [bye_player] if bye_player else [])
+                self.tournament_tab.display_pairings_for_input(
+                    pairings, [bye_player] if bye_player else []
+                )
             else:
                 self.tournament_tab.clear_pairings_display()
 
@@ -828,3 +827,6 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
     def restart_application(self):
         """Restart the application cleanly."""
         utils.restart_application()
+
+
+#  LocalWords:  bbb px
