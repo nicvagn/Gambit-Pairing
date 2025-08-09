@@ -60,6 +60,7 @@ dev = [
     "black",
     "pytest",
     "pre-commit",
+    "mypy",
 ]
 
 # Setuptools configuration
@@ -82,4 +83,4 @@ line-length = 88
 
 [tool.isort]
 profile = "black"
-py_version = 38
+py_version = 39
