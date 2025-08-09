@@ -8,6 +8,7 @@ version = "0.6.0"
 dependencies = [
     "PyQt6",
     "httpx",
+    "importlib_resources",
     "packaging",]
 description = "Fast, fair, and modern tournament management. Open source and cross-platform."
 readme = "README.md"
@@ -41,10 +42,9 @@ gambit-pairing = "gambitpairing:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = true
 
 [tool.setuptools.package-data]
-gambitpairing = [
-  "src/gambitpairing/resources/styles.qss",
-  "src/gambitpairing/resources/icon.ico",
-  "src/gambitpairing/resources/icon.png",
-]
+gambitpairing = ["*.webp", "*.svg", "*.ico", "*.png", "*.qss"]
+
+#  LocalWords:  importlib
