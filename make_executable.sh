@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 SCRIPT_DIR=$(dirname "$0")
-pip install pyinstaller || exit 1
+
+$SCRIPT_DIR/ensure_all_dependancies.sh
+
 pyinstaller "$SCRIPT_DIR/Gambit-Pairing.spec"
