@@ -37,12 +37,8 @@ Example:
 from collections.abc import Sequence
 from typing import Iterable, List, Optional, Tuple
 
-from gambitpairing.core import (  # These are types
-    MatchPairing,
-    Pairings,
-    Players,
-    RoundSchedule,
-)
+from gambitpairing.core import Pairings  # These are types
+from gambitpairing.core import MatchPairing, Players, RoundSchedule
 from gambitpairing.core.exceptions import PairingException
 from gambitpairing.core.player import Player
 from gambitpairing.core.utils import root_logger

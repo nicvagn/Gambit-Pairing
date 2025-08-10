@@ -74,8 +74,8 @@ def format():
     )
     parser.add_argument(
         "--target",
-        default=".",
-        help="Target directory to format (default: current directory)",
+        default="../gambitpairing",
+        help="Target directory to format (default: gambitpairing)",
     )
 
     args = parser.parse_args()

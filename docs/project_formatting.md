@@ -9,14 +9,14 @@ This document explains how to format code in the GambitPairing project.
 Run the formatting script directly with:
 
 ```bash
-python3 format.py
+python3 src/scripts/format_project.py
 ```
 
 Or make it executable and run directly:
 
 ```bash
-chmod +x format.py
-./format.py
+chmod +x format_project.py
+./format_project.py
 ```
 
 ### Manual Execution
@@ -24,7 +24,7 @@ chmod +x format.py
 If you prefer to run the formatting script manually:
 
 ```bash
-python3 src/gambitpairing/resources/scripts/formatting.py --target src/gambitpairing
+python3 src/scripts/format_project.py --target src/gambitpairing
 ```
 
 ## What Gets Formatted
@@ -38,29 +38,9 @@ The formatting script processes all Python files in the `src/gambitpairing` dire
 
 - everything + dev dependencies in pyproject.toml
 
-## Project Structure
-
-```
-project-root/
-├── format.py                                    # Main formatting script (shell-free)
-├── src/
-│   └── gambitpairing/
-│       ├── ...                                  # Your Python code (gets formatted)
-│       └── resources/
-│           └── scripts/
-│               └── formatting.py                # The actual formatting implementation
-└── formatting.md                               # This guide
-```
 
 ## Troubleshooting
 
-### Script Not Found Error
-
-If you get an error about the formatting script not being found:
-
-1. Verify the file exists at `src/gambitpairing/resources/scripts/formatting.py`
-2. Check that you're running the command from the project root directory
-3. Ensure the path separators match your operating system
 
 ### Permission Denied (Unix/Linux/macOS)
 

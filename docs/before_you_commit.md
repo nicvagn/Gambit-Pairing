@@ -2,6 +2,6 @@
 
 1. ensure your code is formatted to project standards.
    this can be achieved by running the format command defined
-   in pyproject.toml, or running the python module format.py
+   in pyproject.toml
 
 2. pull from upstream and merge any changes
