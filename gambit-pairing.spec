@@ -1,18 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
     ['src/gambitpairing/__main__.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        ('src/gambitpairing/resources/styles.qss', 'gambitpairing/resources/'),
+        ('src/gambitpairing/resources/icons/*', 'gambitpairing/resources/icons/'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
-    optimize=0,
 )
 pyz = PYZ(a.pure)
 
@@ -36,5 +37,3 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-
-#  LocalWords:  hiddenimports datas pyz
