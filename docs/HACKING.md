@@ -36,4 +36,7 @@
 
 # Then
 
+to commit, use the commit.py script. see:
+    `git_commit_helper.md`
+
 load the tournament defined in /test_data/tournaments/test_32_players***
