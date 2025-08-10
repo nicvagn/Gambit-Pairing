@@ -12,7 +12,7 @@ def main():
     print(f"cleaning: {script_dir}")
 
     # Define directories to clean
-    built_dir = script_dir / "built"
+    built_dir = script_dir / "build"
     dist_dir = script_dir / "dist"
 
     # Remove contents of directories if they exist
