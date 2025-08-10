@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gambit-pairing"
-version = "0.6.1"
+version = "0.6.2"
 description = "Fast, fair, and modern tournament management. Open source and cross-platform."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -82,5 +82,3 @@ ensure_newline_before_comments = true
 [tool.setuptools.package-data]
 "gambitpairing.resources" = ["styles.qss"]
 "gambitpairing.resources.icons" = ["*.png", "*.ico", "*.webp", "*.svg"]
-
-#  LocalWords:  pyi
