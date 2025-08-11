@@ -67,7 +67,7 @@ python commit.py --dry-run --all -m "Preview changes"
 |--------|-------------|
 | `--dry-run` | Show what actions would be taken without executing them |
 
-## Commit Message Behavior
+## Commit Message Behaviour
 
 The script determines commit messages using this priority:
 

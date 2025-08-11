@@ -9,7 +9,7 @@ This document explains how to format code in the GambitPairing project.
 Run the formatting script directly with:
 
 ```bash
-python3 src/scripts/format_project.py
+python3 {{git root}}/format_project.py
 ```
 
 Or make it executable and run directly:
@@ -24,7 +24,7 @@ chmod +x format_project.py
 If you prefer to run the formatting script manually:
 
 ```bash
-python3 src/scripts/format_project.py --target src/gambitpairing
+python3 format_project.py --target src/gambitpairing
 ```
 
 ## What Gets Formatted

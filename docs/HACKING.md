@@ -9,7 +9,7 @@
   - python3.8 or newer
   - all runtime dependencies
 
-  test building with `python3 -m build .`
+    test building with `python3 -m build .` (from git root)
 # dependencies
     can be installed with sh script: `ensure-all-dependancies.sh`
     will parse the pyproject.toml and install with pip
