@@ -26,7 +26,7 @@ def main():
     print("Installing with pyinstaller")
 
     # Run pyinstaller with the spec file
-    spec_file = script_dir / "Gambit-Pairing.spec"
+    spec_file = script_dir / "gambit-pairing.spec"
     try:
         subprocess.run(["pyinstaller", str(spec_file)], check=True)
     except subprocess.CalledProcessError as e:
