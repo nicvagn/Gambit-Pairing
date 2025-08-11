@@ -71,7 +71,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
             | QtWidgets.QDialogButtonBox.StandardButton.Cancel
         )
         self.buttons.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Maximum
         )
         self.buttons.setMinimumHeight(40)
         self.buttons.accepted.connect(self.accept)
@@ -241,3 +241,6 @@ class NewTournamentDialog(QtWidgets.QDialog):
         # Optionally, update player count if not round robin
         if self.pairing_combo.currentData() != "round_robin":
             self.player_count = value + 1  # For UI consistency
+
+
+#  LocalWords:  swiss

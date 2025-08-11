@@ -17,142 +17,124 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
+from importlib_resources import as_file, files
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import QDir
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QStyle
 
+from gambitpairing.core.exceptions import IconException, StyleException
+from gambitpairing.core.utils import root_logger
 from gambitpairing.gui.mainwindow import GambitPairingMainWindow
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-logging.info("BASE_DIR set to: %s", BASE_DIR)
+from gambitpairing.resources.resource_utils import (
+    get_icon_path,
+    get_resource_path,
+    read_resource_text,
+)
 
 
 def main():
     """Entry point"""
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
+
+    # define aliases used in styles.qss
+
+    icon_path = Path(files("gambitpairing.resources.icons"))
+    # set qt search path for use in styles.qss
+    QDir.setSearchPaths("icons", [str(icon_path)])
     exit_code = run_app()
     logging.info("run_app() exited with code: %s", exit_code)
     sys.exit(exit_code)
 
 
-def resource_path(relative_path):
-    """Get absolute path to resource, works for dev and standard deployments"""
-    return os.path.join(BASE_DIR, relative_path)
+def set_application_icon(app: "QApplication") -> None:
+    """Set application icon
 
+    Parameters
+    ----------
+    app : QtWidgets.QApplication
+       The app to set the icon for
 
-def get_cross_platform_icon():
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    IconException
+        When icon is not a QIcon
     """
-    Get application icon with cross-platform fallbacks:
-    1. Try custom icons (ico, png)
-    2. Try Qt theme icons
-    3. Fall back to system standard icon
-    """
-    # First, try custom icons in preferred order
-    icon_folder = resource_path(os.path.join("resources", "icons"))
-    custom_icon_files = [
-        "icon.png",  # Cross-platform
-        "icon.ico",  # Windows preferred
-    ]
+    icon_path = get_resource_path("icon.png", subpackage="icons")
 
-    for icon_file in custom_icon_files:
-        icon_path = os.path.join(icon_folder, icon_file)
-        if os.path.exists(icon_path):
-            logging.info(f"Using custom icon: {icon_path}")
-            return QIcon(icon_path)
+    logging.info("icon_path: (%s)\n", icon_path)
+    icon = QIcon(str(icon_path))
 
-    # Try Qt theme icons (works well on Linux, limited on Windows/macOS)
-    theme_icons = [
-        "preferences-system",
-        "application-default-icon",
-        "applications-system" "applications-games",
-    ]
-
-    for theme_name in theme_icons:
-        theme_icon = QIcon.fromTheme(theme_name)
-        if not theme_icon.isNull():
-            logging.info(f"Using theme icon: {theme_name}")
-            return theme_icon
-
-    # Fall back to Qt standard system icon
-    logging.info("Using Qt standard system icon as fallback")
-    return None  # Will be handled by get_icon_path()
-
-
-def get_icon_path():
-    """Get the icon path with cross-platform support"""
-    # Try to get cross-platform icon first
-    cross_platform_icon = get_cross_platform_icon()
-    if cross_platform_icon:
-        return cross_platform_icon
-
-    return None
-
-
-def set_application_icon(app):
-    """Set application icon with multiple fallback strategies"""
-    # Try to get custom or theme icon
-    icon = get_icon_path()
-
-    if icon and isinstance(icon, QIcon) and not icon.isNull():
+    if icon and isinstance(icon, QIcon):
         app.setWindowIcon(icon)
         logging.info("Successfully set application icon")
-        return True
+    else:
+        raise IconException("icon not a QIcon, icon instance of type(%s)", type(icon))
 
-    # Final fallback: use Qt's standard application icon
+
+def set_application_style(app: "QApplication") -> None:
+    """Set application style
+
+    Parameters
+    ----------
+    app : QtWidgets.QApplication
+       The app to set the style for
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    StyleException
+        When style fails to be set
+    """
     try:
-        standard_icon = app.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
-        if not standard_icon.isNull():
-            app.setWindowIcon(standard_icon)
-            logging.info("Using Qt standard computer icon as fallback")
-            return True
+        style_text = read_resource_text("styles.qss")
 
-        # Alternative standard icons to try
-        fallback_icons = [
-            QStyle.StandardPixmap.SP_DesktopIcon,
-            QStyle.StandardPixmap.SP_FileDialogDetailedView,
-            QStyle.StandardPixmap.SP_DialogOkButton,
-        ]
-
-        for fallback in fallback_icons:
-            fallback_icon = app.style().standardIcon(fallback)
-            if not fallback_icon.isNull():
-                app.setWindowIcon(fallback_icon)
-                logging.info(f"Using Qt standard icon: {fallback}")
-                return True
+        logging.debug("style_text: (%s)\n", style_text)
+        #  apply style sheet
+        app.setStyleSheet(style_text)
+        logging.debug("set style sheet to:\n%s", style_text)
 
     except Exception as e:
-        logging.error(f"Error setting standard icon: {e}")
 
-    logging.warning("No suitable application icon found")
-    return False
+        raise StyleException(
+            "Exception (%s)\n raised when setting app style. style_text: \n %s",
+            e,
+            style_text,
+        )
 
 
 def run_app():
+    """run the gui application
+
+    Parameters
+    ----------
+    app : QtWidgets.QApplication
+       The app to set the icon for
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    IconException
+        When icon is not a QIcon
+    """
     app = QtWidgets.QApplication(sys.argv)
 
     # Set cross-platform application icon
     set_application_icon(app)
 
-    # Load stylesheet
-    try:
-        styles_qss = os.path.join(BASE_DIR, "resources", "styles.qss")
-        with open(styles_qss, "r", encoding="utf-8") as f:
-            app.setStyleSheet(f.read())
-    except Exception as e:
-        logging.error(f"Could not load stylesheet: {e}")
-
-    # Set WindowsVista style for legacy mode
-    app_instance = QtWidgets.QApplication.instance()
-    if app_instance is not None:
-        try:
-            available_styles = QtWidgets.QStyleFactory.keys()
-            if "Fusion" in available_styles:
-                app_instance.setStyle("WindowsVista")
-        except Exception:
-            pass
+    # set app style
+    set_application_style(app)
 
     window = GambitPairingMainWindow()
     window.set_app_instance(app)
@@ -164,3 +146,5 @@ def run_app():
 
 if __name__ == "__main__":
     main()
+
+#  LocalWords:  IconException QIcon

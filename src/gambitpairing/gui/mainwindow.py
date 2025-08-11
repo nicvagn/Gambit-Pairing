@@ -419,19 +419,6 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
 
         self._update_ui_state()
 
-    '''This is a repeat definition
-    def _on_round_completed(self, new_round_index: int) -> None:
-        """
-        Slot called when a round is successfully recorded and advanced in the TournamentTab.
-        Updates the main window's round index and UI state.
-        """
-        self.current_round_index = new_round_index
-        # Propagate the new round index to the tournament_tab
-        if hasattr(self.tournament_tab, "set_current_round_index"):
-            self.tournament_tab.set_current_round_index(new_round_index)
-        self._update_ui_state()
-    '''
-
     def prompt_new_tournament(self):
         if not self.check_save_before_proceeding():
             return
