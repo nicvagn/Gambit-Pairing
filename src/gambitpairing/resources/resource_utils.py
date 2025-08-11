@@ -142,11 +142,9 @@ def read_resource_binary(resource_name: str, subpackage: str = "") -> bytes:
         ) from e
 
 
-def get_resource_context(resource_name: str, subpackage: str = ""):
+def get_resource_path(resource_name: str, subpackage: str = ""):
     """
-    Get a context manager for accessing a resource file.
-
-    This is useful when you need a actual file path (e.g., for Qt icons).
+    Get a file path (e.g., for Qt icons).
 
     Parameters
     ----------
@@ -157,8 +155,6 @@ def get_resource_context(resource_name: str, subpackage: str = ""):
 
     Returns
     -------
-    context manager
-        Context manager that yields the path to the resource
 
     Raises
     ------
@@ -171,14 +167,7 @@ def get_resource_context(resource_name: str, subpackage: str = ""):
         package_path = "gambitpairing.resources"
 
     try:
-        # Modern approach (Python 3.9+)
-        if hasattr(resources, "as_file") and hasattr(resources, "files"):
-            resource_files = resources.files(package_path)
-            return resources.as_file(resource_files / resource_name)
-
-        # Fallback for older versions
-        else:
-            return resources.path(package_path, resource_name)
+        return resources.path(package_path, resource_name)
 
     except (ModuleNotFoundError, FileNotFoundError) as e:
         raise FileNotFoundError(
@@ -214,7 +203,7 @@ def get_icon_path(icon_type: str = "png"):
         Context manager that yields the path to the icon file
     """
     filename = f"icon.{icon_type}"
-    return get_resource_context(filename, "icons")
+    return get_resource_path(filename, "icons")
 
 
 def get_icon_binary(icon_type: str = "png") -> bytes:

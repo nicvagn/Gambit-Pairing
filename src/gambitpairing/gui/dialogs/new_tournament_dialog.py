@@ -15,6 +15,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
 
         self.layout = QtWidgets.QVBoxLayout(self)
 
+        # -------------------------
         # General Settings
         general_group = QtWidgets.QGroupBox("General")
         form_layout = QtWidgets.QFormLayout(general_group)
@@ -26,6 +27,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         form_layout.addRow("Number of Rounds:", self.rounds_spin)
         self.layout.addWidget(general_group)
 
+        # -------------------------
         # Tiebreak Order Settings
         tiebreak_group = QtWidgets.QGroupBox("Tiebreak Order")
         tiebreak_layout = QtWidgets.QHBoxLayout(tiebreak_group)
@@ -51,20 +53,36 @@ class NewTournamentDialog(QtWidgets.QDialog):
         tiebreak_layout.addLayout(move_button_layout)
         self.layout.addWidget(tiebreak_group)
 
+        # -------------------------
         # Pairing System Selection
         pairing_group = QtWidgets.QGroupBox("Pairing System")
         pairing_layout = QtWidgets.QHBoxLayout(pairing_group)
+
         self.pairing_combo = QtWidgets.QComboBox()
         self.pairing_combo.addItem("Dutch System (FIDE/USCF-style)", "dutch_swiss")
         self.pairing_combo.addItem("Round Robin (All-Play-All)", "round_robin")
         self.pairing_combo.addItem("Manual Pairing", "manual")
         self.pairing_combo.setToolTip("Select the pairing system for this tournament.")
-        pairing_layout.addWidget(self.pairing_combo)
+
+        # Let combo box expand to fill extra horizontal space
+        pairing_layout.addWidget(self.pairing_combo, stretch=1)
+
         info_btn = QtWidgets.QPushButton("About Pairing Systems")
+        info_btn.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         info_btn.clicked.connect(self.show_pairing_info)
         pairing_layout.addWidget(info_btn)
+
         self.layout.addWidget(pairing_group)
 
+        # -------------------------
+        # Ensure all group boxes have same minimum width
+        MIN_GROUP_WIDTH = 350
+        for group in (general_group, tiebreak_group, pairing_group):
+            group.setMinimumWidth(MIN_GROUP_WIDTH)
+
+        # -------------------------
         # Dialog Buttons
         self.buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok
@@ -78,6 +96,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.buttons.rejected.connect(self.reject)
         self.layout.addWidget(self.buttons)
 
+        # -------------------------
         # Pairing system change handling
         self.pairing_combo.currentIndexChanged.connect(self.on_pairing_system_changed)
         # Track player count for round robin (default: 5)
