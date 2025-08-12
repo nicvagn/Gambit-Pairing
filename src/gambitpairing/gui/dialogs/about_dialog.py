@@ -48,8 +48,7 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f"About {APP_NAME}")
-        self.setMinimumSize(320, 260)
-        self.resize(340, 280)
+        self.setMinimumSize(420, 360)
         self.setModal(True)
         self._setup_ui()
 
@@ -67,7 +66,6 @@ class AboutDialog(QDialog):
         """
         # Set minimum size for the dialog
         self.setMinimumSize(400, 300)
-        self.resize(450, 350)  # Set a reasonable default size
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -118,15 +116,15 @@ class AboutDialog(QDialog):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+        layout.setSpacing(25)
 
-        # # Logo/Icon (if you have one) it is broken rn
-        # logo_label = QLabel()
-        # icon_path = get_resource_path("icon.png", subpackage="icons")
-        # logo_pixmap = QPixmap(icon_path)
-        # logo_label.setPixmap(logo_pixmap)
-        # logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # layout.addWidget(logo_label)
+        # Logo/Icon (if you have one) it is broken rn
+        logo_label = QLabel()
+        icon_path = get_resource_path("icon.png", subpackage="icons")
+        logo_pixmap = QPixmap(str(icon_path))
+        logo_label.setPixmap(logo_pixmap)
+        logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(logo_label)
 
         # App name and version
         app_name = QLabel("Gambit Pairing")
@@ -219,37 +217,3 @@ class AboutDialog(QDialog):
         layout.addWidget(license_text)
 
         return widget
-
-    def _setup_ui(self):
-        """Set up the modern tabbed user interface."""
-        # Set minimum size for the dialog
-        self.setMinimumSize(400, 300)
-        self.resize(450, 350)  # Set a reasonable default size
-
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-
-        # Create tab widget
-        tab_widget = QTabWidget()
-        tab_widget.addTab(self._create_about_tab(), "About")
-        tab_widget.addTab(self._create_license_tab(), "License")
-
-        # Make sure tab widget expands properly
-        tab_widget.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
-        main_layout.addWidget(tab_widget)
-
-        # Button layout
-        button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(20, 15, 20, 20)
-        button_layout.addStretch()
-
-        ok_button = QPushButton("Close")
-        ok_button.clicked.connect(self.accept)
-        ok_button.setMinimumWidth(100)
-        ok_button.setStyleSheet("font-weight: 500; padding: 8px 16px;")
-        button_layout.addWidget(ok_button)
-
-        main_layout.addLayout(button_layout)

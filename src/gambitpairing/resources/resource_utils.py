@@ -142,41 +142,6 @@ def read_resource_binary(resource_name: str, subpackage: str = "") -> bytes:
         ) from e
 
 
-def get_resource_path(resource_name: str, subpackage: str = ""):
-    """
-    Get a file path (e.g., for Qt icons).
-
-    Parameters
-    ----------
-    resource_name : str
-        Name of the resource file
-    subpackage : str, optional
-        Subpackage name, by default ""
-
-    Returns
-    -------
-    Path
-        the resource path
-
-    Raises
-    ------
-    FileNotFoundError
-        If the resource file is not found in the specified package
-    """
-    if subpackage:
-        package_path = f"gambitpairing.resources.{subpackage}"
-    else:
-        package_path = "gambitpairing.resources"
-
-    try:
-        return resources.path(package_path, resource_name)
-
-    except (ModuleNotFoundError, FileNotFoundError) as e:
-        raise FileNotFoundError(
-            f"Resource '{resource_name}' not found in package '{package_path}'"
-        ) from e
-
-
 # Convenience functions for your specific use case
 def get_style_sheet() -> str:
     """
