@@ -118,11 +118,19 @@ class AboutDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(25)
 
-        # Logo/Icon (if you have one) it is broken rn
+        # Logo/Icon
         logo_label = QLabel()
         icon_path = get_resource_path("icon.png", subpackage="icons")
         logo_pixmap = QPixmap(str(icon_path))
-        logo_label.setPixmap(logo_pixmap)
+        # Scale to fit within 300x300 maximum
+        max_size = 300
+        scaled_pixmap = logo_pixmap.scaled(
+            max_size,
+            max_size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        logo_label.setPixmap(scaled_pixmap)
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(logo_label)
 
