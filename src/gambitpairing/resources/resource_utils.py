@@ -155,6 +155,8 @@ def get_resource_path(resource_name: str, subpackage: str = ""):
 
     Returns
     -------
+    Path
+        the resource path
 
     Raises
     ------
@@ -222,23 +224,6 @@ def get_icon_binary(icon_type: str = "png") -> bytes:
     """
     filename = f"icon.{icon_type}"
     return read_resource_binary(filename, "icons")
-
-
-def get_ui_icon_path(icon_name: str):
-    """
-    Get path to a UI icon (arrow-up.svg, arrow-down.svg, etc.).
-
-    Parameters
-    ----------
-    icon_name : str
-        Name of the icon file (e.g., 'arrow-up.svg', 'checkmark-white.svg')
-
-    Returns
-    -------
-    context manager
-        Context manager that yields the path to the icon file
-    """
-    return get_resource_context(icon_name, "icons")
 
 
 def get_ui_icon_binary(icon_name: str) -> bytes:

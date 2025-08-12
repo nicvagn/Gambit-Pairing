@@ -38,7 +38,6 @@ from gambitpairing.core.constants import APP_NAME, APP_VERSION
 from gambitpairing.resources.resource_utils import (
     get_icon_path,
     get_resource_path,
-    get_ui_icon_path,
     read_resource_text,
 )
 
@@ -121,14 +120,13 @@ class AboutDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
 
-        # Logo/Icon (if you have one)
-        logo_label = QLabel()
-        icon_path = get_icon_path()
-        breakpoint()
-        logo_pixmap = QPixmap()
-        logo_label.setPixmap(logo_pixmap)
-        logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(logo_label)
+        # # Logo/Icon (if you have one) it is broken rn
+        # logo_label = QLabel()
+        # icon_path = get_resource_path("icon.png", subpackage="icons")
+        # logo_pixmap = QPixmap(icon_path)
+        # logo_label.setPixmap(logo_pixmap)
+        # logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # layout.addWidget(logo_label)
 
         # App name and version
         app_name = QLabel("Gambit Pairing")
