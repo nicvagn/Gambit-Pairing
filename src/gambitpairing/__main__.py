@@ -133,6 +133,9 @@ def run_app():
     # Set cross-platform application icon
     set_application_icon(app)
 
+    # Set Windows Vista style
+    app.setStyle("WindowsVista")
+
     # set app style
     set_application_style(app)
 
