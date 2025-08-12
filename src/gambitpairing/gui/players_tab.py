@@ -91,56 +91,7 @@ class PlayersTab(QtWidgets.QWidget):
         self.table_players.setColumnWidth(1, 110)  # Rating
         self.table_players.setColumnWidth(2, 90)  # Age
         self.table_players.setColumnWidth(3, 130)  # Status
-        # Add extra margin/padding to headers and cells, polish header style, and animate sort arrow
-        self.table_players.setStyleSheet(
-            """
-/* === Header Section === */
-QHeaderView::section {
-    padding: 10px 24px;
-    font-size: 13pt;
-    background-color: #f8f9fc;
-    color: #2a2a2a;
-    font-weight: 600;
-    border: 1px solid #d5dbe4;
-    border-bottom: 2px solid #a8b2c4;
-    border-right: none;
-}
 
-QHeaderView::section:pressed,
-QHeaderView::section:hover {
-    background-color: #e6ecf5;
-}
-
-/* === Table Items === */
-QTableWidget::item {
-    padding: 10px 16px;
-    font-size: 11.5pt;
-    color: #333;
-    border-bottom: 1px solid #e1e6ef;
-}
-
-/* === Corner Button (Top-left) === */
-QTableWidget QTableCornerButton::section {
-    background-color: #f8f9fc;
-    border: 1px solid #d5dbe4;
-}
-
-/* === Optional Enhancements === */
-/* Row Hover */
-QTableWidget::item:hover {
-    background-color: #f1f4fa;
-}
-
-/* Alternate row coloring */
-QTableWidget {
-    alternate-background-color: #fbfcfe;
-    gridline-color: #e1e6ef;
-    selection-background-color: #d0d9eb;
-    selection-color: #000;
-}
-
-        """
-        )
         header.setSortIndicatorShown(True)
         header.setSectionsClickable(True)
         header.setSectionsMovable(True)

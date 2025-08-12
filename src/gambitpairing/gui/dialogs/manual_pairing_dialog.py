@@ -442,33 +442,6 @@ class DroppableTableWidget(QtWidgets.QTableWidget):
         self.auto_scroll_timer.timeout.connect(self._auto_scroll)
         self.auto_scroll_direction = 0  # -1 for up, 1 for down, 0 for no scroll
 
-        # Style the table for better visual feedback
-        self.setStyleSheet(
-            """
-            QTableWidget {
-                gridline-color: #dee2e6;
-                background-color: white;
-                border: 1px solid #ced4da;
-                border-radius: 4px;
-            }
-            QTableWidget::item {
-                padding: 8px;
-                border: none;
-            }
-            QTableWidget::item:selected {
-                background-color: #e3f2fd;
-                color: #1976d2;
-            }
-            QHeaderView::section {
-                background-color: #f8f9fa;
-                padding: 8px;
-                border: none;
-                border-bottom: 2px solid #dee2e6;
-                font-weight: bold;
-            }
-        """
-        )
-
     def dragEnterEvent(self, event):
         """Handle drag enter events for pairings table."""
         if event.mimeData().hasText() and event.mimeData().text().startswith("player:"):
