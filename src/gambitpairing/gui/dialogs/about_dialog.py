@@ -207,19 +207,6 @@ class AboutDialog(QDialog):
             }
         """
         )
-
-        license_text.setStyleSheet(
-            """
-            QTextEdit {
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                padding: 10px;
-                font-family: monospace;
-                font-size: 11px;
-                background-color: #f9f9f9;
-            }
-        """
-        )
         license_text.setReadOnly(True)
 
         layout.addWidget(license_text)
