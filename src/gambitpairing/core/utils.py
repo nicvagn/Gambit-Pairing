@@ -24,16 +24,34 @@ import time
 
 from PyQt6 import QtCore
 from PyQt6.QtCore import QDateTime
-from PyQt6.QtWidgets import QApplication, QStyleFactory
+from PyQt6.QtWidgets import QApplication
+
+# the logger format used
+LOG_FMT = "%(asctime)s |:| LEVEL: %(levelname)s |:| FILE PATH: %(pathname)s |:| FUNCTION/METHOD: %(funcName)s %(message)s |:| LINE NO.: %(lineno)d |:| PROCESS ID: %(process)d |:| THREAD ID: %(thread)d"
+
 
 # --- Logging Setup ---
-# Setup logging to file and console
-log_formatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] %(message)s")
-root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)  # Set minimum level
+def setup_logger(logger_name: str) -> logging.Logger:
+    """Set up loger for a python module
 
-# File Handler
-try:
+    Sets up file handler and console handler
+
+    Parameters
+    ----------
+    logger_name : str
+        The name for the logger, __name__ is idiomatic
+
+    Returns
+    -------
+    logging.Logger
+        the created logger
+    """
+    # Setup logging to file and console
+    lgr = logging.getLogger(name=logger_name)
+    lgr.setLevel(logging.INFO)  # Set minimum level
+    # formatter
+    log_formatter = logging.Formatter(LOG_FMT)
+    # File Handler
     # Attempt to create a log file in the user's home directory or a temp directory
     log_dir = QtCore.QStandardPaths.writableLocation(
         QtCore.QStandardPaths.StandardLocation.AppDataLocation
@@ -46,28 +64,38 @@ try:
         log_path = QtCore.QDir(log_dir).filePath("gambit_pairing.log")
         file_handler = logging.FileHandler(log_path)
         file_handler.setFormatter(log_formatter)
-        root_logger.addHandler(file_handler)
         print(f"Logging to: {log_path}")  # Inform user where logs are
     else:
         print("Warning: Could not determine writable location for log file.")
-except Exception as e:
-    print(f"Warning: Could not create log file handler: {e}")
+        file_handler = False
 
-
-# Console Handler
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(log_formatter)
-root_logger.addHandler(console_handler)
+    # Console Handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(log_formatter)
+    console_handler.setLevel(logging.INFO)
+    lgr.addHandler(console_handler)
+    # add handlers
+    if file_handler:
+        lgr.addHandler(file_handler)
+    lgr.addHandler(console_handler)
+    lgr.debug("logger %s initialized", logger_name)
+    return lgr
 
 
 # --- GUI Restart Functionality ---
-def restart_application():
-    """Restart the entire application to ensure clean state reload."""
+def restart_application() -> None:
+    """Restart the entire application to ensure clean state reload.
+
+    Raises
+    ------
+    an exception if one is raised when trying to restart
+    """
 
     # Get the current application instance
     app = QApplication.instance()
     if app is None:
-        return False
+        logging.error("app is None in restart_application")
+        return
 
     # Get command line arguments for restart
     args = sys.argv[:]
@@ -88,8 +116,9 @@ def restart_application():
             os.execv(sys.executable, [sys.executable] + args)
         return True
     except Exception as e:
-        root_logger.error(f"Failed to restart application: {e}")
-        return False
+        log = setup_logger(__name__)
+        log.error(f"Failed to restart application: {e}")
+        raise e
 
 
 # --- Utility Functions ---

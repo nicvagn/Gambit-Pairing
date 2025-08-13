@@ -17,7 +17,6 @@
 
 import hashlib
 import json
-import logging
 import os
 import shutil
 import subprocess
@@ -29,6 +28,10 @@ from typing import Any, Dict, Optional, Tuple
 
 import httpx
 from packaging.version import parse as parse_version
+
+from gambitpairing.core.utils import setup_logger
+
+logger = setup_logger(__name__)
 
 # Fallback update URL if not defined elsewhere
 UPDATE_URL = "https://api.github.com/repos/Chickaboo/Gambit-Pairing/releases/latest"
@@ -44,7 +47,7 @@ class Updater:
         self.expected_checksum: Optional[str] = None
 
     def check_for_updates(self) -> bool:
-        logging.info("Checking for updates...")
+        logger.info("Checking for updates...")
         try:
             with httpx.Client(timeout=10.0) as client:
                 response = client.get(UPDATE_URL)
@@ -56,15 +59,15 @@ class Updater:
                 is_newer = parse_version(latest_version_str) > parse_version(
                     self.current_version
                 )
-                logging.info(
+                logger.info(
                     f"Latest version: {latest_version_str}, Current version: {self.current_version}, Newer available: {is_newer}"
                 )
                 return is_newer
         except httpx.RequestError as e:
-            logging.error(f"Update check failed: Network error - {e}")
+            logger.error(f"Update check failed: Network error - {e}")
             return False
         except Exception as e:
-            logging.error(f"An unexpected error occurred during update check: {e}")
+            logger.error(f"An unexpected error occurred during update check: {e}")
             return False
 
     def get_latest_version(self) -> Optional[str]:
@@ -103,9 +106,9 @@ class Updater:
                 with httpx.Client(timeout=10.0) as client:
                     checksum_response = client.get(checksum_url)
                     self.expected_checksum = checksum_response.text.split()[0].strip()
-                    logging.info(f"Expected checksum: {self.expected_checksum}")
+                    logger.info(f"Expected checksum: {self.expected_checksum}")
             except Exception as e:
-                logging.warning(f"Could not download checksum: {e}")
+                logger.warning(f"Could not download checksum: {e}")
 
         try:
             with httpx.Client(timeout=60.0) as client:
@@ -125,7 +128,7 @@ class Updater:
                                 )
             return self.update_zip_path
         except httpx.RequestError as e:
-            logging.error(f"Failed to download update: {e}")
+            logger.error(f"Failed to download update: {e}")
             return None
 
     def verify_checksum(self, file_path: str) -> bool:
@@ -136,7 +139,7 @@ class Updater:
             for byte_block in iter(lambda: f.read(4096), b""):
                 sha256_hash.update(byte_block)
         calculated_checksum = sha256_hash.hexdigest()
-        logging.info(f"Calculated checksum: {calculated_checksum}")
+        logger.info(f"Calculated checksum: {calculated_checksum}")
         return calculated_checksum.lower() == self.expected_checksum.lower()
 
     def extract_update(self) -> Optional[str]:
@@ -157,11 +160,11 @@ class Updater:
                     shutil.rmtree(final_path)
                 shutil.move(str(extracted_items[0]), str(final_path))
                 shutil.rmtree(extract_dir)
-                logging.info(f"Update contents moved to {final_path}")
+                logger.info(f"Update contents moved to {final_path}")
                 return str(final_path)
             return str(extract_dir)
         except Exception as e:
-            logging.error(f"Failed to extract update: {e}")
+            logger.error(f"Failed to extract update: {e}")
             return None
 
     def get_pending_update_path(self) -> Optional[str]:
@@ -179,7 +182,7 @@ class Updater:
         skipping the running executable. No admin rights or external scripts required.
         """
         if not getattr(sys, "frozen", False):
-            logging.warning("Skipping update: not running from a frozen executable.")
+            logger.warning("Skipping update: not running from a frozen executable.")
             return
 
         app_path = Path(sys.executable)
@@ -205,17 +208,17 @@ class Updater:
 
         try:
             copytree_overwrite(extracted_dir, app_dir)
-            logging.info(f"Update files copied from {extracted_dir} to {app_dir}")
+            logger.info(f"Update files copied from {extracted_dir} to {app_dir}")
             # Optionally, cleanup extracted_dir
             try:
                 shutil.rmtree(extracted_dir)
             except Exception as e:
-                logging.warning(f"Could not remove temp update dir: {e}")
+                logger.warning(f"Could not remove temp update dir: {e}")
             if errors:
-                logging.error("Some files could not be updated:\n" + "\n".join(errors))
+                logger.error("Some files could not be updated:\n" + "\n".join(errors))
             else:
-                logging.info(
+                logger.info(
                     "Update applied successfully. Please restart the application."
                 )
         except Exception as e:
-            logging.error(f"Failed to apply update: {e}")
+            logger.error(f"Failed to apply update: {e}")

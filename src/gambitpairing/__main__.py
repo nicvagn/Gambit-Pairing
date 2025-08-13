@@ -26,13 +26,14 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QStyle
 
 from gambitpairing.core.exceptions import IconException, StyleException
-from gambitpairing.core.utils import root_logger
+from gambitpairing.core.utils import setup_logger
 from gambitpairing.gui.mainwindow import GambitPairingMainWindow
 from gambitpairing.resources.resource_utils import (
-    get_icon_path,
     get_resource_path,
     read_resource_text,
 )
+
+logger = setup_logger(__name__)
 
 
 def main():
@@ -44,7 +45,7 @@ def main():
     # set qt search path for use in styles.qss
     QDir.setSearchPaths("icons", [str(icon_path)])
     exit_code = run_app()
-    logging.info("run_app() exited with code: %s", exit_code)
+    logger.info("run_app() exited with code: %s", exit_code)
     sys.exit(exit_code)
 
 
@@ -67,12 +68,12 @@ def set_application_icon(app: "QApplication") -> None:
     """
     icon_path = get_resource_path("icon.png", subpackage="icons")
 
-    logging.info("icon_path: (%s)\n", icon_path)
+    logger.info("icon_path: (%s)\n", icon_path)
     icon = QIcon(str(icon_path))
 
     if icon and isinstance(icon, QIcon):
         app.setWindowIcon(icon)
-        logging.info("Successfully set application icon")
+        logger.info("Successfully set application icon")
     else:
         raise IconException("icon not a QIcon, icon instance of type(%s)", type(icon))
 
@@ -97,10 +98,10 @@ def set_application_style(app: "QApplication") -> None:
     try:
         style_text = read_resource_text("styles.qss")
 
-        logging.debug("style_text: (%s)\n", style_text)
+        logger.debug("style_text: (%s)\n", style_text)
         #  apply style sheet
         app.setStyleSheet(style_text)
-        logging.debug("set style sheet to:\n%s", style_text)
+        logger.debug("set style sheet to:\n%s", style_text)
 
     except Exception as e:
 
@@ -111,17 +112,13 @@ def set_application_style(app: "QApplication") -> None:
         )
 
 
-def run_app():
+def run_app() -> int:
     """run the gui application
-
-    Parameters
-    ----------
-    app : QtWidgets.QApplication
-       The app to set the icon for
 
     Returns
     -------
-    None
+    int
+        the exit code from app.exec()
 
     Raises
     ------

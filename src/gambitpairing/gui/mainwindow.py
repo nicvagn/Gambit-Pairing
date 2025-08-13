@@ -29,7 +29,7 @@ from gambitpairing.core import utils
 from gambitpairing.core.constants import APP_NAME, APP_VERSION
 from gambitpairing.core.tournament import Tournament
 from gambitpairing.core.updater import Updater
-from gambitpairing.core.utils import root_logger
+from gambitpairing.core.utils import setup_logger
 
 from .crosstable_tab import CrosstableTab
 from .dialogs import (
@@ -44,6 +44,8 @@ from .players_tab import PlayersTab
 from .standings_tab import StandingsTab
 from .tournament_tab import TournamentTab
 from .update_worker import UpdateWorker
+
+logger = setup_logger(__name__)
 
 
 # --- Main Application Window ---
