@@ -35,6 +35,7 @@ from .crosstable_tab import CrosstableTab
 from .dialogs import (
     AboutDialog,
     NewTournamentDialog,
+    PlayerManagementDialog,
     SettingsDialog,
     UpdateDownloadDialog,
     UpdatePromptDialog,
@@ -187,6 +188,9 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             "&Add Player...", self.players_tab.add_player_detailed
         )
         player_menu.addAction(self.add_player_action)
+        self.import_players_fide_action = self._create_action(
+            "Import from &FIDE...", self.import_players_from_fide
+        )
         self.import_players_action = self._create_action(
             "&Import Players from CSV...", self.players_tab.import_players_csv
         )
@@ -196,6 +200,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         player_menu.addSeparator()
         player_menu.addActions(
             [
+                self.import_players_fide_action,
                 self.import_players_action,
                 self.export_players_action,
             ]
@@ -323,6 +328,9 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             tournament_exists and results_recorded > 0
         )
         self.import_players_action.setEnabled(
+            tournament_exists and not tournament_started
+        )
+        self.import_players_fide_action.setEnabled(
             tournament_exists and not tournament_started
         )
         self.export_players_action.setEnabled(
@@ -512,6 +520,33 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
     def update_history_log(self, message: str):
         """Appends a timestamped message to the history log tab."""
         self.history_tab.update_history_log(message)
+
+    def import_players_from_fide(self):
+        if not self.tournament:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "No Tournament",
+                "Please create a tournament before importing players.",
+            )
+            return
+        if len(self.tournament.rounds_pairings_ids) > 0:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Tournament Active",
+                "Cannot import players after the tournament has started.",
+            )
+            return
+
+        # Open PlayerManagementDialog on FIDE tab
+        from .dialogs import PlayerManagementDialog
+
+        dialog = PlayerManagementDialog(parent=self, tournament=self.tournament)
+        dialog.tab_widget.setCurrentIndex(1)  # Switch to FIDE tab
+        if dialog.exec():
+            # Player was added through the integrated dialog
+            self.players_tab.refresh_player_list()
+            self.players_tab.update_ui_state()
+            self.mark_dirty()
 
     def save_tournament(self, save_as=False):
         if not self.tournament:
