@@ -401,7 +401,7 @@ def create_dutch_swiss_pairings(
 ]:
     """
     Create pairings for a Swiss-system round using the FIDE Dutch system.
-    Based on C++ implementation from swisssystems::dutch
+    Optimized for performance with large player pools.
 
     - players: list of Player objects
     - current_round: The 1-based index of the current round.
@@ -410,12 +410,23 @@ def create_dutch_swiss_pairings(
     - allow_repeat_pairing_callback: function(player1, player2) -> bool, called if a repeat pairing is needed
     Returns: (pairings, bye_player, round_pairings_ids, bye_player_id)
     """
+    import time
+
+    start_time = time.time()
+    MAX_COMPUTATION_TIME = 30.0  # Maximum 30 seconds for pairing computation
 
     # Filter out inactive players and ensure pairing numbers are set
     active_players = [p for p in players if p.is_active]
     for idx, p in enumerate(active_players):
         if not hasattr(p, "pairing_number") or p.pairing_number is None:
             p.pairing_number = idx + 1
+
+    # Performance optimization: for very large tournaments (>30 players),
+    # use simplified approach after round 3 to prevent exponential complexity
+    if len(active_players) > 30 and current_round > 3:
+        return _create_simplified_dutch_pairings(
+            active_players, current_round, previous_matches, get_eligible_bye_player
+        )
 
     # Sort players by score (descending), then pairing number (ascending) - FIDE Article 1.2
     sorted_players = sorted(active_players, key=lambda p: (-p.score, p.pairing_number))
@@ -433,6 +444,13 @@ def create_dutch_swiss_pairings(
     # Round 1 special case: top half vs bottom half
     if current_round == 1:
         return _pair_round_one(sorted_players, bye_player, bye_player_id)
+
+    # Check computation time limit
+    if time.time() - start_time > MAX_COMPUTATION_TIME:
+        # Fallback to simple greedy pairing
+        return _create_fallback_pairings(
+            sorted_players, previous_matches, bye_player, bye_player_id
+        )
 
     # Main pairing algorithm for rounds 2+
     return _compute_dutch_pairings(
@@ -820,7 +838,7 @@ def _try_cross_bracket_pairing(
 def _process_homogeneous_bracket(
     bracket: List[Player], previous_matches: Set[frozenset], current_round: int
 ) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
-    """Process homogeneous bracket (all same score) according to FIDE Dutch rules"""
+    """Process homogeneous bracket (all same score) with performance optimization"""
     # If too few players, no pairing
     if len(bracket) <= 1:
         return [], bracket
@@ -833,6 +851,10 @@ def _process_homogeneous_bracket(
     S1 = bracket[:MaxPairs]
     S2 = bracket[MaxPairs:]
 
+    # Performance optimization: limit configurations for large brackets
+    max_configs_to_try = 15 if len(bracket) > 10 else 50
+    configs_tried = 0
+
     # Try multiple configurations to find best pairing
     best_config = None
     best_score = -1
@@ -844,25 +866,38 @@ def _process_homogeneous_bracket(
     if config1 and config1["paired_count"] > best_score:
         best_config = config1
         best_score = config1["paired_count"]
+    configs_tried += 1
 
-    # Configuration 2: Try S2 transpositions (FIDE Article 4.2)
-    s2_transpositions = _generate_s2_transpositions(S2, len(S1))
-    for i, s2_variant in enumerate(s2_transpositions[:10]):  # Limit for performance
-        config = _try_bracket_configuration(
-            S1, s2_variant, previous_matches, current_round, f"s2_trans_{i}"
-        )
-        if config and config["paired_count"] > best_score:
-            best_config = config
-            best_score = config["paired_count"]
-            if best_score == MaxPairs:  # Perfect pairing found
+    # Configuration 2: Try S2 transpositions (limited for performance)
+    if configs_tried < max_configs_to_try and best_score < MaxPairs:
+        s2_transpositions = _generate_s2_transpositions(S2, len(S1))
+        for i, s2_variant in enumerate(
+            s2_transpositions[:10]
+        ):  # Further limit for performance
+            if configs_tried >= max_configs_to_try:
                 break
+            config = _try_bracket_configuration(
+                S1, s2_variant, previous_matches, current_round, f"s2_trans_{i}"
+            )
+            if config and config["paired_count"] > best_score:
+                best_config = config
+                best_score = config["paired_count"]
+                if best_score == MaxPairs:  # Perfect pairing found
+                    break
+            configs_tried += 1
 
-    # Configuration 3: Try resident exchanges (FIDE Article 4.3)
-    if best_score < MaxPairs:
+    # Configuration 3: Try resident exchanges (only for smaller brackets)
+    if (
+        configs_tried < max_configs_to_try
+        and best_score < MaxPairs
+        and len(bracket) <= 16
+    ):
         resident_exchanges = _generate_resident_exchanges(S1, S2)
         for i, (s1_variant, s2_variant) in enumerate(
-            resident_exchanges[:10]
-        ):  # Limit for performance
+            resident_exchanges[:8]
+        ):  # Limit further
+            if configs_tried >= max_configs_to_try:
+                break
             config = _try_bracket_configuration(
                 s1_variant, s2_variant, previous_matches, current_round, f"exchange_{i}"
             )
@@ -871,12 +906,13 @@ def _process_homogeneous_bracket(
                 best_score = config["paired_count"]
                 if best_score == MaxPairs:  # Perfect pairing found
                     break
+            configs_tried += 1
 
     if best_config:
         return best_config["pairings"], best_config["unpaired"]
     else:
-        # Fallback: no valid configuration found
-        return [], bracket
+        # Fallback: use greedy approach for large brackets
+        return _greedy_pair_bracket(bracket, previous_matches)
 
 
 def _try_bracket_configuration(
@@ -932,7 +968,7 @@ def _process_heterogeneous_bracket(
     previous_matches: Set[frozenset],
     current_round: int,
 ) -> Tuple[List[Tuple[Player, Player]], List[Player]]:
-    """Process heterogeneous bracket (mixed scores) according to FIDE Dutch rules"""
+    """Process heterogeneous bracket (mixed scores) with performance optimization"""
 
     # Ensure BSN assignments
     _ensure_bsn_assignments(bracket + resident_players)
@@ -947,7 +983,9 @@ def _process_heterogeneous_bracket(
 
     configurations = []
 
-    # Generate MDP-Pairings and process remainders
+    # Performance limit: restrict number of configurations for large brackets
+    max_configs = 10 if len(bracket) > 12 else 20
+
     # 1. Original configuration
     config = _evaluate_heterogeneous_configuration(
         S1, S2, Limbo, previous_matches, current_round, "original"
@@ -955,19 +993,24 @@ def _process_heterogeneous_bracket(
     if config:
         configurations.append(config)
 
-    # 2. S2 transpositions for MDP-Pairing
-    s2_transpositions = _generate_s2_transpositions(S2, M1)
-    for i, s2_variant in enumerate(s2_transpositions):
-        config = _evaluate_heterogeneous_configuration(
-            S1, s2_variant, Limbo, previous_matches, current_round, f"mdp_trans_{i}"
-        )
-        if config:
-            configurations.append(config)
+    # 2. S2 transpositions for MDP-Pairing (limited)
+    if len(configurations) < max_configs:
+        s2_transpositions = _generate_s2_transpositions(S2, M1)
+        for i, s2_variant in enumerate(s2_transpositions[:5]):  # Limit transpositions
+            if len(configurations) >= max_configs:
+                break
+            config = _evaluate_heterogeneous_configuration(
+                S1, s2_variant, Limbo, previous_matches, current_round, f"mdp_trans_{i}"
+            )
+            if config:
+                configurations.append(config)
 
-    # 3. MDP exchanges between S1 and Limbo (if Limbo exists)
-    if len(Limbo) > 0:
+    # 3. MDP exchanges between S1 and Limbo (only for smaller brackets)
+    if len(configurations) < max_configs and len(Limbo) > 0 and len(bracket) <= 16:
         exchanges = _generate_mdp_exchanges(S1, Limbo)
-        for i, (new_s1, new_limbo) in enumerate(exchanges):
+        for i, (new_s1, new_limbo) in enumerate(exchanges[:5]):  # Limit exchanges
+            if len(configurations) >= max_configs:
+                break
             config = _evaluate_heterogeneous_configuration(
                 new_s1,
                 S2,
@@ -984,7 +1027,8 @@ def _process_heterogeneous_bracket(
     if best_config:
         return best_config["pairings"], best_config["unpaired"] + Limbo
     else:
-        return [], bracket
+        # Fallback: use greedy pairing for large/complex brackets
+        return _greedy_pair_bracket(bracket, previous_matches)
 
 
 def _evaluate_fide_configuration(
@@ -1106,9 +1150,9 @@ def _evaluate_heterogeneous_configuration(
 
 def _generate_s2_transpositions(S2: List[Player], N1: int) -> List[List[Player]]:
     """
-    FIDE Article 4.2: Generate all transpositions of S2 according to exact FIDE rules.
-    All possible transpositions sorted by lexicographic value of first N1 BSNs.
-    Implements precise FIDE Article 4.2.1 and 4.2.2 requirements.
+    FIDE Article 4.2: Generate S2 transpositions with performance optimization.
+    Limits the number of transpositions to prevent exponential explosion for large brackets.
+    Uses heuristic-based selection to find the most promising configurations.
     """
     if not S2:
         return []
@@ -1118,6 +1162,12 @@ def _generate_s2_transpositions(S2: List[Player], N1: int) -> List[List[Player]]
         if not hasattr(player, "bsn") or player.bsn is None:
             player.bsn = i + 1
 
+    # Performance optimization: limit permutations for large brackets
+    # For brackets > 8 players, use heuristic approach instead of full enumeration
+    if len(S2) > 8:
+        return _generate_limited_s2_transpositions(S2, N1)
+
+    # For small brackets, use the original FIDE approach
     # FIDE 4.2.1: Generate all possible transpositions
     all_permutations = list(permutations(S2))
 
@@ -1143,21 +1193,103 @@ def _generate_s2_transpositions(S2: List[Player], N1: int) -> List[List[Player]]
     return unique_transpositions
 
 
+def _generate_limited_s2_transpositions(
+    S2: List[Player], N1: int
+) -> List[List[Player]]:
+    """
+    Generate a limited set of S2 transpositions for performance optimization.
+    Uses heuristic-based approach to find promising configurations without full enumeration.
+    """
+    if not S2:
+        return []
+
+    # Start with the original order
+    transpositions = [S2.copy()]
+
+    # Add some strategic transpositions based on common patterns
+    n = len(S2)
+
+    # Pattern 1: Reverse order
+    if n > 1:
+        transpositions.append(S2[::-1])
+
+    # Pattern 2: Rotate by different amounts (up to 5 rotations for performance)
+    for shift in range(1, min(6, n)):
+        rotated = S2[shift:] + S2[:shift]
+        transpositions.append(rotated)
+
+    # Pattern 3: Swap adjacent pairs
+    for i in range(0, min(n - 1, 10), 2):  # Limit to first 10 positions
+        swapped = S2.copy()
+        swapped[i], swapped[i + 1] = swapped[i + 1], swapped[i]
+        transpositions.append(swapped)
+
+    # Pattern 4: Interleave first and second halves
+    if n >= 4:
+        mid = n // 2
+        first_half = S2[:mid]
+        second_half = S2[mid:]
+        interleaved = []
+        for i in range(min(len(first_half), len(second_half))):
+            interleaved.append(first_half[i])
+            interleaved.append(second_half[i])
+        # Add any remaining players
+        if len(first_half) > len(second_half):
+            interleaved.extend(first_half[len(second_half) :])
+        elif len(second_half) > len(first_half):
+            interleaved.extend(second_half[len(first_half) :])
+        transpositions.append(interleaved)
+
+    # Pattern 5: Score-based reordering (if players have scores)
+    try:
+        score_sorted = sorted(S2, key=lambda p: (-p.score, p.pairing_number))
+        if score_sorted != S2:
+            transpositions.append(score_sorted)
+    except (AttributeError, TypeError):
+        pass  # Skip if score comparison fails
+
+    # Pattern 6: Rating-based reordering
+    try:
+        rating_sorted = sorted(S2, key=lambda p: (-p.rating, p.pairing_number))
+        if rating_sorted != S2:
+            transpositions.append(rating_sorted)
+    except (AttributeError, TypeError):
+        pass  # Skip if rating comparison fails
+
+    # Remove duplicates while preserving order
+    unique_transpositions = []
+    seen_orders = set()
+
+    for trans in transpositions:
+        # Create a signature based on player IDs to detect duplicates
+        signature = tuple(p.id for p in trans)
+        if signature not in seen_orders:
+            seen_orders.add(signature)
+            unique_transpositions.append(trans)
+
+    # Limit total number of transpositions for performance
+    return unique_transpositions[:20]  # Maximum 20 transpositions
+
+
 def _generate_resident_exchanges(
     S1: List[Player], S2: List[Player]
 ) -> List[Tuple[List[Player], List[Player]]]:
     """
-    FIDE Article 4.3: Generate resident exchanges according to FIDE rules.
-    Sorted by: 1) smallest number of exchanged BSNs, 2) comparison criteria
+    FIDE Article 4.3: Generate resident exchanges with performance optimization.
+    Limited to prevent exponential explosion for large brackets.
     """
     if not S1 or not S2:
         return []
 
     exchanges = []
 
+    # Performance limit: restrict exchanges for large brackets
+    max_s1_exchanges = min(len(S1), 8)  # Limit S1 players considered
+    max_s2_exchanges = min(len(S2), 8)  # Limit S2 players considered
+
     # Single-player exchanges (smallest number first - FIDE 4.3.3.1)
-    for i in range(len(S1)):
-        for j in range(len(S2)):
+    for i in range(max_s1_exchanges):
+        for j in range(max_s2_exchanges):
             new_s1 = S1.copy()
             new_s2 = S2.copy()
 
@@ -1184,8 +1316,9 @@ def _generate_resident_exchanges(
                 )
             )
 
-    # Two-player exchanges (if we have enough players)
-    if len(S1) >= 2 and len(S2) >= 2:
+    # Two-player exchanges (limited for performance)
+    # Only do two-player exchanges for very small brackets to avoid combinatorial explosion
+    if len(S1) <= 4 and len(S2) <= 4:
         for i1 in range(len(S1)):
             for i2 in range(i1 + 1, len(S1)):
                 for j1 in range(len(S2)):
@@ -1198,7 +1331,6 @@ def _generate_resident_exchanges(
                         new_s1[i2], new_s2[j2] = new_s2[j2], new_s1[i2]
 
                         # Re-sort
-                        # Re-sort according to Article 1.2 (score, then pairing number)
                         new_s1.sort(key=lambda p: (-p.score, p.pairing_number))
                         new_s2.sort(key=lambda p: (-p.score, p.pairing_number))
 
@@ -1221,6 +1353,10 @@ def _generate_resident_exchanges(
 
     # Sort exchanges by FIDE criteria
     exchanges.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+
+    # Limit total number of exchanges returned for performance
+    max_exchanges = 50  # Reasonable limit
+    exchanges = exchanges[:max_exchanges]
 
     return [(new_s1, new_s2) for _, _, _, _, new_s1, new_s2 in exchanges]
 
@@ -2550,3 +2686,136 @@ def _has_strong_color_preference(player: Player) -> bool:
     white_count = valid_colors.count(W)
     black_count = valid_colors.count(B)
     return abs(white_count - black_count) == 1
+
+
+def _create_simplified_dutch_pairings(
+    players: List[Player],
+    current_round: int,
+    previous_matches: Set[frozenset],
+    get_eligible_bye_player,
+) -> Tuple[
+    List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]
+]:
+    """
+    Simplified Dutch system pairing for large tournaments (performance optimization).
+    Uses a more straightforward approach with limited complexity.
+    """
+    # Group players by score
+    score_groups = _group_players_by_score(players)
+    sorted_scores = sorted(score_groups.keys(), reverse=True)
+
+    pairings = []
+    round_pairings_ids = []
+    unpaired = []
+
+    # Process each score group with simplified approach
+    for score in sorted_scores:
+        group_players = score_groups[score] + unpaired
+        unpaired = []
+
+        if len(group_players) <= 1:
+            unpaired.extend(group_players)
+            continue
+
+        # Simple pairing within group: pair adjacent players by rating
+        group_players.sort(key=lambda p: (-p.rating, p.pairing_number))
+
+        # Pair players greedily
+        i = 0
+        while i + 1 < len(group_players):
+            p1, p2 = group_players[i], group_players[i + 1]
+
+            # Check if they can be paired
+            if frozenset({p1.id, p2.id}) not in previous_matches:
+                white, black = _assign_colors_dutch_improved(p1, p2, current_round)
+                pairings.append((white, black))
+                round_pairings_ids.append((white.id, black.id))
+                i += 2
+            else:
+                # Try to find another opponent for p1
+                paired = False
+                for j in range(i + 2, len(group_players)):
+                    p3 = group_players[j]
+                    if frozenset({p1.id, p3.id}) not in previous_matches:
+                        white, black = _assign_colors_dutch_improved(
+                            p1, p3, current_round
+                        )
+                        pairings.append((white, black))
+                        round_pairings_ids.append((white.id, black.id))
+                        # Remove p3 from the list
+                        group_players.pop(j)
+                        paired = True
+                        break
+
+                if not paired:
+                    unpaired.append(p1)
+
+                i += 1
+
+        # Add any remaining player to unpaired
+        if i < len(group_players):
+            unpaired.append(group_players[i])
+
+    # Handle any remaining unpaired players with minimal constraints
+    final_pairings = _pair_remaining_players(unpaired, previous_matches)
+    pairings.extend(final_pairings)
+    round_pairings_ids.extend([(p[0].id, p[1].id) for p in final_pairings])
+
+    return pairings, None, round_pairings_ids, None
+
+
+def _create_fallback_pairings(
+    players: List[Player],
+    previous_matches: Set[frozenset],
+    bye_player: Optional[Player],
+    bye_player_id: Optional[str],
+) -> Tuple[
+    List[Tuple[Player, Player]], Optional[Player], List[Tuple[str, str]], Optional[str]
+]:
+    """
+    Emergency fallback pairing when computation time is exceeded.
+    Uses the simplest possible approach to ensure pairing completion.
+    """
+    pairings = []
+    round_pairings_ids = []
+    remaining = players.copy()
+
+    # Sort by score and rating for best possible matchups
+    remaining.sort(key=lambda p: (-p.score, -p.rating, p.pairing_number))
+
+    # Greedy pairing with minimal constraints
+    while len(remaining) >= 2:
+        player1 = remaining.pop(0)
+        best_opponent = None
+        best_idx = -1
+
+        # Find the best available opponent (prefer same score, avoid repeats if possible)
+        for i, player2 in enumerate(remaining):
+            # Prefer players with same score
+            if player2.score == player1.score:
+                # Check if they haven't played before
+                if frozenset({player1.id, player2.id}) not in previous_matches:
+                    best_opponent = player2
+                    best_idx = i
+                    break
+
+        # If no same-score opponent available, find any opponent
+        if best_opponent is None:
+            for i, player2 in enumerate(remaining):
+                if frozenset({player1.id, player2.id}) not in previous_matches:
+                    best_opponent = player2
+                    best_idx = i
+                    break
+
+        # If still no opponent (all have played before), just pair with first available
+        if best_opponent is None and remaining:
+            best_opponent = remaining[0]
+            best_idx = 0
+
+        if best_opponent is not None:
+            remaining.pop(best_idx)
+            white, black = _assign_colors_dutch_improved(player1, best_opponent, 99)
+            pairings.append((white, black))
+            round_pairings_ids.append((white.id, black.id))
+
+    return pairings, bye_player, round_pairings_ids, bye_player_id
