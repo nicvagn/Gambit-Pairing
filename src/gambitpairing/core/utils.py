@@ -27,7 +27,7 @@ from PyQt6.QtCore import QDateTime
 from PyQt6.QtWidgets import QApplication
 
 # the logger format used
-LOG_FMT = "%(asctime)s |:| LEVEL: %(levelname)s |:| FILE PATH: %(pathname)s |:| FUNCTION/METHOD: %(funcName)s %(message)s |:| LINE NO.: %(lineno)d |:| PROCESS ID: %(process)d |:| THREAD ID: %(thread)d"
+LOG_FMT = "LVL: %(levelname)s | FILE PATH: %(pathname)s | FUN: %(funcName)s | msg: %(message)s | ln#:%(lineno)d"
 
 
 # --- Logging Setup ---

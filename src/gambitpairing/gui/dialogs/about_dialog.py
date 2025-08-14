@@ -16,17 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import sys
-
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QIcon, QPixmap
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
     QSizePolicy,
     QTabWidget,
     QTextEdit,
@@ -34,9 +30,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from gambitpairing.core.constants import APP_NAME, APP_VERSION
+from gambitpairing import APP_NAME, APP_VERSION
 from gambitpairing.resources.resource_utils import (
-    get_icon_path,
     get_resource_path,
     read_resource_text,
 )
@@ -48,7 +43,7 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f"About {APP_NAME}")
-        self.setMinimumSize(420, 360)
+        self.setMinimumSize(320, 460)
         self.setModal(True)
         self._setup_ui()
 
@@ -61,11 +56,11 @@ class AboutDialog(QDialog):
 
         Notes
         -----
-        Sets minimum dialog size to 400x300 pixels and default size to 450x350 pixels.
+        Sets minimum dialog size to 400x600 pixels and default size to 450x350 pixels. #
         Uses zero margins on main layout for edge-to-edge tab display.
         """
         # Set minimum size for the dialog
-        self.setMinimumSize(400, 300)
+        self.setMinimumSize(300, 400)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -73,6 +68,16 @@ class AboutDialog(QDialog):
 
         # Create tab widget
         tab_widget = QTabWidget()
+        tab_widget.setStyleSheet(
+            """
+            QTabBar {
+                qproperty-expanding: true;
+            }
+            QTabBar::tab {
+                min-width: 80px;
+            }
+        """
+        )
         tab_widget.addTab(self._create_about_tab(), "About")
         tab_widget.addTab(self._create_license_tab(), "License")
 
@@ -115,21 +120,22 @@ class AboutDialog(QDialog):
         """
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(25)
+        layout.setContentsMargins(10, 20, 10, 10)
+        layout.setSpacing(15)
 
         # Logo/Icon
         logo_label = QLabel()
         icon_path = get_resource_path("icon.png", subpackage="icons")
         logo_pixmap = QPixmap(str(icon_path))
         # Scale to fit within 300x300 maximum
-        max_size = 300
+        max_size = 160
         scaled_pixmap = logo_pixmap.scaled(
             max_size,
             max_size,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation,
         )
+
         logo_label.setPixmap(scaled_pixmap)
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(logo_label)
@@ -137,30 +143,26 @@ class AboutDialog(QDialog):
         # App name and version
         app_name = QLabel("Gambit Pairing")
         app_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        app_name.setStyleSheet(
-            "font-size: 18px; font-weight: bold; margin-bottom: 10px;"
-        )
+        app_name.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(app_name)
 
-        version_label = QLabel("Chess Tournament Manager")
+        version_label = QLabel(f"{APP_NAME} : {APP_VERSION}")
         version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        version_label.setStyleSheet(
-            "font-size: 12px; color: gray; margin-bottom: 20px;"
-        )
+        version_label.setStyleSheet("font-size: 9px; color: dimgrey;")
         layout.addWidget(version_label)
 
         # Description
         description = QLabel("Fast, fair and modern tournament management")
         description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         description.setWordWrap(True)
-        description.setStyleSheet("font-size: 13px; line-height: 1.4;")
+        description.setStyleSheet("font-size: 10px; line-height: 1.4;")
         layout.addWidget(description)
 
         # Support info
         support_text = QLabel("For support, join our <a href='#'>Discord community</a>")
         support_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         support_text.setOpenExternalLinks(True)
-        support_text.setStyleSheet("font-size: 12px; margin-top: 20px;")
+        support_text.setStyleSheet("font-size: 10px; margin-top: 10px;")
         layout.addWidget(support_text)
 
         # Add stretch to center content vertically
@@ -182,13 +184,12 @@ class AboutDialog(QDialog):
         Features:
         - Read-only QTextEdit with MIT License text
         - Monospace font for legal document formatting
-        - Light gray background with border styling
         - Scrollable for longer license texts
-        - 20px margins around the text area
+        - margins around the text area
         """
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(10, 20, 10, 10)
 
         # License text in a scroll-able area
         license_text = QTextEdit()
@@ -200,10 +201,8 @@ class AboutDialog(QDialog):
             QTextEdit {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                padding: 10px;
                 font-family: monospace;
-                font-size: 11px;
-                background-color: #f9f9f9;
+                font-size: 7px;
             }
         """
         )

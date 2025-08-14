@@ -1,3 +1,5 @@
+"""Gambit Pairing entry point"""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -14,16 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-import os
 import sys
 from pathlib import Path
 
-from importlib_resources import as_file, files
+from importlib_resources import files
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QDir
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QStyle
 
 from gambitpairing.core.exceptions import IconException, StyleException
 from gambitpairing.core.utils import setup_logger
@@ -40,16 +39,15 @@ def main():
     """Entry point"""
 
     # define aliases used in styles.qss
-
-    icon_path = Path(files("gambitpairing.resources.icons"))
+    icon_path = str(Path(str(files("gambitpairing.resources.icons"))))
     # set qt search path for use in styles.qss
-    QDir.setSearchPaths("icons", [str(icon_path)])
+    QDir.setSearchPaths("icons", [icon_path])
     exit_code = run_app()
     logger.info("run_app() exited with code: %s", exit_code)
     sys.exit(exit_code)
 
 
-def set_application_icon(app: "QApplication") -> None:
+def set_application_icon(app: QtWidgets.QApplication) -> None:
     """Set application icon
 
     Parameters
@@ -78,7 +76,7 @@ def set_application_icon(app: "QApplication") -> None:
         raise IconException("icon not a QIcon, icon instance of type(%s)", type(icon))
 
 
-def set_application_style(app: "QApplication") -> None:
+def set_application_style(app: QtWidgets.QApplication) -> None:
     """Set application style
 
     Parameters
@@ -95,6 +93,8 @@ def set_application_style(app: "QApplication") -> None:
     StyleException
         When style fails to be set
     """
+    # to ensure it is bound, or mypy bitches
+    style_text = ""
     try:
         style_text = read_resource_text("styles.qss")
 
@@ -104,7 +104,6 @@ def set_application_style(app: "QApplication") -> None:
         logger.debug("set style sheet to:\n%s", style_text)
 
     except Exception as e:
-
         raise StyleException(
             "Exception (%s)\n raised when setting app style. style_text: \n %s",
             e,
@@ -147,4 +146,4 @@ def run_app() -> int:
 if __name__ == "__main__":
     main()
 
-#  LocalWords:  IconException QIcon
+#  LocalWords:  IconException QIcon WindowsVista

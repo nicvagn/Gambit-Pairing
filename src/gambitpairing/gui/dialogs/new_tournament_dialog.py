@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
 
 from gambitpairing.core.constants import DEFAULT_TIEBREAK_SORT_ORDER, TIEBREAK_NAMES

@@ -54,15 +54,8 @@ def get_resource_path(resource_name: str, subpackage: str = "") -> Path:
         package_path = "gambitpairing.resources"
 
     try:
-        # Modern approach (Python 3.9+)
-        if hasattr(resources, "files"):
-            resource_files = resources.files(package_path)
-            return resource_files / resource_name
-
-        # Fallback for older Python versions
-        else:
-            with resources.path(package_path, resource_name) as resource_path:
-                return resource_path
+        with resources.path(package_path, resource_name) as resource_path:
+            return resource_path
 
     except (ModuleNotFoundError, FileNotFoundError) as e:
         raise FileNotFoundError(
