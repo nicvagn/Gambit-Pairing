@@ -13,17 +13,17 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.setMinimumWidth(350)
         self.current_tiebreak_order = list(DEFAULT_TIEBREAK_SORT_ORDER)
 
-        layout = QtWidgets.QVBoxLayout(self)
+        self.common_layout = QtWidgets.QVBoxLayout(self)
 
-        layout.setSpacing(15)
+        self.common_layout.setSpacing(15)
 
         # setup general to all options
         general_group = self._setup_general_group()
-        layout.addWidget(general_group)
+        self.common_layout.addWidget(general_group)
         tiebreak_group = self._setup_tiebreak_group()
-        layout.addWidget(tiebreak_group)
+        self.common_layout.addWidget(tiebreak_group)
         pairing_group = self._setup_pairing_system_select_group()
-        layout.addWidget(pairing_group)
+        self.common_layout.addWidget(pairing_group)
 
         # -------------------------
         # Ensure all group boxes have same minimum width
@@ -33,13 +33,13 @@ class NewTournamentDialog(QtWidgets.QDialog):
 
         # -------------------------
         # Dialog Buttons
-        self.buttons = self._setup_button_group(layout)
+        self.buttons = self._setup_button_group()
 
-        layout.addWidget(self.buttons)
+        self.common_layout.addWidget(self.buttons)
 
         # -----SET LAYOUT----------
         # I think this is the proper way
-        self.setLayout(layout)
+        self.setLayout(self.common_layout)
         # -------------------------
         # Pairing system change handling
         self.pairing_combo.currentIndexChanged.connect(self.on_pairing_system_changed)
@@ -297,7 +297,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
 
     def on_pairing_system_changed(self):
         key = self.pairing_combo.currentData()
-        round_spin_layout = self.layout.itemAt(0).widget().layout()
+        round_spin_layout = self.common_layout.itemAt(0).widget().layout()
 
         if key == "round_robin":
             # For round robin, rounds = players - 1, hide the input
