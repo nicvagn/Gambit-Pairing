@@ -17,8 +17,50 @@ class NewTournamentDialog(QtWidgets.QDialog):
 
         layout.setSpacing(15)
 
+        raise NotImplementedError("I need to finish refactoring")
+        # setup general to all options
+        general_group = self._setup_general_group()
+        layout.addWidget(general_group)
+        tiebreak_group = self._setup_tiebreak_group
+        layout.addWidget(tiebreak_group)
+        pairing_group = self._setup_pairing_system_select_group()
+        layout.addWidget(pairing_group)
+
         # -------------------------
-        # General Settings
+        # Ensure all group boxes have same minimum width
+        MIN_GROUP_WIDTH = 350
+        for group in (general_group, tiebreak_group, pairing_group):
+            group.setMinimumWidth(MIN_GROUP_WIDTH)
+
+        # -------------------------
+        # Dialog Buttons
+        self.buttons = self._build_button_box()
+
+        layout.addWidget(self.buttons)
+
+        # -----SET LAYOUT----------
+        # I think this is the proper way
+        self.setLayout(layout)
+        # -------------------------
+        # Pairing system change handling
+        self.pairing_combo.currentIndexChanged.connect(self.on_pairing_system_changed)
+        # Track player count for round robin (default: 5)
+        self.player_count = 5
+        self.rounds_spin.valueChanged.connect(self.on_rounds_changed)
+        self.on_pairing_system_changed()  # Set initial state
+
+    def _setup_general_group(self) -> QtWidgets.QGroupBox:
+        """Setup layout options that are common to all tournament types
+
+        Side Effects
+        ------------
+        set some default widget ranges and values
+
+        Returns
+        -------
+        QGroupBox
+            containing the general common layout
+        """
         general_group = QtWidgets.QGroupBox("General")
         form_layout = QtWidgets.QFormLayout(general_group)
         self.name_edit = QtWidgets.QLineEdit("My Swiss Tournament")
@@ -27,10 +69,21 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.rounds_spin.setValue(5)
         form_layout.addRow("Tournament Name:", self.name_edit)
         form_layout.addRow("Number of Rounds:", self.rounds_spin)
-        layout.addWidget(general_group)
+        return general_group
 
-        # -------------------------
-        # Tiebreak Order Settings
+    def _setup_tiebreak_group(self) -> QtWidgets.QGroupBox:
+        """initialize the tiebreak order setting part of the gui
+
+        Side Effects
+        ------------
+        set some Widget strings
+
+        Returns
+        -------
+        QGroupBox
+            containing the general common layout
+        """
+
         tiebreak_group = QtWidgets.QGroupBox("Tiebreak Order")
         tiebreak_layout = QtWidgets.QHBoxLayout(tiebreak_group)
         self.tiebreak_list = QtWidgets.QListWidget()
@@ -53,8 +106,21 @@ class NewTournamentDialog(QtWidgets.QDialog):
         move_button_layout.addWidget(btn_down)
         move_button_layout.addStretch()
         tiebreak_layout.addLayout(move_button_layout)
-        layout.addWidget(tiebreak_group)
 
+        return tiebreak_group
+
+    def _setup_pairing_system_select_group(self) -> QtWidgets.QGroupBox:
+        """initialize pairing system sector widget
+
+        Side Effects
+        ------------
+        set some Widget strings
+
+        Returns
+        -------
+        QGroupBox
+            containing the general common layout
+        """
         # -------------------------
         # Pairing System Selection
         pairing_group = QtWidgets.QGroupBox("Pairing System")
@@ -76,17 +142,19 @@ class NewTournamentDialog(QtWidgets.QDialog):
         info_btn.clicked.connect(self.show_pairing_info)
         pairing_layout.addWidget(info_btn)
 
-        layout.addWidget(pairing_group)
+    def _setup_button_group(self) -> QtWidgets.QDialogButtonBox:
+        """Setup group  containing: OK and Cancel
 
-        # -------------------------
-        # Ensure all group boxes have same minimum width
-        MIN_GROUP_WIDTH = 350
-        for group in (general_group, tiebreak_group, pairing_group):
-            group.setMinimumWidth(MIN_GROUP_WIDTH)
+        Side Effects
+        ------------
+        set size policy of created buttons
 
-        # -------------------------
-        # Dialog Buttons
-        self.buttons = QtWidgets.QDialogButtonBox(
+        Returns
+        -------
+        QDialogButtonBox
+            containing the general common layout
+        """
+        QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok
             | QtWidgets.QDialogButtonBox.StandardButton.Cancel
         )
@@ -96,19 +164,6 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.buttons.setMinimumHeight(40)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
-        layout.addWidget(self.buttons)
-
-        # -----SET LAYOUT----------
-        # I think this is the proper way
-        self.setLayout(layout)
-        raise NotImplementedError("I need to finnish refactoring")
-        # -------------------------
-        # Pairing system change handling
-        self.pairing_combo.currentIndexChanged.connect(self.on_pairing_system_changed)
-        # Track player count for round robin (default: 5)
-        self.player_count = 5
-        self.rounds_spin.valueChanged.connect(self.on_rounds_changed)
-        self.on_pairing_system_changed()  # Set initial state
 
     def populate_tiebreak_list(self):
         self.tiebreak_list.clear()
@@ -268,4 +323,4 @@ class NewTournamentDialog(QtWidgets.QDialog):
             self.player_count = value + 1  # For UI consistency
 
 
-#  LocalWords:  swiss
+#  LocalWords:  swiss QGroupBox QDialogButtonBox
