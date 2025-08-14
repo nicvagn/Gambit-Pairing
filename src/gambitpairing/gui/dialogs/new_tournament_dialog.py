@@ -17,11 +17,10 @@ class NewTournamentDialog(QtWidgets.QDialog):
 
         layout.setSpacing(15)
 
-        raise NotImplementedError("I need to finish refactoring")
         # setup general to all options
         general_group = self._setup_general_group()
         layout.addWidget(general_group)
-        tiebreak_group = self._setup_tiebreak_group
+        tiebreak_group = self._setup_tiebreak_group()
         layout.addWidget(tiebreak_group)
         pairing_group = self._setup_pairing_system_select_group()
         layout.addWidget(pairing_group)
@@ -34,7 +33,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
 
         # -------------------------
         # Dialog Buttons
-        self.buttons = self._build_button_box()
+        self.buttons = self._setup_button_group(layout)
 
         layout.addWidget(self.buttons)
 
@@ -142,30 +141,36 @@ class NewTournamentDialog(QtWidgets.QDialog):
         info_btn.clicked.connect(self.show_pairing_info)
         pairing_layout.addWidget(info_btn)
 
+        pairing_group.setLayout(pairing_layout)
+
+        return pairing_group
+
     def _setup_button_group(self) -> QtWidgets.QDialogButtonBox:
-        """Setup group  containing: OK and Cancel
+        """Setup group containing: OK and Cancel
 
         Side Effects
         ------------
-        set size policy of created buttons
+        Set size policy of created buttons
 
         Returns
         -------
         QDialogButtonBox
             containing the general common layout
         """
-        QtWidgets.QDialogButtonBox(
+        button_box = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok
             | QtWidgets.QDialogButtonBox.StandardButton.Cancel
         )
-        self.buttons.setSizePolicy(
+        button_box.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Maximum
         )
-        self.buttons.setMinimumHeight(40)
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        button_box.setMinimumHeight(40)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
 
-    def populate_tiebreak_list(self):
+        return button_box
+
+    def populate_tiebreak_list(self) -> None:
         self.tiebreak_list.clear()
         for tb_key in self.current_tiebreak_order:
             display_name = TIEBREAK_NAMES.get(tb_key, tb_key)
@@ -173,31 +178,32 @@ class NewTournamentDialog(QtWidgets.QDialog):
             item.setData(Qt.ItemDataRole.UserRole, tb_key)
             self.tiebreak_list.addItem(item)
 
-    def move_tiebreak_up(self):
+    def move_tiebreak_up(self) -> None:
         current_row = self.tiebreak_list.currentRow()
         if current_row > 0:
             item = self.tiebreak_list.takeItem(current_row)
             self.tiebreak_list.insertItem(current_row - 1, item)
             self.tiebreak_list.setCurrentRow(current_row - 1)
 
-    def move_tiebreak_down(self):
+    def move_tiebreak_down(self) -> None:
         current_row = self.tiebreak_list.currentRow()
         if current_row < self.tiebreak_list.count() - 1:
             item = self.tiebreak_list.takeItem(current_row)
             self.tiebreak_list.insertItem(current_row + 1, item)
             self.tiebreak_list.setCurrentRow(current_row + 1)
 
-    def update_order_from_list(self):
+    def update_order_from_list(self) -> None:
         self.current_tiebreak_order = [
             self.tiebreak_list.item(i).data(Qt.ItemDataRole.UserRole)
             for i in range(self.tiebreak_list.count())
         ]
 
-    def accept(self):
+    def accept(self) -> None:
         self.update_order_from_list()
         super().accept()
 
-    def show_pairing_info(self):
+    def show_pairing_info(self) -> None:
+        """show pairing system information"""
         info = {
             "dutch_swiss": {
                 "title": "Dutch System",
@@ -291,12 +297,12 @@ class NewTournamentDialog(QtWidgets.QDialog):
 
     def on_pairing_system_changed(self):
         key = self.pairing_combo.currentData()
+        round_spin_layout = self.layout.itemAt(0).widget().layout()
+
         if key == "round_robin":
             # For round robin, rounds = players - 1, hide the input
             self.rounds_spin.hide()
-            label = (
-                self.layout.itemAt(0).widget().layout().labelForField(self.rounds_spin)
-            )
+            label = round_spin_layout.labelForField(self.rounds_spin)
             if label:
                 label.hide()
             self.rounds_spin.setToolTip(
@@ -305,22 +311,20 @@ class NewTournamentDialog(QtWidgets.QDialog):
             self.rounds_spin.setValue(max(1, self.player_count - 1))
         else:
             self.rounds_spin.show()
-            label = (
-                self.layout.itemAt(0).widget().layout().labelForField(self.rounds_spin)
-            )
+            label = round_spin_layout.labelForField(self.rounds_spin)
             if label:
                 label.show()
-            self.rounds_spin.setToolTip("")
+            self.rounds_spin.setToolTip(None)
 
-    def set_player_count(self, count: int):
+    def set_player_count(self, count: int) -> None:
         self.player_count = count
         if self.pairing_combo.currentData() == "round_robin":
             self.rounds_spin.setValue(max(1, count - 1))
 
-    def on_rounds_changed(self, value):
+    def on_rounds_changed(self, value) -> None:
         # Optionally, update player count if not round robin
         if self.pairing_combo.currentData() != "round_robin":
             self.player_count = value + 1  # For UI consistency
 
 
-#  LocalWords:  swiss QGroupBox QDialogButtonBox
+#  LocalWords:  swiss QGroupBox QDialogButtonBox fide desc colors
