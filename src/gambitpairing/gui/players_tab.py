@@ -25,7 +25,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 
 from gambitpairing.core.player import Player
 
-from .dialogs import PlayerDetailDialog
+from .dialogs import PlayerManagementDialog
 from .notournament_placeholder import NoTournamentPlaceholder, PlayerPlaceholder
 
 
@@ -194,7 +194,9 @@ class PlayersTab(QtWidgets.QWidget):
         action = menu.exec(self.table_players.mapToGlobal(point))
 
         if action == edit_action:
-            dialog = PlayerDetailDialog(self, player_data=player.to_dict())
+            dialog = PlayerManagementDialog(
+                self, player_data=player.to_dict(), tournament=self.tournament
+            )
             if dialog.exec():
                 data = dialog.get_player_data()
                 if not data["name"]:
@@ -220,6 +222,14 @@ class PlayersTab(QtWidgets.QWidget):
                 player.email = data.get("email")
                 player.club = data.get("club")
                 player.federation = data.get("federation")
+                # Update FIDE data if provided
+                if data.get("fide_id"):
+                    player.fide_id = data.get("fide_id")
+                    player.fide_title = data.get("fide_title")
+                    player.fide_standard = data.get("fide_standard")
+                    player.fide_rapid = data.get("fide_rapid")
+                    player.fide_blitz = data.get("fide_blitz")
+                    player.birth_year = data.get("birth_year")
 
                 self.update_player_table_row(player)
                 self.history_message.emit(f"Player '{player.name}' details updated.")
@@ -272,7 +282,7 @@ class PlayersTab(QtWidgets.QWidget):
             )
             return
 
-        dialog = PlayerDetailDialog(self)
+        dialog = PlayerManagementDialog(self, tournament=self.tournament)
         if dialog.exec():
             data = dialog.get_player_data()
             if not data["name"]:
@@ -294,6 +304,12 @@ class PlayersTab(QtWidgets.QWidget):
                 federation=data["federation"],
                 gender=data.get("gender"),
                 dob=data.get("dob"),
+                fide_id=data.get("fide_id"),
+                fide_title=data.get("fide_title"),
+                fide_standard=data.get("fide_standard"),
+                fide_rapid=data.get("fide_rapid"),
+                fide_blitz=data.get("fide_blitz"),
+                birth_year=data.get("birth_year"),
             )
             self.tournament.players[new_player.id] = new_player
             self.add_player_to_table(new_player)
@@ -374,6 +390,21 @@ class PlayersTab(QtWidgets.QWidget):
             tooltip_parts.append(f"Club: {player.club}")
         if player.federation:
             tooltip_parts.append(f"Federation: {player.federation}")
+        # FIDE metadata if present
+        if getattr(player, "fide_id", None):
+            tooltip_parts.append(f"FIDE ID: {player.fide_id}")
+        if getattr(player, "fide_title", None):
+            tooltip_parts.append(f"Title: {player.fide_title}")
+        if getattr(player, "fide_standard", None) is not None:
+            tooltip_parts.append(f"Std: {player.fide_standard}")
+        if getattr(player, "fide_rapid", None) is not None:
+            tooltip_parts.append(f"Rapid: {player.fide_rapid}")
+        if getattr(player, "fide_blitz", None) is not None:
+            tooltip_parts.append(f"Blitz: {player.fide_blitz}")
+        if getattr(player, "birth_year", None) is not None:
+            tooltip_parts.append(f"Birth Year: {player.birth_year}")
+        if getattr(player, "gender", None):
+            tooltip_parts.append(f"Gender: {player.gender}")
         tooltip = "\n".join(tooltip_parts)
         name_item.setToolTip(tooltip)
         rating_item.setToolTip(tooltip)
