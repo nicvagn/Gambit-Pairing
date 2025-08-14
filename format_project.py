@@ -73,11 +73,15 @@ def main():
             sys.exit(1)
     else:
         print("No dev dependencies found")
-
-    # Run formatters - FIXED: Use lists instead of strings
-    run_command([sys.executable, "-m", "isort", "src"], "Formatting with isort")
+    # Run formatters - exit if they fail
+    if not run_command([sys.executable, "-m", "isort", "src"], "Formatting with isort"):
+        print("isort failed")
+        sys.exit(1)
     print("------- isort ran ----------")
-    run_command([sys.executable, "-m", "black", "src"], "Formatting with black")
+
+    if not run_command([sys.executable, "-m", "black", "src"], "Formatting with black"):
+        print("black failed")
+        sys.exit(1)
     print("------- black ran ----------")
 
 

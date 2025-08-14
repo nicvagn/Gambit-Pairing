@@ -1,6 +1,6 @@
 """Types used in Gambit Pairing"""
 
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import List, Optional, Tuple
 
 from gambitpairing.core.player import Player
 

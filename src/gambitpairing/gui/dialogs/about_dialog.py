@@ -16,40 +16,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import sys
-
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPixmap
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
+    QSizePolicy,
     QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
-from gambitpairing.core.constants import APP_NAME, APP_VERSION
-
-
-def resource_path(relative_path: str) -> str:
-    """Get absolute path to resource, works for dev and for cx_Freeze"""
-    if getattr(sys, "frozen", False):
-        # The application is frozen
-        base_path = os.path.dirname(sys.executable)
-    else:
-        # The application is not frozen - go up from dialogs dir to project root
-        # Current file is in src/gambitpairing/gui/dialogs/
-        # So we need to go up 4 levels to reach project root
-        base_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
-        )
-
-    return os.path.join(base_path, relative_path)
+from gambitpairing import APP_NAME, APP_VERSION
+from gambitpairing.resources.resource_utils import (
+    get_resource_path,
+    read_resource_text,
+)
 
 
 class AboutDialog(QDialog):
@@ -58,22 +43,48 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f"About {APP_NAME}")
-        self.setMinimumSize(320, 260)
-        self.resize(340, 280)
+        self.setMinimumSize(320, 460)
         self.setModal(True)
         self._setup_ui()
 
     def _setup_ui(self):
-        """Set up the modern tabbed user interface."""
+        """
+        Set up the modern tabbed user interface.
+
+        Creates a tabbed dialog with About and License tabs, along with a Close button.
+        Sets appropriate sizing, layout, and styling for all components.
+
+        Notes
+        -----
+        Sets minimum dialog size to 400x600 pixels and default size to 450x350 pixels. #
+        Uses zero margins on main layout for edge-to-edge tab display.
+        """
+        # Set minimum size for the dialog
+        self.setMinimumSize(300, 400)
+
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
         # Create tab widget
         tab_widget = QTabWidget()
+        tab_widget.setStyleSheet(
+            """
+            QTabBar {
+                qproperty-expanding: true;
+            }
+            QTabBar::tab {
+                min-width: 80px;
+            }
+        """
+        )
         tab_widget.addTab(self._create_about_tab(), "About")
         tab_widget.addTab(self._create_license_tab(), "License")
 
+        # Make sure tab widget expands properly
+        tab_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         main_layout.addWidget(tab_widget)
 
         # Button layout
@@ -84,156 +95,119 @@ class AboutDialog(QDialog):
         ok_button = QPushButton("Close")
         ok_button.clicked.connect(self.accept)
         ok_button.setMinimumWidth(100)
-        ok_button.setStyleSheet("font-weight: 500;")
+        ok_button.setStyleSheet("font-weight: 500; padding: 8px 16px;")
         button_layout.addWidget(ok_button)
 
         main_layout.addLayout(button_layout)
 
-    def _create_about_tab(self) -> QWidget:
-        """Create the About tab with app information."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setSpacing(10)
-        layout.setContentsMargins(16, 12, 16, 8)
+    def _create_about_tab(self):
+        """
+        Create the About tab widget with application information.
 
-        # Subtle separator line
-        sep1 = QLabel()
-        sep1.setFixedHeight(1)
-        sep1.setStyleSheet("background: #e3e7ee; margin: 8px 0 8px 0;")
+        Returns
+        -------
+        QWidget
+            A widget containing centered application information including name,
+            description, and support links.
 
-        # Load and display about image
-        self._add_about_image(layout)
+        Notes
+        -----
+        The tab contains:
+        - Application name and subtitle
+        - Brief description
+        - Discord community support link
+        - All content is vertically centered with appropriate spacing
+        """
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(10, 20, 10, 10)
+        layout.setSpacing(15)
 
-        # App name and version in a single concise header
-        header_label = QLabel(
-            f"<span style='font-size:18pt; font-weight:700; color:#2d5a27;'>{APP_NAME}</span> <span style='font-size:11pt; color:#6b7280; font-weight:400;'>v{APP_VERSION}</span>"
+        # Logo/Icon
+        logo_label = QLabel()
+        icon_path = get_resource_path("icon.png", subpackage="icons")
+        logo_pixmap = QPixmap(str(icon_path))
+        # Scale to fit within 300x300 maximum
+        max_size = 160
+        scaled_pixmap = logo_pixmap.scaled(
+            max_size,
+            max_size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
         )
-        header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        header_label.setStyleSheet("margin-bottom: 4px;")
-        layout.addWidget(header_label)
 
-        # Subtitle
-        subtitle_label = QLabel("Chess Tournament Manager")
-        subtitle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        subtitle_label.setStyleSheet(
-            "color: #8b5c2b; font-size:9pt; font-style:italic; margin-bottom: 10px;"
-        )
-        layout.addWidget(subtitle_label)
+        logo_label.setPixmap(scaled_pixmap)
+        logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(logo_label)
 
-        layout.addWidget(sep1)
-        # Subtle separator after description
-        sep2 = QLabel()
-        sep2.setFixedHeight(1)
-        sep2.setStyleSheet("background: #e3e7ee; margin: 8px 0 8px 0;")
+        # App name and version
+        app_name = QLabel("Gambit Pairing")
+        app_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        app_name.setStyleSheet("font-size: 18px; font-weight: bold;")
+        layout.addWidget(app_name)
 
-        # Description block
-        description_text = (
-            "<div style='color:#23272f; font-size:10pt; line-height:1.5; padding:12px 10px; background:#f9fafb; border-radius:8px; border:1px solid #e3e7ee;'>"
-            "Fast, fair, and modern tournament management.<br>"
-            "Open source and cross-platform<br>"
-            "<span style='font-weight:600; color:#2d5a27;'>Copyright © 2025 Gambit Group</span><br>"
-            "Developed by <span style='font-weight:600;'>Chickaboo</span> and <span style='font-weight:600;'>Nic</span>"
-            "</div>"
-        )
-        description_label = QLabel(description_text)
-        description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        description_label.setWordWrap(True)
-        description_label.setStyleSheet("margin-bottom: 8px;")
-        layout.addWidget(description_label)
-        layout.addWidget(sep2)
+        version_label = QLabel(f"{APP_NAME} : {APP_VERSION}")
+        version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        version_label.setStyleSheet("font-size: 9px; color: dimgrey;")
+        layout.addWidget(version_label)
 
-        # Support links block
-        support_text = (
-            "<div style='color:#6b7280; font-size:9pt; padding:8px; background:#fff; border-radius:7px; border:1px solid #e3e7ee;'>"
-            "For support, join our <a href='https://discord.gg/eEnnetMDfr' style='color:#2d5a27; font-weight:600; text-decoration:none;'>Discord community</a><br>"
-            "or visit <a href='https://www.chickaboo.net/contact' style='color:#2d5a27; font-weight:600; text-decoration:none;'>chickaboo.net/contact</a>"
-            "</div>"
-        )
-        support_label = QLabel(support_text)
-        support_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        support_label.setOpenExternalLinks(True)
-        support_label.setWordWrap(True)
-        support_label.setStyleSheet("margin-bottom: 4px;")
-        layout.addWidget(support_label)
+        # Description
+        description = QLabel("Fast, fair and modern tournament management")
+        description.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        description.setWordWrap(True)
+        description.setStyleSheet("font-size: 10px; line-height: 1.4;")
+        layout.addWidget(description)
 
+        # Support info
+        support_text = QLabel("For support, join our <a href='#'>Discord community</a>")
+        support_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        support_text.setOpenExternalLinks(True)
+        support_text.setStyleSheet("font-size: 10px; margin-top: 10px;")
+        layout.addWidget(support_text)
+
+        # Add stretch to center content vertically
         layout.addStretch()
-        return tab
 
-    def _create_license_tab(self) -> QWidget:
-        """Create the License tab with GNU GPL v3 text."""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        return widget
 
-        # License header
-        header_widget = QWidget()
-        header_layout = QVBoxLayout(header_widget)
-        header_layout.setContentsMargins(20, 20, 20, 15)
+    def _create_license_tab(self):
+        """
+        Create the License tab widget with legal information.
 
-        license_title = QLabel("GNU General Public License v3")
-        license_font = QFont()
-        license_font.setPointSize(14)
-        license_font.setBold(True)
-        license_title.setFont(license_font)
-        license_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        license_title.setStyleSheet("color: #2d5a27; margin-bottom: 5px;")
-        header_layout.addWidget(license_title)
+        Returns
+        -------
+        QWidget
+            A widget containing a scrollable text area with the MIT License text.
 
-        license_subtitle = QLabel("This software is licensed under the GNU GPL v3")
-        license_subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        license_subtitle.setStyleSheet("color: #6b7280; font-size: 10pt;")
-        header_layout.addWidget(license_subtitle)
+        Notes
+        -----
+        Features:
+        - Read-only QTextEdit with MIT License text
+        - Monospace font for legal document formatting
+        - Scrollable for longer license texts
+        - margins around the text area
+        """
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(10, 20, 10, 10)
 
-        layout.addWidget(header_widget)
-
-        # License text in scrollable area
-        license_text = self._get_license_text()
-        text_edit = QTextEdit()
-        text_edit.setReadOnly(True)
-        text_edit.setPlainText(license_text)
-        text_edit.setStyleSheet("font-size: 9pt; line-height: 1.3;")
-        layout.addWidget(text_edit)
-        return tab
-
-    def _add_about_image(self, layout):
-        """Add the about image to the layout with fallback options."""
-        # For images, go up 2 levels to src/gambitpairing
-        base_img_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..")
+        # License text in a scroll-able area
+        license_text = QTextEdit()
+        license_text.setReadOnly(True)
+        gpl = read_resource_text("LICENSE")
+        license_text.setPlainText(gpl)
+        license_text.setStyleSheet(
+            """
+            QTextEdit {
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-family: monospace;
+                font-size: 7px;
+            }
+        """
         )
-        image_path = os.path.join(base_img_path, "resources", "icons", "about.webp")
-        if os.path.exists(image_path):
-            pixmap = QPixmap(image_path)
-            if not pixmap.isNull():
-                img_label = QLabel()
-                # Use fast transformation for pixelated look
-                img_label.setPixmap(
-                    pixmap.scaledToWidth(220, Qt.TransformationMode.FastTransformation)
-                )
-                img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                img_label.setStyleSheet("margin-bottom: 8px;")
-                layout.addWidget(img_label)
-                return
+        license_text.setReadOnly(True)
 
-    def _get_license_text(self) -> str:
-        """Get the GNU GPL v3 license text from the license file."""
-        license_path = resource_path(os.path.join("licenses", "LICENSE"))
-        try:
-            with open(license_path, "r", encoding="utf-8") as f:
-                return f.read()
-        except (FileNotFoundError, IOError):
-            return (
-                "GNU GENERAL PUBLIC LICENSE\n"
-                "Version 3, 29 June 2007\n\n"
-                "Copyright (C) 2025 Gambit Pairing developers\n\n"
-                "This program is free software: you can redistribute it and/or modify "
-                "it under the terms of the GNU General Public License as published by "
-                "the Free Software Foundation\n\n"
-                "This program is distributed in the hope that it will be useful, "
-                "but WITHOUT ANY WARRANTY; without even the implied warranty of "
-                "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the "
-                "GNU General Public License for more details.\n\n"
-                "You should have received a copy of the GNU General Public License "
-                "along with this program. If not, see https://www.gnu.org/licenses/gpl-3.0.html .\n\n"
-            )
+        layout.addWidget(license_text)
+
+        return widget

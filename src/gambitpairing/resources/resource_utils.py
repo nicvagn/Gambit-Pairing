@@ -54,15 +54,8 @@ def get_resource_path(resource_name: str, subpackage: str = "") -> Path:
         package_path = "gambitpairing.resources"
 
     try:
-        # Modern approach (Python 3.9+)
-        if hasattr(resources, "files"):
-            resource_files = resources.files(package_path)
-            return resource_files / resource_name
-
-        # Fallback for older Python versions
-        else:
-            with resources.path(package_path, resource_name) as resource_path:
-                return resource_path
+        with resources.path(package_path, resource_name) as resource_path:
+            return resource_path
 
     except (ModuleNotFoundError, FileNotFoundError) as e:
         raise FileNotFoundError(
@@ -142,50 +135,6 @@ def read_resource_binary(resource_name: str, subpackage: str = "") -> bytes:
         ) from e
 
 
-def get_resource_context(resource_name: str, subpackage: str = ""):
-    """
-    Get a context manager for accessing a resource file.
-
-    This is useful when you need a actual file path (e.g., for Qt icons).
-
-    Parameters
-    ----------
-    resource_name : str
-        Name of the resource file
-    subpackage : str, optional
-        Subpackage name, by default ""
-
-    Returns
-    -------
-    context manager
-        Context manager that yields the path to the resource
-
-    Raises
-    ------
-    FileNotFoundError
-        If the resource file is not found in the specified package
-    """
-    if subpackage:
-        package_path = f"gambitpairing.resources.{subpackage}"
-    else:
-        package_path = "gambitpairing.resources"
-
-    try:
-        # Modern approach (Python 3.9+)
-        if hasattr(resources, "as_file") and hasattr(resources, "files"):
-            resource_files = resources.files(package_path)
-            return resources.as_file(resource_files / resource_name)
-
-        # Fallback for older versions
-        else:
-            return resources.path(package_path, resource_name)
-
-    except (ModuleNotFoundError, FileNotFoundError) as e:
-        raise FileNotFoundError(
-            f"Resource '{resource_name}' not found in package '{package_path}'"
-        ) from e
-
-
 # Convenience functions for your specific use case
 def get_style_sheet() -> str:
     """
@@ -214,7 +163,7 @@ def get_icon_path(icon_type: str = "png"):
         Context manager that yields the path to the icon file
     """
     filename = f"icon.{icon_type}"
-    return get_resource_context(filename, "icons")
+    return get_resource_path(filename, "icons")
 
 
 def get_icon_binary(icon_type: str = "png") -> bytes:
@@ -233,23 +182,6 @@ def get_icon_binary(icon_type: str = "png") -> bytes:
     """
     filename = f"icon.{icon_type}"
     return read_resource_binary(filename, "icons")
-
-
-def get_ui_icon_path(icon_name: str):
-    """
-    Get path to a UI icon (arrow-up.svg, arrow-down.svg, etc.).
-
-    Parameters
-    ----------
-    icon_name : str
-        Name of the icon file (e.g., 'arrow-up.svg', 'checkmark-white.svg')
-
-    Returns
-    -------
-    context manager
-        Context manager that yields the path to the icon file
-    """
-    return get_resource_context(icon_name, "icons")
 
 
 def get_ui_icon_binary(icon_name: str) -> bytes:

@@ -15,8 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # --- Constants ---
-APP_NAME = "Gambit Pairing"
-APP_VERSION = "0.6"
 SAVE_FILE_EXTENSION = ".json"
 SAVE_FILE_FILTER = f"Gambit Pairing Files (*{SAVE_FILE_EXTENSION});;All Files (*)"
 CSV_FILTER = "CSV Files (*.csv);;Text Files (*.txt)"

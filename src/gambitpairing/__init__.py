@@ -1,2 +1,3 @@
-from . import core, gui
-from .__main__ import main
+APP_NAME = "Gambit Pairing"
+APP_VERSION = "0.6.2 (alpha)"
+__version__ = APP_VERSION

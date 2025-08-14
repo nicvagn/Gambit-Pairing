@@ -41,7 +41,9 @@ from gambitpairing.core import Pairings  # These are types
 from gambitpairing.core import MatchPairing, Players, RoundSchedule
 from gambitpairing.core.exceptions import PairingException
 from gambitpairing.core.player import Player
-from gambitpairing.core.utils import root_logger
+from gambitpairing.core.utils import setup_logger
+
+logger = setup_logger(__name__)
 
 # Type aliases for clarity
 BergerTable = Tuple[RoundSchedule, ...]  # Complete tournament schedule
@@ -172,7 +174,7 @@ class RoundRobin:
         n_players = len(self.players)
 
         if not (3 <= n_players <= 16):
-            root_logger.error("Invalid player count for round robin: %d", n_players)
+            logger.error("Invalid player count for round robin: %d", n_players)
             raise PairingException(
                 f"Round robin tournaments support 3-16 players, got {n_players}"
             )
@@ -196,49 +198,49 @@ class RoundRobin:
             self.berger_table = BERGER_TABLES["15-16"]
             if n_players % 2 != 0:
                 self.bye_number = 15
-            root_logger.info("Using 15-16 player Berger table")
+            logger.info("Using 15-16 player Berger table")
 
         elif n_players >= 13:
             self.berger_table = BERGER_TABLES["13-14"]
             if n_players % 2 != 0:
                 self.bye_number = 13
-            root_logger.info("Using 13-14 player Berger table")
+            logger.info("Using 13-14 player Berger table")
 
         elif n_players >= 11:
             self.berger_table = BERGER_TABLES["11-12"]
             if n_players % 2 != 0:
                 self.bye_number = 11
-            root_logger.info("Using 11-12 player Berger table")
+            logger.info("Using 11-12 player Berger table")
 
         elif n_players >= 9:
             self.berger_table = BERGER_TABLES["9-10"]
             if n_players % 2 != 0:
                 self.bye_number = 9
-            root_logger.info("Using 9-10 player Berger table")
+            logger.info("Using 9-10 player Berger table")
 
         elif n_players >= 7:
             self.berger_table = BERGER_TABLES["7-8"]
             if n_players % 2 != 0:
                 self.bye_number = 7
-            root_logger.info("Using 7-8 player Berger table")
+            logger.info("Using 7-8 player Berger table")
 
         elif n_players >= 5:
             self.berger_table = BERGER_TABLES["5-6"]
             if n_players % 2 != 0:
                 self.bye_number = 5
-            root_logger.info("Using 5-6 player Berger table")
+            logger.info("Using 5-6 player Berger table")
 
         else:  # 3-4 players
             self.berger_table = BERGER_TABLES["3-4"]
             if n_players % 2 != 0:
                 self.bye_number = 3
-            root_logger.info("Using 3-4 player Berger table")
+            logger.info("Using 3-4 player Berger table")
 
         self.number_of_rounds = len(self.berger_table)
 
     def _generate_all_pairings(self) -> None:
         """Generate pairings for all rounds in the tournament."""
-        root_logger.info(
+        logger.info(
             "Generating pairings for %d players using table: %s",
             len(self.players),
             self.berger_table,
@@ -250,7 +252,7 @@ class RoundRobin:
             pairings = self._generate_round_pairings(round_idx)
             self.round_pairings.append(pairings)
 
-        root_logger.info(
+        logger.info(
             "Generated pairings for %d rounds with %d players",
             len(self.round_pairings),
             len(self.players),
@@ -276,7 +278,7 @@ class RoundRobin:
             )
 
         round_schedule = self.berger_table[round_idx]
-        root_logger.debug("Processing round %d: %s", round_idx, round_schedule)
+        logger.debug("Processing round %d: %s", round_idx, round_schedule)
 
         matches = []
         bye_player = None
@@ -294,7 +296,7 @@ class RoundRobin:
                 # Only assign bye if the player exists in our tournament
                 if real_player_idx < len(self.players):
                     bye_player = self.players[real_player_idx]
-                    root_logger.debug(
+                    logger.debug(
                         "Bye assigned to player %d: %s", real_player_idx, bye_player
                     )
                 continue
@@ -304,13 +306,13 @@ class RoundRobin:
 
                 match = (self.players[player1_idx], self.players[player2_idx])
                 matches.append(match)
-                root_logger.debug(
+                logger.debug(
                     "Match created: %s vs %s",
                     self.players[player1_idx],
                     self.players[player2_idx],
                 )
 
-        root_logger.info(
+        logger.info(
             "Round %d: %d matches, bye: %s", round_idx + 1, len(matches), bye_player
         )
 
@@ -431,7 +433,7 @@ def create_round_robin(players: Players) -> RoundRobin:
         >>> len(round_robin.players)  # Number of players
     """
     tournament = RoundRobin(players)
-    root_logger.info("Round Robin tournament created: %s", tournament)
+    logger.info("Round Robin tournament created: %s", tournament)
     return tournament
 
 

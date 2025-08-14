@@ -22,16 +22,15 @@ $$ |                                            $$\   $$ |
 $$ |                                            \$$$$$$  |
 \__|                                             \______/
 
-          ________   _______       ____
-         /  _____/   \   _  \     /_   |
-        /   __  \    /  /_\  \     |   |
-        \  |__\  \   \  \_/   \    |   |
-         \_____  / /\ \_____  / /\ |___|
-               \/  \/       \/  \/
+                       ___   __
+                      / _ \ / /_
+                     | | | | '_ \
+                     | |_| | (_) |
+                      \___(_)___/
 ```
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/PyQt6-Used-green.svg)](https://riverbankcomputing.com/software/pyqt/intro)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/eEnnetMDfr)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Chickaboo/gambit-pairing)

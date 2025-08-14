@@ -1,6 +1,6 @@
 from PyQt6 import QtWidgets
 
-from gambitpairing.core.constants import APP_NAME
+from gambitpairing import APP_NAME
 
 
 class UpdatePromptDialog(QtWidgets.QDialog):

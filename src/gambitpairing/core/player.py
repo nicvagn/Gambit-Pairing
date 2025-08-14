@@ -19,7 +19,9 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from gambitpairing.core.constants import B, W
-from gambitpairing.core.utils import generate_id
+from gambitpairing.core.utils import generate_id, setup_logger
+
+logger = setup_logger(__name__)
 
 
 class Player:
@@ -36,6 +38,12 @@ class Player:
         federation: Optional[str] = None,
         gender: Optional[str] = None,
         dob: Optional[str] = None,
+        fide_id: Optional[int] = None,
+        fide_title: Optional[str] = None,
+        fide_standard: Optional[int] = None,
+        fide_rapid: Optional[int] = None,
+        fide_blitz: Optional[int] = None,
+        birth_year: Optional[int] = None,
     ) -> None:
         self.id: str = player_id or generate_id("player_")
         self.name: str = name
@@ -46,6 +54,13 @@ class Player:
         self.federation: Optional[str] = federation
         self.gender: Optional[str] = gender
         self.dob: Optional[str] = dob
+        # FIDE-related metadata (optional)
+        self.fide_id: Optional[int] = fide_id
+        self.fide_title: Optional[str] = fide_title
+        self.fide_standard: Optional[int] = fide_standard
+        self.fide_rapid: Optional[int] = fide_rapid
+        self.fide_blitz: Optional[int] = fide_blitz
+        self.birth_year: Optional[int] = birth_year
         self.score: float = 0.0
         self.is_active: bool = True  # Used for withdrawals
 
@@ -66,6 +81,51 @@ class Player:
 
         # Runtime cache
         self._opponents_played_cache: List[Optional["Player"]] = []
+
+    @property
+    def age(self) -> Optional[int]:
+        """Calculate age from birth year or date of birth."""
+        from datetime import date
+
+        # Try to calculate from birth year first
+        if self.birth_year:
+            current_year = date.today().year
+            return current_year - self.birth_year
+
+        # Try to calculate from date of birth
+        if self.dob:
+            try:
+                if isinstance(self.dob, str):
+                    # Parse various date formats
+                    if "-" in self.dob:  # YYYY-MM-DD format
+                        birth_date = date.fromisoformat(self.dob)
+                    else:  # Try other formats if needed
+                        return None
+                else:
+                    return None
+
+                today = date.today()
+                age = today.year - birth_date.year
+                # Adjust if birthday hasn't occurred this year
+                if today.month < birth_date.month or (
+                    today.month == birth_date.month and today.day < birth_date.day
+                ):
+                    age -= 1
+                return age
+            except (ValueError, AttributeError):
+                return None
+
+        return None
+
+    @property
+    def date_of_birth(self) -> Optional[str]:
+        """Return the date of birth, maintaining compatibility."""
+        return self.dob
+
+    @date_of_birth.setter
+    def date_of_birth(self, value: Optional[str]) -> None:
+        """Set the date of birth, maintaining compatibility."""
+        self.dob = value
 
     def __repr__(self) -> str:
         status = "" if self.is_active else " (Inactive)"
@@ -162,6 +222,9 @@ class Player:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Player":
         """Deserializes player data."""
+        # Handle backward compatibility for sex/gender field consolidation
+        gender = data.get("gender") or data.get("sex")
+
         player = cls(
             name=data["name"],
             rating=data.get("rating", 1000),
@@ -170,8 +233,14 @@ class Player:
             email=data.get("email"),
             club=data.get("club"),
             federation=data.get("federation"),
-            gender=data.get("gender"),
+            gender=gender,
             dob=data.get("dob"),
+            fide_id=data.get("fide_id"),
+            fide_title=data.get("fide_title"),
+            fide_standard=data.get("fide_standard"),
+            fide_rapid=data.get("fide_rapid"),
+            fide_blitz=data.get("fide_blitz"),
+            birth_year=data.get("birth_year"),
         )
         for key, value in data.items():
             if hasattr(player, key) and not key.startswith("_"):

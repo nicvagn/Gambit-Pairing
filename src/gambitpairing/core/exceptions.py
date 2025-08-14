@@ -21,3 +21,15 @@ class PairingException(Exception):
     """Error producing pairings"""
 
     pass
+
+
+class IconException(Exception):
+    """Error with the app icon"""
+
+    pass
+
+
+class StyleException(Exception):
+    """Error with the app Style"""
+
+    pass
