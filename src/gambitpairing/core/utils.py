@@ -24,7 +24,7 @@ import time
 
 from PyQt6 import QtCore
 from PyQt6.QtCore import QDateTime
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QListWidget
 
 # the logger format used
 LOG_FMT = "LVL: %(levelname)s | FILE PATH: %(pathname)s | FUN: %(funcName)s | msg: %(message)s | ln#:%(lineno)d"
@@ -125,3 +125,21 @@ def restart_application() -> None:
 def generate_id(prefix: str = "item_") -> str:
     """Generates a simple unique ID."""
     return f"{prefix}{random.randint(100000, 999999)}_{int(QDateTime.currentMSecsSinceEpoch())}"
+
+
+def resize_list_to_show_all_items(list_widget: QListWidget):
+    """Resize QListWidget to show all items without scrolling - Qt6 version"""
+    if list_widget.count() == 0:
+        return
+
+    # Calculate total height needed
+    total_height = 0
+    for i in range(list_widget.count()):
+        total_height += list_widget.sizeHintForRow(i)
+
+    # Add frame margins
+    frame_height = list_widget.frameWidth() * 2
+
+    # Disable vertical scrollbar and set height
+    list_widget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    list_widget.setFixedHeight(total_height + frame_height)

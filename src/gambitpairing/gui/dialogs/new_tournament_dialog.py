@@ -4,6 +4,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
 
 from gambitpairing.core.constants import DEFAULT_TIEBREAK_SORT_ORDER, TIEBREAK_NAMES
+from gambitpairing.core.utils import resize_list_to_show_all_items
 
 
 class NewTournamentDialog(QtWidgets.QDialog):
@@ -27,7 +28,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
 
         # -------------------------
         # Ensure all group boxes have same minimum width
-        MIN_GROUP_WIDTH = 350
+        MIN_GROUP_WIDTH = 450
         for group in (general_group, tiebreak_group, pairing_group):
             group.setMinimumWidth(MIN_GROUP_WIDTH)
 
@@ -86,6 +87,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         tiebreak_group = QtWidgets.QGroupBox("Tiebreak Order")
         tiebreak_layout = QtWidgets.QHBoxLayout(tiebreak_group)
         self.tiebreak_list = QtWidgets.QListWidget()
+        self.tiebreak_list.closePersistentEditor
         self.tiebreak_list.setToolTip(
             "Order in which tiebreaks are applied (higher is better). Drag to reorder."
         )
@@ -93,6 +95,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
             QtWidgets.QAbstractItemView.DragDropMode.InternalMove
         )
         self.populate_tiebreak_list()
+        resize_list_to_show_all_items(self.tiebreak_list)
         tiebreak_layout.addWidget(self.tiebreak_list)
 
         move_button_layout = QtWidgets.QVBoxLayout()
