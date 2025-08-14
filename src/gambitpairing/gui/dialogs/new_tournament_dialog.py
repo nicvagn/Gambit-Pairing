@@ -10,7 +10,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("New Tournament")
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(550)
         self.current_tiebreak_order = list(DEFAULT_TIEBREAK_SORT_ORDER)
 
         self.common_layout = QtWidgets.QVBoxLayout(self)
