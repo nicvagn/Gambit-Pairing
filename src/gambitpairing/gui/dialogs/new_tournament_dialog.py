@@ -13,7 +13,9 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.setMinimumWidth(350)
         self.current_tiebreak_order = list(DEFAULT_TIEBREAK_SORT_ORDER)
 
-        self.layout = QtWidgets.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
+
+        layout.setSpacing(15)
 
         # -------------------------
         # General Settings
@@ -25,7 +27,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.rounds_spin.setValue(5)
         form_layout.addRow("Tournament Name:", self.name_edit)
         form_layout.addRow("Number of Rounds:", self.rounds_spin)
-        self.layout.addWidget(general_group)
+        layout.addWidget(general_group)
 
         # -------------------------
         # Tiebreak Order Settings
@@ -51,7 +53,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         move_button_layout.addWidget(btn_down)
         move_button_layout.addStretch()
         tiebreak_layout.addLayout(move_button_layout)
-        self.layout.addWidget(tiebreak_group)
+        layout.addWidget(tiebreak_group)
 
         # -------------------------
         # Pairing System Selection
@@ -74,7 +76,7 @@ class NewTournamentDialog(QtWidgets.QDialog):
         info_btn.clicked.connect(self.show_pairing_info)
         pairing_layout.addWidget(info_btn)
 
-        self.layout.addWidget(pairing_group)
+        layout.addWidget(pairing_group)
 
         # -------------------------
         # Ensure all group boxes have same minimum width
@@ -94,8 +96,12 @@ class NewTournamentDialog(QtWidgets.QDialog):
         self.buttons.setMinimumHeight(40)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
-        self.layout.addWidget(self.buttons)
+        layout.addWidget(self.buttons)
 
+        # -----SET LAYOUT----------
+        # I think this is the proper way
+        self.setLayout(layout)
+        raise NotImplementedError("I need to finnish refactoring")
         # -------------------------
         # Pairing system change handling
         self.pairing_combo.currentIndexChanged.connect(self.on_pairing_system_changed)
