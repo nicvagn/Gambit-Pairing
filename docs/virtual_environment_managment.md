@@ -5,6 +5,25 @@ This is the project standard.
 
 I manage my environments with [direnv](https://thelinuxcode.com/managing-per-directory-environment-variables-effortlessly-with-direnv/)
 
+if you wanna be like me:
+[here](https://direnv.net/docs/installation.html)
+
+direnv is packaged for a variety of systems:
+
+    Fedora
+    Arch Linux
+    Debian
+    Gentoo Guru
+    NetBSD pkgsrc-wip
+    NixOS
+    macOS Homebrew
+    openSUSE
+    MacPorts
+    Ubuntu
+    GNU Guix
+    Windows
+
+
 I have included my .envrc in the git root in the hope that it
 is useful it simply activates the python virtual environment
 in .venv
