@@ -59,7 +59,7 @@ DEFAULT_TIEBREAK_SORT_ORDER = [
     TB_MOST_BLACKS,
 ]
 
-UPDATE_URL = "https://api.github.com/repos/Chickaboo/Gambit-Pairing/releases/latest"
+UPDATE_URL = "https://api.github.com/repos/gambit-devs/Gambit-Pairing/releases/latest"
 
 # chess colors
 W = "White"
