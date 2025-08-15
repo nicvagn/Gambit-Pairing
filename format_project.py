@@ -79,12 +79,12 @@ def main():
 
     # Run formatters - exit if they fail
     if not run_command([sys.executable, "-m", "isort", "src"], "Formatting with isort"):
-        print("isort failed")
+        print("isort failed. Ensure current working dir is git root")
         sys.exit(1)
     print("------- isort ran ----------")
 
     if not run_command([sys.executable, "-m", "black", "src"], "Formatting with black"):
-        print("black failed")
+        print("black failed. Ensure current working dir is git root")
         sys.exit(1)
     print("------- black ran ----------")
 

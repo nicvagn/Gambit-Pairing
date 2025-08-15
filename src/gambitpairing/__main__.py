@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import platform
 import sys
 from pathlib import Path
 
@@ -128,9 +129,15 @@ def run_app() -> int:
 
     # Set cross-platform application icon
     set_application_icon(app)
+    # Get current platform
+    system = platform.system()
 
-    # Set Windows Vista style
-    app.setStyle("WindowsVista")
+    if system == "Windows":
+        app.setStyle("WindowsVista")  # windows
+    elif system == "Darwin":  # macOS
+        app.setStyle("macos")
+    else:
+        app.setStyle("fusion")  # Best cross-platform option
 
     # set app style
     set_application_style(app)
@@ -146,4 +153,4 @@ def run_app() -> int:
 if __name__ == "__main__":
     main()
 
-#  LocalWords:  IconException QIcon WindowsVista
+#  LocalWords:  IconException QIcon WindowsVista macos
