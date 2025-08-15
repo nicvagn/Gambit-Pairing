@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "PyQt6",
+    "beautifulsoup4",
     "httpx",
     "packaging",
     "importlib-resources",
@@ -123,4 +124,4 @@ reportUnusedFunction = "warning"
 reportDuplicateImport = "error"
 
 #  LocalWords:  reportMissingTypeStubs reportUnusedImport venvPath
-#  LocalWords:  reportImportCycles typeCheckingMode
+#  LocalWords:  reportImportCycles typeCheckingMode beautifulsoup
