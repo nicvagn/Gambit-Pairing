@@ -30,9 +30,8 @@ from gambitpairing.core.constants import (
     WIN_SCORE,
 )
 from gambitpairing.core.player import Player
-
-from .dialogs import ManualPairingDialog
-from .notournament_placeholder import NoTournamentPlaceholder
+from gambitpairing.gui.dialogs import ManualPairingDialog
+from gambitpairing.gui.notournament_placeholder import NoTournamentPlaceholder
 
 
 def get_icon(icon_name: str, fallback_theme_name: str = None) -> QtGui.QIcon:

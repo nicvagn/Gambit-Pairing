@@ -29,22 +29,23 @@ from PyQt6.QtWidgets import QMessageBox
 from gambitpairing import APP_NAME, APP_VERSION
 from gambitpairing.core import utils
 from gambitpairing.core.tournament import Tournament
+from gambitpairing.core.update_worker import UpdateWorker
 from gambitpairing.core.updater import Updater
 from gambitpairing.core.utils import setup_logger
-
-from .crosstable_tab import CrosstableTab
-from .dialogs import (
+from gambitpairing.gui.dialogs import (
     AboutDialog,
     NewTournamentDialog,
     SettingsDialog,
     UpdateDownloadDialog,
     UpdatePromptDialog,
 )
-from .history_tab import HistoryTab
-from .players_tab import PlayersTab
-from .standings_tab import StandingsTab
-from .tournament_tab import TournamentTab
-from .update_worker import UpdateWorker
+from gambitpairing.gui.tabs import (
+    CrosstableTab,
+    HistoryTab,
+    PlayersTab,
+    StandingsTab,
+    TournamentTab,
+)
 
 logger = setup_logger(__name__)
 

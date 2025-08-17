@@ -20,7 +20,7 @@ import logging
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QDateTime
 
-from .notournament_placeholder import NoTournamentPlaceholder
+from gambitpairing.gui.notournament_placeholder import NoTournamentPlaceholder
 
 
 class HistoryTab(QtWidgets.QWidget):
