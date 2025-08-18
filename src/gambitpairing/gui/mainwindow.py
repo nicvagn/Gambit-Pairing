@@ -195,15 +195,8 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         )
         player_menu.addAction(self.add_player_action)
         self.import_players_fide_action = self._create_action(
-            "Import from &FIDE...", self.import_mgr.import_players_from_fide
-        )
-        player_menu.addAction(self.add_player_action)
-        self.import_players_uscf_action = self._create_action(
-            "Import from &US-CF...", self.import_mgr.import_players_from_uscf
-        )
-        player_menu.addAction(self.add_player_action)
-        self.import_players_cfc_action = self._create_action(
-            "Import from &CFC...", self.import_mgr.import_players_from_cfc
+            "Import from &FIDE, &CFC, or &US-CF...",
+            self.import_mgr.import_players_from_api,
         )
         self.import_players_action = self._create_action(
             "&Import Players from CSV...", self.players_tab.import_players_csv
