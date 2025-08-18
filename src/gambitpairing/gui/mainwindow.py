@@ -39,6 +39,7 @@ from gambitpairing.gui.dialogs import (
     UpdateDownloadDialog,
     UpdatePromptDialog,
 )
+from gambitpairing.gui.import_player import ImportPlayer
 from gambitpairing.gui.tabs import (
     CrosstableTab,
     HistoryTab,
@@ -65,6 +66,8 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self._dirty: bool = False
         self.is_updating = False
         self.updater: Optional[Updater] = Updater(APP_VERSION)
+        # import player is a class containing import player logic
+        self.import_mgr = ImportPlayer(self)
 
         self._setup_ui()
         self._update_ui_state()
@@ -190,11 +193,15 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         )
         player_menu.addAction(self.add_player_action)
         self.import_players_fide_action = self._create_action(
-            "Import from &FIDE...", self.import_players_from_fide
+            "Import from &FIDE...", self.import_mgr.import_players_from_fide
         )
         player_menu.addAction(self.add_player_action)
         self.import_players_fide_action = self._create_action(
-            "Import from &CFC...", self.import_players_from_cfc
+            "Import from &US-CF...", self.import_mgr.import_players_from_uscf
+        )
+        player_menu.addAction(self.add_player_action)
+        self.import_players_fide_action = self._create_action(
+            "Import from &CFC...", self.import_mgr.import_players_from_cfc
         )
         self.import_players_action = self._create_action(
             "&Import Players from CSV...", self.players_tab.import_players_csv
