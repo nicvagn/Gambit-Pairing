@@ -215,6 +215,8 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         player_menu.addActions(
             [
                 self.import_players_fide_action,
+                self.import_players_cfc_action,
+                self.import_players_uscf_action,
                 self.import_players_action,
                 self.export_players_action,
             ]
@@ -348,6 +350,12 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             tournament_exists and not tournament_started
         )
         self.import_players_fide_action.setEnabled(
+            tournament_exists and not tournament_started
+        )
+        self.import_players_cfc_action.setEnabled(
+            tournament_exists and not tournament_started
+        )
+        self.import_players_uscf_action.setEnabled(
             tournament_exists and not tournament_started
         )
         self.export_players_action.setEnabled(
