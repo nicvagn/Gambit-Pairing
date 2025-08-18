@@ -194,10 +194,6 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             "&Add Player...", self.players_tab.add_player_detailed
         )
         player_menu.addAction(self.add_player_action)
-        self.import_players_fide_action = self._create_action(
-            "Import from &FIDE, &CFC, or &US-CF...",
-            self.import_mgr.import_players_from_api,
-        )
         self.import_players_action = self._create_action(
             "&Import Players from CSV...", self.players_tab.import_players_csv
         )
@@ -207,9 +203,6 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         player_menu.addSeparator()
         player_menu.addActions(
             [
-                self.import_players_fide_action,
-                self.import_players_cfc_action,
-                self.import_players_uscf_action,
                 self.import_players_action,
                 self.export_players_action,
             ]
@@ -340,15 +333,6 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             tournament_exists and results_recorded > 0
         )
         self.import_players_action.setEnabled(
-            tournament_exists and not tournament_started
-        )
-        self.import_players_fide_action.setEnabled(
-            tournament_exists and not tournament_started
-        )
-        self.import_players_cfc_action.setEnabled(
-            tournament_exists and not tournament_started
-        )
-        self.import_players_uscf_action.setEnabled(
             tournament_exists and not tournament_started
         )
         self.export_players_action.setEnabled(
