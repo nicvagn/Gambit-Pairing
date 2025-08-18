@@ -1,3 +1,5 @@
+"""Main GUI window for Gambit Pairing."""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -87,7 +89,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         logging.info(f"{APP_NAME} v{APP_VERSION} started.")
 
     def _setup_main_panel(self):
-        """Creates the tab widget and populates it with the modular tab classes."""
+        """Create the tab widget and populates it with the modular tab classes."""
         self.tabs = QtWidgets.QTabWidget()
         self.main_layout.addWidget(self.tabs)
 
@@ -119,7 +121,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self.tabs.addTab(self.history_tab, "History Log")
 
     def _setup_menu(self):
-        """Sets up the main menu bar, connecting actions to methods in the main window or tabs."""
+        """Set up the main menu bar, connecting actions to methods in the main window or tabs."""
         menu_bar = self.menuBar()
 
         # File Menu
@@ -222,15 +224,17 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
     def _create_action(
         self, text: str, slot: callable, shortcut: str = "", tooltip: str = ""
     ) -> QAction:
-        """Helper function to create and configure a QAction.
+        """Function to create and configure a QAction.
 
-        Args:
+        Arguments
+        ---------
             text: The text to display for the action.
             slot: The function to call when the action is triggered.
             shortcut: Optional keyboard shortcut (e.g., "Ctrl+N").
             tooltip: Optional tooltip to show on hover.
 
-        Returns:
+        Returns
+        -------
             The configured QAction.
         """
         action = QAction(text, self)
@@ -290,7 +294,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         )
 
     def _update_ui_state(self):
-        """Updates the state of UI elements based on the tournament's current state."""
+        """Update the state of UI elements based on the tournament's current state."""
         tournament_exists = self.tournament is not None
         pairings_generated = (
             len(self.tournament.rounds_pairings_ids) if tournament_exists else 0
@@ -390,15 +394,17 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(status)
 
     def mark_dirty(self, dirty=True):
+        """Mark as dirty."""
         if self._dirty != dirty:
             self._dirty = dirty
             self._update_ui_state()
 
     def mark_clean(self):
+        """Mark as clean."""
         self.mark_dirty(False)
 
     def _set_tournament_on_tabs(self):
-        """Passes the current tournament object to all tabs so they can access its data."""
+        """Pass the current tournament object to all tabs so they can access its data."""
         for tab in [
             self.players_tab,
             self.tournament_tab,
@@ -415,7 +421,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self._update_ui_state()
 
     def reset_tournament_state(self):
-        """Resets the entire application to a clean state."""
+        """Reset the entire application to a clean state."""
         self.tournament = None
         self.current_round_index = 0
         self.last_recorded_results_data = []
@@ -523,7 +529,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         return False
 
     def update_history_log(self, message: str):
-        """Appends a timestamped message to the history log tab."""
+        """Append a timestamped message to the history log tab."""
         self.history_tab.update_history_log(message)
 
     def save_tournament(self, save_as=False):
@@ -674,7 +680,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         dialog.exec()
 
     def check_for_pending_update(self) -> bool:
-        """Checks for a previously downloaded update and asks to install it."""
+        """Check for a previously downloaded update and asks to install it."""
         if not self.updater:
             return False
 
@@ -745,7 +751,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             self.prompt_update()
 
     def prompt_update(self):
-        """Shows a modern dialog prompting the user to download the new version."""
+        """Show a modern dialog prompting the user to download the new version."""
         if not self.updater or not self.updater.latest_version_info:
             return
 
@@ -769,7 +775,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             self.start_update_download()
 
     def start_update_download(self):
-        """Initiates the update download and shows the progress dialog."""
+        """Initiate the update download and shows the progress dialog."""
         if not self.updater:
             return
 
@@ -796,7 +802,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self.download_dialog.exec()
 
     def on_update_done(self, success: bool, message: str):
-        """Handles both success and error for update in a modern dialog."""
+        """Handle both success and error for update in a modern dialog."""
         if success:
             self.download_dialog.show_complete()
             # Connect restart button to restart logic
