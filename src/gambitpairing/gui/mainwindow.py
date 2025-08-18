@@ -198,11 +198,11 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             "Import from &FIDE...", self.import_mgr.import_players_from_fide
         )
         player_menu.addAction(self.add_player_action)
-        self.import_players_fide_action = self._create_action(
+        self.import_players_uscf_action = self._create_action(
             "Import from &US-CF...", self.import_mgr.import_players_from_uscf
         )
         player_menu.addAction(self.add_player_action)
-        self.import_players_fide_action = self._create_action(
+        self.import_players_cfc_action = self._create_action(
             "Import from &CFC...", self.import_mgr.import_players_from_cfc
         )
         self.import_players_action = self._create_action(
@@ -231,7 +231,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
     def _create_action(
         self, text: str, slot: callable, shortcut: str = "", tooltip: str = ""
     ) -> QAction:
-        """Function to create and configure a QAction.
+        """Create and configure a QAction.
 
         Arguments
         ---------
@@ -254,8 +254,9 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         action.setIconVisibleInMenu(False)  # Hide icon in menus
         return action
 
-    def _setup_toolbar(self):
-        """Sets up the main application toolbar.
+    def _setup_toolbar(self) -> None:
+        """Set up the main application toolbar.
+
         Icons are loaded from the system theme for a native look and feel.
         """
         toolbar = self.addToolBar("Main Toolbar")
