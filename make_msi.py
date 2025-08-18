@@ -110,31 +110,7 @@ def validate_executable_for_msi(exe_path: Path) -> bool:
     return True
 
 
-def create_compressed_archive(exe_dir: Path, output_dir: Path, version: str) -> Path:
-    """Create a compressed archive of the onedir executable for MSI packaging"""
-    import zipfile
-
-    exe_dir = Path(exe_dir).resolve()
-    output_dir = Path(output_dir)
-
-    archive_name = f"gambit-pairing-{version}-onedir.zip"
-    archive_path = output_dir / archive_name
-
-    print(f"Creating compressed archive: {archive_path}")
-
-    with zipfile.ZipFile(
-        archive_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6
-    ) as zipf:
-        for file_path in exe_dir.rglob("*"):
-            if file_path.is_file():
-                # Calculate the relative path within the archive
-                arc_name = file_path.relative_to(exe_dir)
-                zipf.write(file_path, arc_name)
-
-    size_mb = archive_path.stat().st_size / (1024 * 1024)
-    print(f"[+] Archive created: {archive_path} ({size_mb:.1f} MB)")
-
-    return archive_path
+# Removed create_compressed_archive function - using direct file harvesting instead
 
 
 def build_executable():
@@ -155,6 +131,13 @@ def build_executable():
 
     # Use the onedir spec file for MSI creation (we need a directory structure)
     print("Building onedir executable with PyInstaller...")
+
+    # Clean dist directory to avoid PyInstaller conflicts
+    dist_dir = script_dir / "dist"
+    if dist_dir.exists():
+        print(f"Cleaning existing dist directory: {dist_dir}")
+        shutil.rmtree(dist_dir)
+
     spec_file = script_dir / "gambit-pairing-onedir.spec"
     if not spec_file.exists():
         print(f"Error: PyInstaller onedir spec file not found: {spec_file}")
@@ -727,11 +710,11 @@ def build_msi(wix_file, version, output_dir, wix_tools=None, cleanup_wix=True):
 
             main_content = main_content.replace(placeholder, f"  {combined_fragments}")
 
-            # Debug: Verify the replacement worked
+            # Verify the replacement worked
             if 'ComponentGroup Id="ApplicationFiles"' in main_content:
-                print("✓ ComponentGroup 'ApplicationFiles' found in merged file")
+                print("[+] ComponentGroup 'ApplicationFiles' found in merged file")
             else:
-                print("✗ ComponentGroup 'ApplicationFiles' NOT found in merged file")
+                print("[x] ComponentGroup 'ApplicationFiles' NOT found in merged file")
         else:
             print(f"Warning: Expected 2 fragments, found {len(fragment_matches)}")
 
@@ -827,18 +810,13 @@ def main():
     print(f"Onedir directory: {exe_dir}")
     print(f"Output directory: {output_dir}")
 
-    # Step 2: Create compressed archive
-    print("\n=== Creating Compressed Archive ===")
-    archive_path = create_compressed_archive(exe_dir, output_dir, version)
-    print(f"[+] Archive created: {archive_path}")
-
-    # Step 3: Generate WiX file with branding
+    # Step 2: Generate WiX file with branding (using direct harvesting)
     print("\n=== Generating WiX XML with Branding ===")
     wix_file = create_wix_file(exe_path, version, output_dir)
     print(f"[+] Created WiX file: {wix_file}")
 
-    # Step 4: Build MSI
-    print("\n=== Building MSI with WiX ===")
+    # Step 3: Build MSI with direct file harvesting
+    print("\n=== Building MSI with WiX (Direct File Harvesting) ===")
     msi_file = build_msi(wix_file, version, output_dir, cleanup_wix=True)
 
     if msi_file and msi_file.exists():
@@ -849,10 +827,13 @@ def main():
 
         print(f"\nMSI Features:")
         print(f"- Professional installer with branding")
+        print(f"- Direct file installation (no intermediate archives)")
         print(f"- Installs to Program Files")
         print(f"- Start Menu shortcut")
         print(f"- Optional desktop shortcut")
         print(f"- Proper uninstall support")
+        print(f"- Windows transactional installation")
+        print(f"- MSI repair capability")
 
         # Cleanup intermediate files
         wixobj_file = output_dir / "gambit-pairing.wixobj"

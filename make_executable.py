@@ -76,10 +76,10 @@ def build_executable(spec_file: Path):
     if expected_exe.exists():
         size_mb = expected_exe.stat().st_size / (1024 * 1024)
         print(
-            f"✓ {build_type.capitalize()} executable created: {expected_exe} ({size_mb:.1f} MB)"
+            f"[+] {build_type.capitalize()} executable created: {expected_exe} ({size_mb:.1f} MB)"
         )
     else:
-        print(f"✗ Error: Expected executable not found: {expected_exe}")
+        print(f"[x] Error: Expected executable not found: {expected_exe}")
         sys.exit(1)
 
 
@@ -137,17 +137,7 @@ Examples:
     # Build the executable
     build_executable(spec_file)
 
-    print(f"\n🎉 Build completed successfully!")
-
-    # Show next steps
-    if args.onedir:
-        print(f"\n📝 Next steps:")
-        print(f"   • Test the executable: dist/gambit-pairing/gambit-pairing.exe")
-        print(f"   • Create MSI installer: python make_msi.py")
-    else:
-        print(f"\n📝 Next steps:")
-        print(f"   • Test the executable: dist/gambit-pairing.exe")
-        print(f"   • For MSI creation, use: python make_executable.py --onedir")
+    print(f"\nBuild completed successfully!")
 
 
 if __name__ == "__main__":
