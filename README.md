@@ -122,9 +122,6 @@ Visit the [Releases page](https://github.com/gambit-devs/gambit-pairing/releases
 
 ### Build Status
 [![Build Windows Release](https://github.com/gambit-devs/gambit-pairing/actions/workflows/build-release.yml/badge.svg)](https://github.com/gambit-devs/gambit-pairing/actions/workflows/build-release.yml)
-[![Test Build](https://github.com/gambit-devs/gambit-pairing/actions/workflows/test-build.yml/badge.svg)](https://github.com/gambit-devs/gambit-pairing/actions/workflows/test-build.yml)
-[![Build Cross-Platform](https://github.com/gambit-devs/gambit-pairing/actions/workflows/build-cross-platform.yml/badge.svg)](https://github.com/gambit-devs/gambit-pairing/actions/workflows/build-cross-platform.yml)
-
 ## Requirements
 
 To install with pip, there is a helper sh script, ensure-all-dependancies.sh
