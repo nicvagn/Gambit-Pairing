@@ -4,6 +4,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
 
 from gambitpairing.core.constants import TIEBREAK_NAMES
+from gambitpairing.core.utils import resize_list_to_show_all_items
 
 
 class SettingsDialog(QtWidgets.QDialog):
@@ -31,6 +32,7 @@ class SettingsDialog(QtWidgets.QDialog):
             QtWidgets.QAbstractItemView.DragDropMode.InternalMove
         )
         self.populate_tiebreak_list()
+        resize_list_to_show_all_items(self.tiebreak_list)
         tiebreak_layout.addWidget(self.tiebreak_list)
         move_button_layout = QtWidgets.QVBoxLayout()
         btn_up = QtWidgets.QPushButton("Up")

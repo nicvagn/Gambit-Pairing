@@ -2,7 +2,7 @@
 
 # Installation - pip
 
-1. Install Python 3.8 or higher.
+1. Install Python 3.9 or higher.
 2. Download or clone this repository.
 3. if bash is on your $PATH run install.sh
     OR

@@ -19,7 +19,6 @@ import logging
 
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QDateTime, Qt
-from PyQt6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 
 from gambitpairing.core.constants import (
     CSV_FILTER,
@@ -31,8 +30,7 @@ from gambitpairing.core.constants import (
     TB_SONNENBORN_BERGER,
     TIEBREAK_NAMES,
 )
-
-from .notournament_placeholder import NoTournamentPlaceholder
+from gambitpairing.gui.notournament_placeholder import NoTournamentPlaceholder
 
 
 class StandingsTab(QtWidgets.QWidget):

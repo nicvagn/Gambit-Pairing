@@ -14,14 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import functools
 
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import Qt
 
 from gambitpairing.core.constants import DRAW_SCORE, LOSS_SCORE, WIN_SCORE
-
-from .notournament_placeholder import NoTournamentPlaceholder
+from gambitpairing.gui.notournament_placeholder import NoTournamentPlaceholder
 
 
 class CrosstableTab(QtWidgets.QWidget):

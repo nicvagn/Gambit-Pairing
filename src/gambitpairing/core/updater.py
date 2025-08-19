@@ -16,10 +16,8 @@
 
 
 import hashlib
-import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 import zipfile
@@ -29,12 +27,12 @@ from typing import Any, Dict, Optional, Tuple
 import httpx
 from packaging.version import parse as parse_version
 
+from gambitpairing.core.constants import UPDATE_URL
 from gambitpairing.core.utils import setup_logger
 
 logger = setup_logger(__name__)
 
 # Fallback update URL if not defined elsewhere
-UPDATE_URL = "https://api.github.com/repos/Chickaboo/Gambit-Pairing/releases/latest"
 
 
 class Updater:

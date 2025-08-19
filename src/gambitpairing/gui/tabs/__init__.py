@@ -14,20 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .dialogs.about_dialog import AboutDialog
-from .dialogs.manual_pairing_dialog import ManualPairingDialog
-from .dialogs.new_tournament_dialog import NewTournamentDialog
-from .dialogs.player_management_dialog import PlayerManagementDialog
-from .dialogs.settings_dialog import SettingsDialog
-from .dialogs.update_dialog import UpdateDownloadDialog
-from .dialogs.update_prompt_dialog import UpdatePromptDialog
 
-__all__ = [
-    "NewTournamentDialog",
-    "PlayerManagementDialog",
-    "SettingsDialog",
-    "ManualPairingDialog",
-    "UpdateDownloadDialog",
-    "UpdatePromptDialog",
-    "AboutDialog",
-]
+from .crosstable_tab import CrosstableTab
+from .history_tab import HistoryTab
+from .players_tab import PlayersTab
+from .standings_tab import StandingsTab
+from .tournament_tab import TournamentTab

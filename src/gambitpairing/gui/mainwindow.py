@@ -17,34 +17,35 @@
 
 import json
 import logging
-import os
 import sys
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import QFileInfo, Qt
 from PyQt6.QtGui import QAction, QCloseEvent
+from PyQt6.QtWidgets import QMessageBox
 
 from gambitpairing import APP_NAME, APP_VERSION
 from gambitpairing.core import utils
 from gambitpairing.core.tournament import Tournament
+from gambitpairing.core.update_worker import UpdateWorker
 from gambitpairing.core.updater import Updater
 from gambitpairing.core.utils import setup_logger
-
-from .crosstable_tab import CrosstableTab
-from .dialogs import (
+from gambitpairing.gui.dialogs import (
     AboutDialog,
     NewTournamentDialog,
-    PlayerManagementDialog,
     SettingsDialog,
     UpdateDownloadDialog,
     UpdatePromptDialog,
 )
-from .history_tab import HistoryTab
-from .players_tab import PlayersTab
-from .standings_tab import StandingsTab
-from .tournament_tab import TournamentTab
-from .update_worker import UpdateWorker
+from gambitpairing.gui.tabs import (
+    CrosstableTab,
+    HistoryTab,
+    PlayersTab,
+    StandingsTab,
+    TournamentTab,
+)
 
 logger = setup_logger(__name__)
 
@@ -565,6 +566,15 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
                 "current_round_index": self.current_round_index,
                 "last_recorded_results_data": self.last_recorded_results_data,
             }
+            # check to see if file exists, and confirm prior to overwrite
+            if Path(self._current_filepath).exists():
+                # confirm before over write
+                if not self.get_confirmation(
+                    action="will overwrite tournament", message="Is that what you want?"
+                ):
+                    return False
+                # else continue
+
             with open(self._current_filepath, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
             self.mark_clean()
@@ -852,6 +862,22 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
     def restart_application(self):
         """Restart the application cleanly."""
         utils.restart_application()
+
+    def get_confirmation(
+        self, action="", message="Are you sure you want to proceed?"
+    ) -> bool:
+        reply = QMessageBox.question(
+            self,
+            action,
+            message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            QMessageBox.information(self, "Success", "Action completed!")
+            return True
+        return False
 
 
 #  LocalWords:  bbb px

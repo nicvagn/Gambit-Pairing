@@ -24,9 +24,11 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
 from gambitpairing.core.player import Player
-
-from .dialogs import PlayerManagementDialog
-from .notournament_placeholder import NoTournamentPlaceholder, PlayerPlaceholder
+from gambitpairing.gui.dialogs import PlayerManagementDialog
+from gambitpairing.gui.notournament_placeholder import (
+    NoTournamentPlaceholder,
+    PlayerPlaceholder,
+)
 
 
 class NumericTableWidgetItem(QtWidgets.QTableWidgetItem):

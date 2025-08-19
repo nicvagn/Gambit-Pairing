@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+import importlib.util
 import subprocess
 import sys
 import tomllib
-from pathlib import Path
 
 
 def run_command(cmd, description):
@@ -51,38 +51,44 @@ def main():
     ):
         sys.exit(1)
 
-    # Load dependencies from pyproject.toml
-    dependencies, dev_dependencies = load_pyproject_dependencies()
-    if dependencies is None:
-        sys.exit(1)
-
-    # Install main dependencies
-    if dependencies:
-        print("Installing dependencies")
-        cmd = [sys.executable, "-m", "pip", "install"] + dependencies
-        if not run_command(cmd, "installing main dependencies"):
+    black = importlib.util.find_spec("black")
+    isort = importlib.util.find_spec("isort")
+    if not black or not isort:
+        # Load dependencies from pyproject.toml
+        dependencies, dev_dependencies = load_pyproject_dependencies()
+        if dependencies is None:
             sys.exit(1)
-    else:
-        print("No main dependencies found")
 
-    # Install dev dependencies
-    if dev_dependencies:
-        print("Installing dev dependencies")
-        cmd = [sys.executable, "-m", "pip", "install"] + dev_dependencies
-        if not run_command(cmd, "installing dev dependencies"):
-            sys.exit(1)
-    else:
-        print("No dev dependencies found")
+        # Install main dependencies
+        if dependencies:
+            print("Installing dependencies")
+            cmd = [sys.executable, "-m", "pip", "install"] + dependencies
+            if not run_command(cmd, "installing main dependencies"):
+                sys.exit(1)
+        else:
+            print("No main dependencies found")
+
+        # Install dev dependencies
+        if dev_dependencies:
+            print("Installing dev dependencies")
+            cmd = [sys.executable, "-m", "pip", "install"] + dev_dependencies
+            if not run_command(cmd, "installing dev dependencies"):
+                sys.exit(1)
+        else:
+            print("No dev dependencies found")
+
     # Run formatters - exit if they fail
     if not run_command([sys.executable, "-m", "isort", "src"], "Formatting with isort"):
-        print("isort failed")
+        print("isort failed. Ensure current working dir is git root")
         sys.exit(1)
     print("------- isort ran ----------")
 
     if not run_command([sys.executable, "-m", "black", "src"], "Formatting with black"):
-        print("black failed")
+        print("black failed. Ensure current working dir is git root")
         sys.exit(1)
     print("------- black ran ----------")
+
+    print("----- src formatted --------")
 
 
 if __name__ == "__main__":
