@@ -16,7 +16,7 @@ from gambitpairing.resources.resource_utils import get_icon_path
 
 # FIDE columns with better minimum widths
 FIDE_COLUMNS: List[Tuple[str, int]] = [
-    ("", 25),  # checkbox - smaller to reduce wasted space
+    ("", 5),  # checkbox - smaller to reduce wasted space
     ("Name", 300),
     ("FIDE ID", 100),
     ("Fed", 80),
@@ -29,8 +29,8 @@ FIDE_COLUMNS: List[Tuple[str, int]] = [
 ]
 
 # Define CFC columns - adjust these based on actual CFC database structure
-CFC_COLUMNS = [
-    ("", 30),  # Checkbox column
+CFC_COLUMNS: List[Tuple[str, int]] = [
+    ("", 5),  # Checkbox column
     ("CFC ID", 80),  # CFC membership ID
     ("Name", 200),  # Player name
     ("Rating", 80),  # CFC rating
@@ -98,7 +98,7 @@ class PlayerManagementDialog(QtWidgets.QDialog):
 
         self.setWindowTitle("Player Management")
         self.setModal(True)
-        self.resize(800, 600)
+        self.resize(900, 600)
 
         # Main layout with tabs
         layout = QtWidgets.QVBoxLayout(self)
@@ -590,8 +590,7 @@ class PlayerManagementDialog(QtWidgets.QDialog):
         search_bar.addWidget(self.cfc_search_edit)
 
         self.btn_cfc_search = QtWidgets.QPushButton("Search")
-        self.btn_cfc_search.setToolTip("Search by name or CFC ID (Ctrl+Enter)")
-        self.btn_cfc_search.setShortcut("Ctrl+Return")
+        self.btn_cfc_search.setToolTip("Search by name or CFC ID")
         self.btn_cfc_search.clicked.connect(self._on_cfc_search)
         search_bar.addWidget(self.btn_cfc_search)
 
@@ -604,32 +603,6 @@ class PlayerManagementDialog(QtWidgets.QDialog):
         search_bar.addWidget(self.btn_cfc_clear)
 
         search_layout.addLayout(search_bar)
-
-        # Province/Territory filter
-        filter_layout = QtWidgets.QHBoxLayout()
-        filter_layout.addWidget(QtWidgets.QLabel("Province/Territory:"))
-        self.cfc_province_combo = QtWidgets.QComboBox()
-        self.cfc_province_combo.addItems(
-            [
-                "All Provinces/Territories",
-                "Alberta (AB)",
-                "British Columbia (BC)",
-                "Manitoba (MB)",
-                "New Brunswick (NB)",
-                "Newfoundland and Labrador (NL)",
-                "Northwest Territories (NT)",
-                "Nova Scotia (NS)",
-                "Nunavut (NU)",
-                "Ontario (ON)",
-                "Prince Edward Island (PE)",
-                "Quebec (QC)",
-                "Saskatchewan (SK)",
-            ]
-        )
-        self.cfc_province_combo.setToolTip("Filter results by province or territory")
-        filter_layout.addWidget(self.cfc_province_combo)
-        filter_layout.addStretch()
-        search_layout.addLayout(filter_layout)
 
         # Instructions with examples
         instructions = QtWidgets.QLabel(
