@@ -794,7 +794,7 @@ def main():
     print(f"Version: {version}")
 
     # Set output directory
-    output_dir = Path("./msi_build")
+    output_dir = Path("./build/gambit-pairing-msi")
     output_dir.mkdir(exist_ok=True)
 
     # Step 1: Build onedir executable with PyInstaller
