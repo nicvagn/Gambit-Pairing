@@ -89,6 +89,7 @@ def main():
     print("------- black ran ----------")
 
     print("----- src formatted --------")
+    print("--- Hint: ensure new formatted files are added to any commit. ---")
 
 
 if __name__ == "__main__":

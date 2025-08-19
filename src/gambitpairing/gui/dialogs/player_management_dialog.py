@@ -16,7 +16,7 @@ from gambitpairing.resources.resource_utils import get_icon_path
 
 # FIDE columns with better minimum widths
 FIDE_COLUMNS: List[Tuple[str, int]] = [
-    ("", 25),  # checkbox - smaller to reduce wasted space
+    ("", 5),  # checkbox - smaller to reduce wasted space
     ("Name", 300),
     ("FIDE ID", 100),
     ("Fed", 80),
@@ -26,6 +26,18 @@ FIDE_COLUMNS: List[Tuple[str, int]] = [
     ("Blitz", 80),
     ("B-Year", 80),
     ("Gender", 110),  # Increased for better fit
+]
+
+# Define CFC columns - adjust these based on actual CFC database structure
+CFC_COLUMNS: List[Tuple[str, int]] = [
+    ("", 5),  # Checkbox column
+    ("CFC ID", 80),  # CFC membership ID
+    ("Name", 200),  # Player name
+    ("Rating", 80),  # CFC rating
+    ("Province", 80),  # Province/Territory
+    ("City", 120),  # City
+    ("Expiry", 80),  # Membership expiry
+    ("Status", 80),  # Active/Inactive status
 ]
 
 # Tournament players columns
@@ -86,7 +98,7 @@ class PlayerManagementDialog(QtWidgets.QDialog):
 
         self.setWindowTitle("Player Management")
         self.setModal(True)
-        self.resize(800, 600)
+        self.resize(900, 600)
 
         # Main layout with tabs
         layout = QtWidgets.QVBoxLayout(self)
@@ -101,6 +113,14 @@ class PlayerManagementDialog(QtWidgets.QDialog):
         # FIDE tab
         self.fide_tab = self._create_fide_tab()
         self.tab_widget.addTab(self.fide_tab, "Import from FIDE")
+
+        # CFC tab
+        self.cfc_tab = self._create_cfc_tab()
+        self.tab_widget.addTab(self.cfc_tab, "Import from CFC")
+
+        # US-CF tab TODO
+        # self.uscf_tab = self._create_USCF_tab()
+        # self.tab_widget.addTab(self.uscf_tab, "Import from US-CF")
 
         # Tournament players tab (only if tournament provided)
         if self.tournament:
@@ -546,6 +566,344 @@ class PlayerManagementDialog(QtWidgets.QDialog):
         layout.addLayout(controls_layout)
 
         return widget
+
+    def _create_cfc_tab(self):
+        """Create the CFC import tab."""
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(widget)
+
+        # Search section with group box
+        search_group = QtWidgets.QGroupBox("Search CFC Database")
+        search_layout = QtWidgets.QVBoxLayout(search_group)
+
+        # Unified search controls
+        search_bar = QtWidgets.QHBoxLayout()
+
+        # Single unified search field
+        search_bar.addWidget(QtWidgets.QLabel("Search:"))
+        self.cfc_search_edit = QtWidgets.QLineEdit()
+        self.cfc_search_edit.setToolTip(
+            "Enter player name (e.g., 'Kevin Spraggett') or CFC ID (e.g., '100123')"
+        )
+        self.cfc_search_edit.setPlaceholderText("Enter player name or CFC ID...")
+        self.cfc_search_edit.installEventFilter(self)
+        search_bar.addWidget(self.cfc_search_edit)
+
+        self.btn_cfc_search = QtWidgets.QPushButton("Search")
+        self.btn_cfc_search.setToolTip("Search by name or CFC ID")
+        self.btn_cfc_search.clicked.connect(self._on_cfc_search)
+        search_bar.addWidget(self.btn_cfc_search)
+
+        # Clear button
+        self.btn_cfc_clear = QtWidgets.QPushButton("Clear Results")
+        self.btn_cfc_clear.setToolTip("Clear search results and start over (Ctrl+R)")
+        self.btn_cfc_clear.setShortcut("Ctrl+R")
+        self.btn_cfc_clear.clicked.connect(self._clear_cfc_results)
+        self.btn_cfc_clear.setEnabled(False)  # Initially disabled
+        search_bar.addWidget(self.btn_cfc_clear)
+
+        search_layout.addLayout(search_bar)
+
+        # Instructions with examples
+        instructions = QtWidgets.QLabel(
+            "<b>Search Tips:</b><br>"
+            "• <b>Name search:</b> Try 'Kevin Spraggett', 'Spraggett', or 'Kevin'<br>"
+            "• <b>CFC ID search:</b> Enter exact ID like 100123<br>"
+            "• <b>Auto-detection:</b> Numbers are treated as CFC IDs, text as names<br>"
+            "• <b>Province filter:</b> Narrow results by selecting a specific province<br>"
+            "• <b>Right-click</b> on results for copy options<br>"
+            "• <b>Double-click</b> any result to import that player"
+        )
+        instructions.setStyleSheet(
+            "color: #444; font-size: 10px; background-color: #f0f0f0; "
+            "padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 5px;"
+        )
+        search_layout.addWidget(instructions)
+
+        layout.addWidget(search_group)
+
+        # Results table with better column widths - make this section much larger
+        results_group = QtWidgets.QGroupBox("Search Results")
+        results_layout = QtWidgets.QVBoxLayout(results_group)
+
+        self.cfc_table = QtWidgets.QTableWidget(0, len(CFC_COLUMNS))
+        self.cfc_table.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.cfc_table.setEditTriggers(
+            QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.cfc_table.verticalHeader().setVisible(False)
+        self.cfc_table.setAlternatingRowColors(True)
+        self.cfc_table.setMinimumHeight(350)  # Make table much taller
+
+        # Set headers and minimum column widths
+        header = self.cfc_table.horizontalHeader()
+        for i, (title, width) in enumerate(CFC_COLUMNS):
+            self.cfc_table.setHorizontalHeaderItem(i, QtWidgets.QTableWidgetItem(title))
+            self.cfc_table.setColumnWidth(i, width)
+            # Set minimum width to prevent columns from being too narrow
+            header.setMinimumSectionSize(width)
+
+        # Make checkbox column resize to contents (minimum space)
+        header.setSectionResizeMode(
+            0, QtWidgets.QHeaderView.ResizeMode.ResizeToContents
+        )
+
+        self.cfc_table.itemSelectionChanged.connect(self._on_cfc_selection_changed)
+        self.cfc_table.itemDoubleClicked.connect(self._use_selected_cfc_player)
+        self.cfc_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.cfc_table.customContextMenuRequested.connect(self._show_cfc_context_menu)
+
+        results_layout.addWidget(self.cfc_table)
+
+        # Results info label
+        self.cfc_results_info_label = QtWidgets.QLabel(
+            "Search for players above to see results here"
+        )
+        self.cfc_results_info_label.setStyleSheet("color: gray; font-style: italic;")
+        results_layout.addWidget(self.cfc_results_info_label)
+
+        layout.addWidget(results_group, 2)  # Give more space to results section
+
+        # Progress bar and buttons
+        controls_layout = QtWidgets.QHBoxLayout()
+
+        self.cfc_progress = QtWidgets.QProgressBar()
+        self.cfc_progress.setVisible(False)
+        controls_layout.addWidget(self.cfc_progress)
+
+        controls_layout.addStretch()
+
+        self.btn_use_selected_cfc = QtWidgets.QPushButton("Import Selected Player")
+        self.btn_use_selected_cfc.setEnabled(False)
+        self.btn_use_selected_cfc.setToolTip(
+            "Import the selected CFC player data to the Player Details tab"
+        )
+        self.btn_use_selected_cfc.clicked.connect(self._use_selected_cfc_player)
+        controls_layout.addWidget(self.btn_use_selected_cfc)
+
+        layout.addLayout(controls_layout)
+
+        return widget
+
+    # Supporting methods for CFC functionality
+    def _on_cfc_search(self):
+        """Handle CFC search button click."""
+        search_term = self.cfc_search_edit.text().strip()
+        if not search_term:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Search Required",
+                "Please enter a player name or CFC ID to search.",
+            )
+            return
+
+        self._search_cfc_players(search_term)
+
+    def _search_cfc_players(self, search_term):
+        """Search for CFC players."""
+        self.cfc_progress.setVisible(True)
+        self.cfc_progress.setRange(0, 0)  # Indeterminate progress
+        self.btn_cfc_search.setEnabled(False)
+        self.cfc_results_info_label.setText("Searching CFC database...")
+
+        # Determine if search term is CFC ID (numeric) or name
+        is_id_search = search_term.isdigit()
+
+        try:
+            # This would be replaced with actual CFC API call
+            # results = self._query_cfc_database(search_term, is_id_search)
+            results = []  # Placeholder
+
+            self._populate_cfc_results(results, search_term)
+
+        except Exception as e:
+            QtWidgets.QMessageBox.warning(
+                self, "Search Error", f"Failed to search CFC database:\n{str(e)}"
+            )
+            self.cfc_results_info_label.setText("Search failed")
+
+        finally:
+            self.cfc_progress.setVisible(False)
+            self.btn_cfc_search.setEnabled(True)
+            self.btn_cfc_clear.setEnabled(True)
+
+    def _populate_cfc_results(self, results, search_term):
+        """Populate the CFC results table."""
+        self.cfc_table.setRowCount(len(results))
+
+        for row, player in enumerate(results):
+            # Checkbox
+            checkbox = QtWidgets.QCheckBox()
+            self.cfc_table.setCellWidget(row, 0, checkbox)
+
+            # Player data
+            items = [
+                player.get("cfc_id", ""),
+                player.get("name", ""),
+                str(player.get("rating", "")),
+                player.get("province", ""),
+                player.get("city", ""),
+                player.get("expiry_date", ""),
+                player.get("status", ""),
+            ]
+
+            for col, text in enumerate(items, 1):
+                item = QtWidgets.QTableWidgetItem(str(text))
+                item.setData(Qt.ItemDataRole.UserRole, player)  # Store full player data
+                self.cfc_table.setItem(row, col, item)
+
+        # Update results info
+        if results:
+            self.cfc_results_info_label.setText(
+                f"Found {len(results)} player(s) for '{search_term}'"
+            )
+        else:
+            self.cfc_results_info_label.setText(
+                f"No players found for '{search_term}'. Try a different search term."
+            )
+
+    def _clear_cfc_results(self):
+        """Clear CFC search results."""
+        self.cfc_table.setRowCount(0)
+        self.cfc_search_edit.clear()
+        self.cfc_results_info_label.setText(
+            "Search for players above to see results here"
+        )
+        self.btn_cfc_clear.setEnabled(False)
+        self.btn_use_selected_cfc.setEnabled(False)
+
+    def _on_cfc_selection_changed(self):
+        """Handle CFC table selection change."""
+        has_selection = bool(self.cfc_table.selectedItems())
+        self.btn_use_selected_cfc.setEnabled(has_selection)
+
+    def _use_selected_cfc_player(self):
+        """Import the selected CFC player."""
+        current_row = self.cfc_table.currentRow()
+        if current_row < 0:
+            QtWidgets.QMessageBox.information(
+                self, "No Selection", "Please select a player to import."
+            )
+            return
+
+        # Get player data from the selected row
+        item = self.cfc_table.item(current_row, 1)  # CFC ID column
+        if item:
+            player_data = item.data(Qt.ItemDataRole.UserRole)
+            self._import_cfc_player_data(player_data)
+
+    def _import_cfc_player_data(self, player_data):
+        """Import CFC player data to the Player Details tab."""
+        if not player_data:
+            return
+
+        try:
+            # Map CFC data to player form fields
+            # Adjust field mappings based on your actual form structure
+
+            # Switch to Player Details tab
+            self.tab_widget.setCurrentIndex(0)  # Assuming Player Details is first tab
+
+            # Populate form fields - adjust these based on your actual field names
+            if hasattr(self, "name_edit"):
+                self.name_edit.setText(player_data.get("name", ""))
+
+            if hasattr(self, "cfc_id_edit"):
+                self.cfc_id_edit.setText(str(player_data.get("cfc_id", "")))
+
+            if hasattr(self, "rating_edit"):
+                self.rating_edit.setText(str(player_data.get("rating", "")))
+
+            if hasattr(self, "province_edit"):
+                self.province_edit.setText(player_data.get("province", ""))
+
+            if hasattr(self, "city_edit"):
+                self.city_edit.setText(player_data.get("city", ""))
+
+            # Show success message
+            QtWidgets.QMessageBox.information(
+                self,
+                "Import Successful",
+                f"Successfully imported CFC player: {player_data.get('name', 'Unknown')}",
+            )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.warning(
+                self, "Import Error", f"Failed to import player data:\n{str(e)}"
+            )
+
+    def _show_cfc_context_menu(self, position):
+        """Show context menu for CFC results table."""
+        item = self.cfc_table.itemAt(position)
+        if not item:
+            return
+
+        menu = QtWidgets.QMenu(self)
+
+        # Copy actions
+        copy_name_action = menu.addAction("Copy Name")
+        copy_cfc_id_action = menu.addAction("Copy CFC ID")
+        copy_rating_action = menu.addAction("Copy Rating")
+        menu.addSeparator()
+        copy_all_action = menu.addAction("Copy All Data")
+
+        action = menu.exec(self.cfc_table.mapToGlobal(position))
+
+        if action:
+            row = item.row()
+            clipboard = QtWidgets.QApplication.clipboard()
+
+            if action == copy_name_action:
+                clipboard.setText(self.cfc_table.item(row, 2).text())  # Name column
+            elif action == copy_cfc_id_action:
+                clipboard.setText(self.cfc_table.item(row, 1).text())  # CFC ID column
+            elif action == copy_rating_action:
+                clipboard.setText(self.cfc_table.item(row, 3).text())  # Rating column
+            elif action == copy_all_action:
+                # Copy all visible data for the row
+                data_parts = []
+                for col in range(
+                    1, self.cfc_table.columnCount()
+                ):  # Skip checkbox column
+                    header = self.cfc_table.horizontalHeaderItem(col).text()
+                    value = self.cfc_table.item(row, col).text()
+                    data_parts.append(f"{header}: {value}")
+                clipboard.setText(" | ".join(data_parts))
+
+    def _query_cfc_database(self, search_term, is_id_search):
+        """
+        Query the CFC database API.
+
+        This is a placeholder method that should be implemented with actual CFC API calls.
+        The CFC may have a different API structure than FIDE.
+
+        Args:
+            search_term: The search term (name or CFC ID)
+            is_id_search: True if searching by CFC ID, False if by name
+
+        Returns:
+            List of player dictionaries with CFC data
+        """
+        # Placeholder - replace with actual CFC API implementation
+        # You'll need to research the CFC's available APIs or web scraping methods
+
+        # Example structure of what this might return:
+        example_results = [
+            {
+                "cfc_id": "123456",
+                "name": "John Smith",
+                "rating": 1850,
+                "province": "ON",
+                "city": "Toronto",
+                "expiry_date": "2024-12-31",
+                "status": "Active",
+            }
+        ]
+
+        # For now, return empty list - implement actual API call here
+        return []
 
     def _create_tournament_tab(self):
         """Create the tournament players tab."""

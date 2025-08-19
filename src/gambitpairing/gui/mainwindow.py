@@ -1,3 +1,5 @@
+"""Main GUI window for Gambit Pairing."""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -39,6 +41,7 @@ from gambitpairing.gui.dialogs import (
     UpdateDownloadDialog,
     UpdatePromptDialog,
 )
+from gambitpairing.gui.import_player import ImportPlayer
 from gambitpairing.gui.tabs import (
     CrosstableTab,
     HistoryTab,
@@ -65,6 +68,8 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self._dirty: bool = False
         self.is_updating = False
         self.updater: Optional[Updater] = Updater(APP_VERSION)
+        # import player is a class containing import player logic
+        self.import_mgr = ImportPlayer(self)
 
         self._setup_ui()
         self._update_ui_state()
@@ -87,7 +92,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         logging.info(f"{APP_NAME} v{APP_VERSION} started.")
 
     def _setup_main_panel(self):
-        """Creates the tab widget and populates it with the modular tab classes."""
+        """Create the tab widget and populates it with the modular tab classes."""
         self.tabs = QtWidgets.QTabWidget()
         self.main_layout.addWidget(self.tabs)
 
@@ -119,7 +124,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self.tabs.addTab(self.history_tab, "History Log")
 
     def _setup_menu(self):
-        """Sets up the main menu bar, connecting actions to methods in the main window or tabs."""
+        """Set up the main menu bar, connecting actions to methods in the main window or tabs."""
         menu_bar = self.menuBar()
 
         # File Menu
@@ -189,9 +194,6 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             "&Add Player...", self.players_tab.add_player_detailed
         )
         player_menu.addAction(self.add_player_action)
-        self.import_players_fide_action = self._create_action(
-            "Import from &FIDE...", self.import_players_from_fide
-        )
         self.import_players_action = self._create_action(
             "&Import Players from CSV...", self.players_tab.import_players_csv
         )
@@ -201,7 +203,6 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         player_menu.addSeparator()
         player_menu.addActions(
             [
-                self.import_players_fide_action,
                 self.import_players_action,
                 self.export_players_action,
             ]
@@ -218,15 +219,17 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
     def _create_action(
         self, text: str, slot: callable, shortcut: str = "", tooltip: str = ""
     ) -> QAction:
-        """Helper function to create and configure a QAction.
+        """Create and configure a QAction.
 
-        Args:
+        Arguments
+        ---------
             text: The text to display for the action.
             slot: The function to call when the action is triggered.
             shortcut: Optional keyboard shortcut (e.g., "Ctrl+N").
             tooltip: Optional tooltip to show on hover.
 
-        Returns:
+        Returns
+        -------
             The configured QAction.
         """
         action = QAction(text, self)
@@ -239,8 +242,9 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         action.setIconVisibleInMenu(False)  # Hide icon in menus
         return action
 
-    def _setup_toolbar(self):
-        """Sets up the main application toolbar.
+    def _setup_toolbar(self) -> None:
+        """Set up the main application toolbar.
+
         Icons are loaded from the system theme for a native look and feel.
         """
         toolbar = self.addToolBar("Main Toolbar")
@@ -286,7 +290,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         )
 
     def _update_ui_state(self):
-        """Updates the state of UI elements based on the tournament's current state."""
+        """Update the state of UI elements based on the tournament's current state."""
         tournament_exists = self.tournament is not None
         pairings_generated = (
             len(self.tournament.rounds_pairings_ids) if tournament_exists else 0
@@ -329,9 +333,6 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             tournament_exists and results_recorded > 0
         )
         self.import_players_action.setEnabled(
-            tournament_exists and not tournament_started
-        )
-        self.import_players_fide_action.setEnabled(
             tournament_exists and not tournament_started
         )
         self.export_players_action.setEnabled(
@@ -386,15 +387,17 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(status)
 
     def mark_dirty(self, dirty=True):
+        """Mark as dirty."""
         if self._dirty != dirty:
             self._dirty = dirty
             self._update_ui_state()
 
     def mark_clean(self):
+        """Mark as clean."""
         self.mark_dirty(False)
 
     def _set_tournament_on_tabs(self):
-        """Passes the current tournament object to all tabs so they can access its data."""
+        """Pass the current tournament object to all tabs so they can access its data."""
         for tab in [
             self.players_tab,
             self.tournament_tab,
@@ -411,7 +414,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self._update_ui_state()
 
     def reset_tournament_state(self):
-        """Resets the entire application to a clean state."""
+        """Reset the entire application to a clean state."""
         self.tournament = None
         self.current_round_index = 0
         self.last_recorded_results_data = []
@@ -519,35 +522,8 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         return False
 
     def update_history_log(self, message: str):
-        """Appends a timestamped message to the history log tab."""
+        """Append a timestamped message to the history log tab."""
         self.history_tab.update_history_log(message)
-
-    def import_players_from_fide(self):
-        if not self.tournament:
-            QtWidgets.QMessageBox.warning(
-                self,
-                "No Tournament",
-                "Please create a tournament before importing players.",
-            )
-            return
-        if len(self.tournament.rounds_pairings_ids) > 0:
-            QtWidgets.QMessageBox.warning(
-                self,
-                "Tournament Active",
-                "Cannot import players after the tournament has started.",
-            )
-            return
-
-        # Open PlayerManagementDialog on FIDE tab
-        from .dialogs import PlayerManagementDialog
-
-        dialog = PlayerManagementDialog(parent=self, tournament=self.tournament)
-        dialog.tab_widget.setCurrentIndex(1)  # Switch to FIDE tab
-        if dialog.exec():
-            # Player was added through the integrated dialog
-            self.players_tab.refresh_player_list()
-            self.players_tab.update_ui_state()
-            self.mark_dirty()
 
     def save_tournament(self, save_as=False):
         if not self.tournament:
@@ -697,7 +673,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         dialog.exec()
 
     def check_for_pending_update(self) -> bool:
-        """Checks for a previously downloaded update and asks to install it."""
+        """Check for a previously downloaded update and asks to install it."""
         if not self.updater:
             return False
 
@@ -768,7 +744,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             self.prompt_update()
 
     def prompt_update(self):
-        """Shows a modern dialog prompting the user to download the new version."""
+        """Show a modern dialog prompting the user to download the new version."""
         if not self.updater or not self.updater.latest_version_info:
             return
 
@@ -792,7 +768,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
             self.start_update_download()
 
     def start_update_download(self):
-        """Initiates the update download and shows the progress dialog."""
+        """Initiate the update download and shows the progress dialog."""
         if not self.updater:
             return
 
@@ -819,7 +795,7 @@ class GambitPairingMainWindow(QtWidgets.QMainWindow):
         self.download_dialog.exec()
 
     def on_update_done(self, success: bool, message: str):
-        """Handles both success and error for update in a modern dialog."""
+        """Handle both success and error for update in a modern dialog."""
         if success:
             self.download_dialog.show_complete()
             # Connect restart button to restart logic
