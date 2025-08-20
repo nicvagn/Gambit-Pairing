@@ -6,6 +6,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import QObject, Qt, QThread, pyqtSignal
 
 from gambitpairing.core.api_utils import (
+    get_cfc_player_info,
     get_fide_player_info,
     get_fide_top_players,
     search_fide_players,
@@ -708,13 +709,8 @@ class PlayerManagementDialog(QtWidgets.QDialog):
         self.btn_cfc_search.setEnabled(False)
         self.cfc_results_info_label.setText("Searching CFC database...")
 
-        # Determine if search term is CFC ID (numeric) or name
-        is_id_search = search_term.isdigit()
-
         try:
-            # This would be replaced with actual CFC API call
-            # results = self._query_cfc_database(search_term, is_id_search)
-            results = []  # Placeholder
+            results = get_cfc_player_info(search_term)
 
             self._populate_cfc_results(results, search_term)
 
@@ -879,11 +875,13 @@ class PlayerManagementDialog(QtWidgets.QDialog):
         This is a placeholder method that should be implemented with actual CFC API calls.
         The CFC may have a different API structure than FIDE.
 
-        Args:
+        Parameters
+        ----------
             search_term: The search term (name or CFC ID)
             is_id_search: True if searching by CFC ID, False if by name
 
-        Returns:
+        Returns
+        -------
             List of player dictionaries with CFC data
         """
         # Placeholder - replace with actual CFC API implementation

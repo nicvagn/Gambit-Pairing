@@ -102,11 +102,11 @@ def get_cfc_player_info(cfc_id: str):
 def get_uscf_player_info(uscf_id):
     """Get the player info from uscf API.
 
-    TODO
+    Todo
     ----
     Implement
     """
-    raise NotImplementedError("tryed to get uscf player info for id: %s", uscf_id)
+    raise NotImplementedError("TODO: tried to get uscf player info for id: %s", uscf_id)
 
 
 def get_fide_player_info(fide_id: str, player_info=None):
