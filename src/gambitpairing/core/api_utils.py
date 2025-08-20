@@ -2,8 +2,7 @@
 
 This module provides helper functions to retrieve player information from
 various chess federation sources. Implementations prefer lightweight HTTP
-requests and BeautifulSoup parsing (when available) and avoid optional
-third-party SDKs that are not used in the project.
+requests and BeautifulSoup parsing.
 """
 
 # Copyright (C) 2024  Nicolas Vaagen
@@ -101,12 +100,17 @@ def get_cfc_player_info(cfc_id: str):
 
 
 def get_uscf_player_info(uscf_id):
-    """Get the player info from uscf API"""
-    raise NotImplementedError("tryed to get uscf player info for id: %s", uscf_id)
+    """Get the player info from uscf API.
+
+    Todo
+    ----
+    Implement
+    """
+    raise NotImplementedError("TODO: tried to get uscf player info for id: %s", uscf_id)
 
 
 def get_fide_player_info(fide_id: str, player_info=None):
-    """Get the player info from FIDE API
+    """Get the player info from FIDE API.
 
     Parameters
     ----------
@@ -117,8 +121,20 @@ def get_fide_player_info(fide_id: str, player_info=None):
 
     Returns
     -------
-    player_info
-        the player info got from the api, should be documented... TODO
+    player_info : dict
+        {
+            "fide_id": fide_id,
+            "name": None,
+            "federation": None,
+            "title": None,
+            "standard_rating": None,
+            "rapid_rating": None,
+            "blitz_rating": None,
+            "birth_year": None,
+            "gender": None,
+            "active": None,
+        }
+        the player info got from the api. IMPROVE - documentation
     """
     if player_info is None:
         player_info = {}
@@ -265,7 +281,6 @@ def search_fide_players(name=None, fide_id=None, limit=50, is_cancelled=None):
             "active": None,
         }
     """
-
     # Validate input - need at least one search parameter
     if not name and not fide_id:
         logger.warning("No search parameters provided")
@@ -517,4 +532,4 @@ def get_fide_top_players(count: int = 50) -> List[Dict[str, Any]]:
     return []
 
 
-#  LocalWords:  apicode RUS CHN
+#  LocalWords:  apicode RUS CHN BeautifulSoup

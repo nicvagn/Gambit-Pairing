@@ -137,6 +137,8 @@ def main():
             if check_mode
             else "----- src formatted --------"
         )
+        if not check_mode:
+            print("--- Hint: ensure new formatted files are added to any commit. ---")
     else:
         if check_mode:
             print(

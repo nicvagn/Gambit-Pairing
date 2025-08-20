@@ -1,4 +1,4 @@
-"""Gambit Pairing entry point"""
+"""Gambit Pairing entry point."""
 
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
@@ -37,8 +37,7 @@ logger = setup_logger(__name__)
 
 
 def main():
-    """Entry point"""
-
+    """Entry point."""
     # define aliases used in styles.qss
     icon_path = str(Path(str(files("gambitpairing.resources.icons"))))
     # set qt search path for use in styles.qss
@@ -49,7 +48,7 @@ def main():
 
 
 def set_application_icon(app: QtWidgets.QApplication) -> None:
-    """Set application icon
+    """Set application icon.
 
     Parameters
     ----------
@@ -78,7 +77,7 @@ def set_application_icon(app: QtWidgets.QApplication) -> None:
 
 
 def set_application_style(app: QtWidgets.QApplication) -> None:
-    """Set application style
+    """Set application style.
 
     Parameters
     ----------
@@ -113,7 +112,7 @@ def set_application_style(app: QtWidgets.QApplication) -> None:
 
 
 def run_app() -> int:
-    """run the gui application
+    """Run the gui application.
 
     Returns
     -------
@@ -153,4 +152,4 @@ def run_app() -> int:
 if __name__ == "__main__":
     main()
 
-#  LocalWords:  IconException QIcon WindowsVista macos
+#  LocalWords:  IconException QIcon WindowsVista macos StyleException
