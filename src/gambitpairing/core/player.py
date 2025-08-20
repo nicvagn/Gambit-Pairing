@@ -153,7 +153,7 @@ class Player:
             return None, None
 
     def get_color_preference(self) -> Optional[str]:
-        """Determines color preference based on FIDE/USCF rules.
+        """Determine color preference based on FIDE/USCF rules.
         1. Absolute: If last two played games had same color, must get the other.
         2. Preference: If colors are unbalanced, prefer the color that moves towards balance.
         Returns: "White", "Black", or None if no preference or perfectly balanced.
