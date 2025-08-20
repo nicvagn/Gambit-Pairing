@@ -1,3 +1,5 @@
+"""A base chess player in a tournament. This is a base class."""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -16,8 +18,11 @@
 
 
 import logging
+import re
+from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
 
+from gambitpairing.core.club import Club
 from gambitpairing.core.constants import B, W
 from gambitpairing.core.utils import generate_id, setup_logger
 
@@ -27,42 +32,47 @@ logger = setup_logger(__name__)
 class Player:
     """Represents a player in the tournament."""
 
+    Player.email_regex = re.compile(
+        r"([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\[[\t -Z^-~]*])"
+    )
+    Player.phone_regex = re.compile(
+        r"^[+]{1}(?:[0-9\\-\\(\\)\\/\\.]\\s?){6,15}[0-9]{1}$"
+    )
+
     def __init__(
         self,
         name: str,
-        rating: Optional[int] = None,
         player_id: Optional[str] = None,
         phone: Optional[str] = None,
         email: Optional[str] = None,
-        club: Optional[str] = None,
+        club: Optional[Club] = None,
         federation: Optional[str] = None,
         gender: Optional[str] = None,
         dob: Optional[str] = None,
-        fide_id: Optional[int] = None,
-        fide_title: Optional[str] = None,
-        fide_standard: Optional[int] = None,
-        fide_rapid: Optional[int] = None,
-        fide_blitz: Optional[int] = None,
-        birth_year: Optional[int] = None,
     ) -> None:
         self.id: str = player_id or generate_id("player_")
         self.name: str = name
-        self.rating: int = rating if rating is not None else 1000
-        self.phone: Optional[str] = phone
-        self.email: Optional[str] = email
-        self.club: Optional[str] = club
-        self.federation: Optional[str] = federation
+
+        if Player.phone_regex.match(email):
+            self.phone = phone
+        else:
+            raise RuntimeWarning(
+                "The phone number: %s is not valid, phone not set for Player with id: %s",
+                phone,
+                self.id,
+            )
+
+        if Player.email_regex.match(email):
+            self.email = email
+        else:
+            raise RuntimeWarning(
+                "The email: %s is not valid. email not set for Player with id: %s",
+                email,
+                self.id,
+            )
+        self.club: Optional[Club] = club
         self.gender: Optional[str] = gender
         self.dob: Optional[str] = dob
-        # FIDE-related metadata (optional)
-        self.fide_id: Optional[int] = fide_id
-        self.fide_title: Optional[str] = fide_title
-        self.fide_standard: Optional[int] = fide_standard
-        self.fide_rapid: Optional[int] = fide_rapid
-        self.fide_blitz: Optional[int] = fide_blitz
-        self.birth_year: Optional[int] = birth_year
-        self.score: float = 0.0
-        self.is_active: bool = True  # Used for withdrawals
 
         # History
         self.color_history: List[Optional[str]] = []  # Stores W, B, or None (for bye)
@@ -82,11 +92,20 @@ class Player:
         # Runtime cache
         self._opponents_played_cache: List[Optional["Player"]] = []
 
-    @property
-    def age(self) -> Optional[int]:
-        """Calculate age from birth year or date of birth."""
-        from datetime import date
+    def __repr__(self) -> str:
+        """Representation of Player."""
+        status = "" if self.is_active else " (Inactive)"
+        return f"{self.name} ({self.rating}){status}"
 
+    @property
+    def age(self) -> Optional[date]:
+        """Calculate age from birth year or date of birth.
+
+        Returns
+        -------
+        int : Optional[int]
+            The players age, if known
+        """
         # Try to calculate from birth year first
         if self.birth_year:
             current_year = date.today().year
@@ -118,8 +137,14 @@ class Player:
         return None
 
     @property
-    def date_of_birth(self) -> Optional[str]:
-        """Return the date of birth, maintaining compatibility."""
+    def date_of_birth(self) -> Optional[datetime.date]:
+        """Return the date of birth, maintaining compatibility.
+
+        Returns
+        -------
+        datetime.date
+            The date of the players birth
+        """
         return self.dob
 
     @date_of_birth.setter
@@ -127,14 +152,19 @@ class Player:
         """Set the date of birth, maintaining compatibility."""
         self.dob = value
 
-    def __repr__(self) -> str:
-        status = "" if self.is_active else " (Inactive)"
-        return f"{self.name} ({self.rating}){status}"
-
     def get_opponent_objects(
         self, players_dict: Dict[str, "Player"]
     ) -> List[Optional["Player"]]:
-        """Resolves opponent ID's to Player objects using the provided dictionary."""
+        """Resolve opponent ID's to Player objects using the provided dictionary.
+
+        Parameters
+        ----------
+        player_dict : Dict[str, "Player"]
+
+        Returns
+        -------
+        List of your opponents
+        """
         if len(self._opponents_played_cache) != len(self.opponent_ids):
             self._opponents_played_cache = [
                 players_dict.get(opp_id) if opp_id else None
@@ -143,7 +173,7 @@ class Player:
         return self._opponents_played_cache
 
     def get_last_two_colors(self) -> Tuple[Optional[str], Optional[str]]:
-        """Returns the colors of the last two non-bye games played."""
+        """Return the colors of the last two non-bye games played."""
         valid_colors = [c for c in self.color_history if c is not None]
         if len(valid_colors) >= 2:
             return valid_colors[-1], valid_colors[-2]
@@ -154,9 +184,16 @@ class Player:
 
     def get_color_preference(self) -> Optional[str]:
         """Determine color preference based on FIDE/USCF rules.
+
+        Notes
+        -----
         1. Absolute: If last two played games had same color, must get the other.
         2. Preference: If colors are unbalanced, prefer the color that moves towards balance.
-        Returns: "White", "Black", or None if no preference or perfectly balanced.
+
+        Returns
+        -------
+        string
+            "White", "Black", or None if no preference or perfectly balanced.
         """
         valid_played_colors = [c for c in self.color_history if c is not None]
 
@@ -179,7 +216,7 @@ class Player:
     def add_round_result(
         self, opponent: Optional["Player"], result: float, color: Optional[str]
     ) -> None:
-        """Records the outcome of a round for the player."""
+        """Record the outcome of a round for the player."""
         opponent_id = opponent.id if opponent else None
         self.opponent_ids.append(opponent_id)
         self.results.append(result)
@@ -215,53 +252,18 @@ class Player:
         self._opponents_played_cache = []  # Invalidate cache
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serializes player data."""
+        """Serialize player data."""
         data = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
         return data
 
+    @abstractmethod
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Player":
-        """Deserializes player data."""
-        # Handle backward compatibility for sex/gender field consolidation
-        gender = data.get("gender") or data.get("sex")
+    def from_dict(cls, player_data: Dict[str, Any]) -> "Player":
+        """Create a python Player instance from serialized data.
 
-        player = cls(
-            name=data["name"],
-            rating=data.get("rating", 1000),
-            player_id=data["id"],
-            phone=data.get("phone"),
-            email=data.get("email"),
-            club=data.get("club"),
-            federation=data.get("federation"),
-            gender=gender,
-            dob=data.get("dob"),
-            fide_id=data.get("fide_id"),
-            fide_title=data.get("fide_title"),
-            fide_standard=data.get("fide_standard"),
-            fide_rapid=data.get("fide_rapid"),
-            fide_blitz=data.get("fide_blitz"),
-            birth_year=data.get("birth_year"),
-        )
-        for key, value in data.items():
-            if hasattr(player, key) and not key.startswith("_"):
-                setattr(player, key, value)
-        # Ensure essential lists exist if loading older format without them
-        for list_attr in [
-            "color_history",
-            "opponent_ids",
-            "results",
-            "running_scores",
-            "float_history",
-        ]:
-            if not hasattr(player, list_attr) or getattr(player, list_attr) is None:
-                setattr(player, list_attr, [])
-        if not hasattr(player, "has_received_bye"):  # For older save files
-            player.has_received_bye = (
-                (None in player.opponent_ids) if player.opponent_ids else False
-            )
-        if not hasattr(player, "num_black_games"):  # For older save files
-            player.num_black_games = (
-                player.color_history.count(B) if player.color_history else 0
-            )
-
-        return player
+        Parameters
+        ----------
+        player-data : Dict[str, Any]
+            the player data used to construct the Chess Player
+        """
+        pass
