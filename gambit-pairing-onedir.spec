@@ -2,7 +2,7 @@
 
 import os
 import sys
-from PyInstaller.building.build_main import Analysis, PYZ, EXE
+from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
 
 # Compute the spec directory. When PyInstaller executes a spec it may exec()
 # it in a namespace without __file__; fall back to sys.argv[0] in that case.
@@ -41,22 +41,23 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name=APP_NAME,
     icon=ICON,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=False,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    optimize=2,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    name=APP_NAME,
 )

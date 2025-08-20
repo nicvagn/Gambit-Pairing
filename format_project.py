@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+import argparse
 import importlib.util
 import subprocess
 import sys
 import tomllib
 
 
-def run_command(cmd, description):
+def run_command(cmd, description, check_mode=False):
     """Run a command and handle errors"""
     print(f"Running: {description}")
     try:
@@ -44,6 +45,18 @@ def load_pyproject_dependencies():
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Format Python code using black and isort"
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Don't write changes, just check if formatting is needed",
+    )
+    args = parser.parse_args()
+
+    check_mode = args.check
+
     # Ensure pip is up to date
     print("Ensuring pip is up to date")
     if not run_command(
@@ -77,19 +90,61 @@ def main():
         else:
             print("No dev dependencies found")
 
-    # Run formatters - exit if they fail
-    if not run_command([sys.executable, "-m", "isort", "src"], "Formatting with isort"):
-        print("isort failed. Ensure current working dir is git root")
-        sys.exit(1)
-    print("------- isort ran ----------")
+    # Prepare commands based on check mode
+    isort_cmd = [sys.executable, "-m", "isort"]
+    black_cmd = [sys.executable, "-m", "black"]
 
-    if not run_command([sys.executable, "-m", "black", "src"], "Formatting with black"):
-        print("black failed. Ensure current working dir is git root")
-        sys.exit(1)
-    print("------- black ran ----------")
+    if check_mode:
+        isort_cmd.append("--check-only")
+        black_cmd.append("--check")
 
-    print("----- src formatted --------")
-    print("--- Hint: ensure new formatted files are added to any commit. ---")
+    isort_cmd.append("src")
+    black_cmd.append("src")
+
+    success = True
+
+    if not run_command(isort_cmd, "Checking/formatting with isort", check_mode):
+        print(
+            "isort check failed. Code formatting required."
+            if check_mode
+            else "isort failed. Ensure current working dir is git root"
+        )
+        success = False
+    else:
+        print(
+            "------- isort check passed ----------"
+            if check_mode
+            else "------- isort ran ----------"
+        )
+
+    if not run_command(black_cmd, "Checking/formatting with black", check_mode):
+        print(
+            "black check failed. Code formatting required."
+            if check_mode
+            else "black failed. Ensure current working dir is git root"
+        )
+        success = False
+    else:
+        print(
+            "------- black check passed ----------"
+            if check_mode
+            else "------- black ran ----------"
+        )
+
+    if success:
+        print(
+            "----- src format check passed --------"
+            if check_mode
+            else "----- src formatted --------"
+        )
+        if not check_mode:
+            print("--- Hint: ensure new formatted files are added to any commit. ---")
+    else:
+        if check_mode:
+            print(
+                "Format check failed. Run 'python format_project.py' to fix formatting issues."
+            )
+        sys.exit(1)
 
 
 if __name__ == "__main__":
