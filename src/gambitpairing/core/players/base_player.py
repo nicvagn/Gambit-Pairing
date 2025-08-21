@@ -19,11 +19,12 @@
 
 import logging
 import re
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from gambitpairing.core.club import Club
-from gambitpairing.core.constants import B, W
+from dateutil.relativedelta import relativedelta
+
+from gambitpairing.core import B, Club, Colour, W
 from gambitpairing.core.utils import generate_id, setup_logger
 
 logger = setup_logger(__name__)
@@ -32,50 +33,58 @@ logger = setup_logger(__name__)
 class Player:
     """Represents a player in the tournament."""
 
-    Player.email_regex = re.compile(
+    email_regex = re.compile(
         r"([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\[[\t -Z^-~]*])"
     )
-    Player.phone_regex = re.compile(
-        r"^[+]{1}(?:[0-9\\-\\(\\)\\/\\.]\\s?){6,15}[0-9]{1}$"
-    )
+    phone_regex = re.compile(r"^[+]{1}(?:[0-9\\-\\(\\)\\/\\.]\\s?){6,15}[0-9]{1}$")
 
     def __init__(
         self,
         name: str,
-        player_id: Optional[str] = None,
         phone: Optional[str] = None,
         email: Optional[str] = None,
         club: Optional[Club] = None,
-        federation: Optional[str] = None,
         gender: Optional[str] = None,
-        dob: Optional[str] = None,
+        date_of_birth: Optional[date] = None,
     ) -> None:
-        self.id: str = player_id or generate_id("player_")
+        # the player id is for internal use, so it will never be external set.
+        self.id: str = generate_id(self.__class__.__name__)
+
         self.name: str = name
 
-        if Player.phone_regex.match(email):
-            self.phone = phone
+        if phone is None:
+            logger.info("No phone given for: %s", self)
         else:
-            raise RuntimeWarning(
-                "The phone number: %s is not valid, phone not set for Player with id: %s",
-                phone,
-                self.id,
-            )
+            if type(self).phone_regex.match(phone):
+                self.phone = phone
+            else:
+                raise RuntimeWarning(
+                    "The phone number: %s is not valid, phone not set for Player with id: %s",
+                    phone,
+                    self.id,
+                )
 
-        if Player.email_regex.match(email):
-            self.email = email
+        if email is None:
+            logger.info("No email given for: %s", self)
         else:
-            raise RuntimeWarning(
-                "The email: %s is not valid. email not set for Player with id: %s",
-                email,
-                self.id,
-            )
+            if type(self).email_regex.match(str(email)):
+                self.email = email
+            else:
+                raise RuntimeWarning(
+                    "The email: %s is not valid. email not set for Player with id: %s",
+                    email,
+                    self.id,
+                )
+
         self.club: Optional[Club] = club
         self.gender: Optional[str] = gender
-        self.dob: Optional[str] = dob
+        self.dob: Optional[date] = date_of_birth
 
         # History
-        self.color_history: List[Optional[str]] = []  # Stores W, B, or None (for bye)
+        self.score: float = 0  # start at the bottom
+        self.color_history: List[Optional[Colour]] = (
+            []
+        )  # Stores W, B, or None (for bye)
         self.opponent_ids: List[Optional[str]] = []
         self.results: List[Optional[float]] = []
         self.running_scores: List[float] = []
@@ -92,64 +101,45 @@ class Player:
         # Runtime cache
         self._opponents_played_cache: List[Optional["Player"]] = []
 
-    def __repr__(self) -> str:
-        """Representation of Player."""
-        status = "" if self.is_active else " (Inactive)"
-        return f"{self.name} ({self.rating}){status}"
-
     @property
-    def age(self) -> Optional[date]:
+    def age(self) -> Optional[int]:
         """Calculate age from birth year or date of birth.
 
         Returns
         -------
-        int : Optional[int]
+        int or None
             The players age, if known
         """
-        # Try to calculate from birth year first
-        if self.birth_year:
-            current_year = date.today().year
-            return current_year - self.birth_year
 
         # Try to calculate from date of birth
         if self.dob:
-            try:
-                if isinstance(self.dob, str):
-                    # Parse various date formats
-                    if "-" in self.dob:  # YYYY-MM-DD format
-                        birth_date = date.fromisoformat(self.dob)
-                    else:  # Try other formats if needed
-                        return None
-                else:
-                    return None
+            today = date.today()
+            age = relativedelta(today, self.dob)
 
-                today = date.today()
-                age = today.year - birth_date.year
-                # Adjust if birthday hasn't occurred this year
-                if today.month < birth_date.month or (
-                    today.month == birth_date.month and today.day < birth_date.day
-                ):
-                    age -= 1
-                return age
-            except (ValueError, AttributeError):
-                return None
-
+            return age.years
+        logger.info("%s tried to caa age method. self.dob was: %s", self, self.dob)
         return None
 
     @property
-    def date_of_birth(self) -> Optional[datetime.date]:
-        """Return the date of birth, maintaining compatibility.
+    def date_of_birth(self) -> Optional[date]:
+        """Return the date of birth of this Player
 
         Returns
         -------
-        datetime.date
-            The date of the players birth
+        datetime.date | None
+            The date of the players birth, if known
         """
         return self.dob
 
     @date_of_birth.setter
-    def date_of_birth(self, value: Optional[str]) -> None:
-        """Set the date of birth, maintaining compatibility."""
+    def set_date_of_birth(self, value: date) -> None:
+        """Set the date of birth
+
+        Parameters
+        ----------
+        value : datetime.date
+            the date of the players birth
+        """
         self.dob = value
 
     def get_opponent_objects(
@@ -160,10 +150,11 @@ class Player:
         Parameters
         ----------
         player_dict : Dict[str, "Player"]
+            Dict of Player obj. that where opponent of self
 
         Returns
         -------
-        List of your opponents
+        List of your opponents or None
         """
         if len(self._opponents_played_cache) != len(self.opponent_ids):
             self._opponents_played_cache = [
@@ -172,18 +163,18 @@ class Player:
             ]
         return self._opponents_played_cache
 
-    def get_last_two_colors(self) -> Tuple[Optional[str], Optional[str]]:
+    def get_last_two_colors(self) -> Tuple[Optional[Colour], Optional[Colour]]:
         """Return the colors of the last two non-bye games played."""
         valid_colors = [c for c in self.color_history if c is not None]
         if len(valid_colors) >= 2:
-            return valid_colors[-1], valid_colors[-2]
+            return valid_colors[-1], valid_colors[-2]  # type: ignore | this confuses my type checker
         elif len(valid_colors) == 1:
-            return valid_colors[-1], None
+            return valid_colors[-1], None  # type: ignore
         else:
             return None, None
 
-    def get_color_preference(self) -> Optional[str]:
-        """Determine color preference based on FIDE/USCF rules.
+    def get_color_preference(self) -> Colour | None:
+        """Determine color preference based on FIDE/US-CF rules.
 
         Notes
         -----
@@ -195,16 +186,22 @@ class Player:
         string
             "White", "Black", or None if no preference or perfectly balanced.
         """
-        valid_played_colors = [c for c in self.color_history if c is not None]
+        played_colors = [c for c in self.color_history if c is not None]
 
-        if len(valid_played_colors) >= 2:
-            last_color = valid_played_colors[-1]
-            second_last_color = valid_played_colors[-2]
+        if len(played_colors) >= 2:
+            last_color = played_colors[-1]
+            second_last_color = played_colors[-2]
             if last_color == second_last_color:
-                return B if last_color == B else W
+                return B if last_color == B else W  # type: ignore
 
-        white_games_played = valid_played_colors.count(W)
-        black_games_played = valid_played_colors.count(B)
+        white_games_played = 0
+        black_games_played = 0
+
+        for colour in played_colors:
+            if colour is W:
+                white_games_played = +1
+            elif colour is B:
+                black_games_played = +1
 
         if white_games_played > black_games_played:
             return B
@@ -256,14 +253,18 @@ class Player:
         data = {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
         return data
 
-    @abstractmethod
     @classmethod
-    def from_dict(cls, player_data: Dict[str, Any]) -> "Player":
+    def from_dict(cls, player_data: Dict[str, Any]):
         """Create a python Player instance from serialized data.
 
         Parameters
         ----------
         player-data : Dict[str, Any]
             the player data used to construct the Chess Player
+
+        Returns
+        -------
+        cls
+            A Player created from the data
         """
-        pass
+        return cls.from_dict(player_data=player_data)

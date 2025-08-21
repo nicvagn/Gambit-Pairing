@@ -17,46 +17,42 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import logging
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import date
+from typing import Any, Dict, Optional
 
-from gambitpairing.core.constants import B, W
-from gambitpairing.core.players.base_player import BasePlayer
-from gambitpairing.core.utils import generate_id, setup_logger
+from gambitpairing.core.club import Club
+from gambitpairing.core.constants import B
+from gambitpairing.core.players.base_player import Player
+from gambitpairing.core.utils import setup_logger
 
 logger = setup_logger(__name__)
 
 
-class FidePlayer(BasePlayer):
+class FidePlayer(Player):
     """Represents A FIDE a player in the tournament."""
 
     def __init__(
         self,
         name: str,
-        rating: Optional[int] = None,
-        player_id: Optional[str] = None,
         phone: Optional[str] = None,
         email: Optional[str] = None,
-        club: Optional[str] = None,
-        federation: Optional[str] = None,
+        club: Optional[Club] = None,
         gender: Optional[str] = None,
-        dob: Optional[str] = None,
+        date_of_birth: Optional[date] = None,
         fide_id: Optional[int] = None,
         fide_title: Optional[str] = None,
         fide_standard: Optional[int] = None,
         fide_rapid: Optional[int] = None,
         fide_blitz: Optional[int] = None,
-        birth_year: Optional[int] = None,
     ) -> None:
+        # initialize all the Player base class attributes
         super().__init__(
             name=name,
-            player_id=player_id,
             phone=phone,
             email=email,
             club=club,
-            federation=federation,
             gender=gender,
-            dob=dob,
+            date_of_birth=date_of_birth,
         )
         # FIDE Related data
         self.fide_id: Optional[int] = fide_id
@@ -64,13 +60,13 @@ class FidePlayer(BasePlayer):
         self.fide_standard: Optional[int] = fide_standard
         self.fide_rapid: Optional[int] = fide_rapid
         self.fide_blitz: Optional[int] = fide_blitz
-        self.birth_year: Optional[int] = birth_year
+        self.birth_year: Optional[int] = date_of_birth.year
         self.score: float = 0.0
         self.is_active: bool = True  # Used for withdrawals
 
     @classmethod
-    def from_dict(cls, player_data: Dict[str, Any]) -> cls:
-        """Create a python Player instance from serialized data.
+    def from_dict(cls, player_data: Dict[str, Any]) -> "FidePlayer":
+        """Create a Fide Player instance from serialized data.
 
         Parameters
         ----------
@@ -86,20 +82,16 @@ class FidePlayer(BasePlayer):
 
         player = cls(
             name=player_data["name"],
-            rating=player_data.get("rating", 1000),
-            player_id=player_data["id"],
             phone=player_data.get("phone"),
             email=player_data.get("email"),
             club=player_data.get("club"),
-            federation=player_data.get("federation"),
             gender=gender,
-            dob=player_data.get("dob"),
+            date_of_birth=player_data.get("dob"),
             fide_id=player_data.get("fide_id"),
             fide_title=player_data.get("fide_title"),
             fide_standard=player_data.get("fide_standard"),
             fide_rapid=player_data.get("fide_rapid"),
             fide_blitz=player_data.get("fide_blitz"),
-            birth_year=player_data.get("birth_year"),
         )
         for key, value in player_data.items():
             if hasattr(player, key) and not key.startswith("_"):
