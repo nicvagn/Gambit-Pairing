@@ -1,3 +1,5 @@
+"""Relating to a Chess Tournament managed by Gambit Pairing."""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -19,7 +21,6 @@ import functools
 import logging
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from gambitpairing.core import Pairings  # this is a type
 from gambitpairing.core.constants import (
     BYE_SCORE,
     DEFAULT_TIEBREAK_SORT_ORDER,
@@ -33,12 +34,11 @@ from gambitpairing.core.constants import (
     TB_SOLKOFF,
     TB_SONNENBORN_BERGER,
     WIN_SCORE,
-    B,
-    W,
 )
 from gambitpairing.core.pairing.dutch_swiss import create_dutch_swiss_pairings
 from gambitpairing.core.pairing.round_robin import RoundRobin, create_round_robin
 from gambitpairing.core.player import Player
+from gambitpairing.type_hints import B, Pairings, W
 
 
 class Tournament:
@@ -65,6 +65,18 @@ class Tournament:
         self.pairing_system: str = pairing_system  # NEW: pairing system type
 
     def get_player_list(self, active_only=False) -> List[Player]:
+        """Get the players in this tournament.
+
+        Parameters
+        ----------
+        active_only=False
+            Only active players
+
+        Returns
+        -------
+        List[Players]
+            The Tournament player list
+        """
         players = list(self.players.values())
         if active_only:
             return [p for p in players if p.is_active]
@@ -76,7 +88,15 @@ class Tournament:
     def _get_eligible_bye_player(
         self, potential_bye_players: List[Player]
     ) -> Optional[Player]:
-        """Determines the bye player according to Swiss rules.
+        """Determine the bye player according to Swiss rules.
+
+        Parameters
+        ----------
+        potential_bye_players : List[Players]
+            A list of players who can get a bye.
+
+        Notes
+        -----
         Priority: Active player who has not yet received a bye, lowest score, then lowest rating.
         Fallback: If all have received a bye, the active player with the lowest score, then rating, gets a second bye.
         """
@@ -114,7 +134,7 @@ class Tournament:
     def create_pairings(
         self, current_round: int, allow_repeat_pairing_callback=None
     ) -> Pairings:
-        """Generates pairings for the next round using the selected pairing system."""
+        """Generate pairings for the next round using the selected pairing system."""
         active_players = self._get_active_players()
         if self.pairing_system == "dutch_swiss":
             pairings, bye_player, round_pairings_ids, bye_player_id = (
@@ -201,7 +221,7 @@ class Tournament:
             )
 
     def get_pairings_for_round(self, round_index: int) -> Pairings:
-        """Retrieves the pairings and bye player for a given round index."""
+        """Retrieve the pairings and bye player for a given round index."""
         if not (0 <= round_index < len(self.rounds_pairings_ids)):
             return [], None
 
@@ -221,7 +241,7 @@ class Tournament:
     def manually_adjust_pairing(
         self, round_index: int, player1_id: str, new_opponent_id: str
     ) -> bool:
-        """Allows manual adjustment of one player's opponent in a specific round's pairings."""
+        """Allow manual adjustment of one player's opponent in a specific round's pairings."""
         if round_index < 0 or round_index >= len(self.rounds_pairings_ids):
             logging.error(f"Manual Adjust: Invalid round index {round_index}.")
             return False
@@ -468,7 +488,7 @@ class Tournament:
     def record_results(
         self, round_index: int, results_data: List[Tuple[str, str, float]]
     ):
-        """Records results, checking for active status and round index."""
+        """Record results, checking for active status and round index."""
         if round_index < 0 or round_index >= len(self.rounds_pairings_ids):
             logging.error(f"Record Results: Invalid round index {round_index}")
             return False
@@ -801,7 +821,7 @@ class Tournament:
         return min(len(p.results) for p in players_with_results)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serializes the tournament state to a dictionary."""
+        """Serialize the tournament state to a dictionary."""
         # TODO: Document
         return {
             "name": self.name,
@@ -817,7 +837,7 @@ class Tournament:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Tournament":
-        """Deserializes a tournament from a dictionary."""
+        """Deserialize a tournament from a dictionary."""
         # TODO document expected Dict parameters
         players = [Player.from_dict(p_data) for p_data in data["players"]]
         num_rounds = data["num_rounds"]

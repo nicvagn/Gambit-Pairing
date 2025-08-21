@@ -11,14 +11,14 @@ from typing import List, Optional, Set, Tuple
 
 import pytest
 
-from gambitpairing.core import BERGER_TABLES, RoundRobin, create_round_robin_pairings
-from gambitpairing.core.exceptions import PairingException
-from gambitpairing.core.pairing_round_robin import (
+from gambitpairing import BERGER_TABLES, RoundRobin, create_round_robin_pairings
+from gambitpairing.exceptions import PairingException
+from gambitpairing.pairing_round_robin import (
     BERGER_TABLES,
     RoundRobin,
     create_round_robin_pairings,
 )
-from gambitpairing.core.player import Player
+from gambitpairing.player import Player
 
 
 class TestRoundRobinBasic:

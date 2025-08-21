@@ -24,8 +24,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from dateutil.relativedelta import relativedelta
 
-from gambitpairing.core import B, Club, Colour, W
+from gambitpairing.core.club import Club
 from gambitpairing.core.utils import generate_id, setup_logger
+from gambitpairing.type_hints import B, Colour, W
 
 logger = setup_logger(__name__)
 
@@ -90,7 +91,8 @@ class Player:
         self.running_scores: List[float] = []
         self.has_received_bye: bool = False
         self.num_black_games: int = 0  # Counts actual games played as Black
-        self.float_history: List[int] = []  # Track rounds where player floated down
+        # Track rounds where player floated down
+        self.float_history: List[int] = []
         self.match_history: List[Optional[Dict[str, Any]]] = (
             []
         )  # Stores {'opponent_id': str, 'opponent_score': float}
@@ -167,7 +169,8 @@ class Player:
         """Return the colors of the last two non-bye games played."""
         valid_colors = [c for c in self.color_history if c is not None]
         if len(valid_colors) >= 2:
-            return valid_colors[-1], valid_colors[-2]  # type: ignore | this confuses my type checker
+            # type: ignore | this confuses my type checker
+            return valid_colors[-1], valid_colors[-2]
         elif len(valid_colors) == 1:
             return valid_colors[-1], None  # type: ignore
         else:

@@ -18,11 +18,9 @@
 
 
 import logging
-import os
-import random
-import subprocess
 import sys
-import time
+
+from PyQt6 import QtCore
 
 # the logger format used
 LOG_FMT = "LVL: %(levelname)s | FILE PATH: %(pathname)s | FUN: %(funcName)s | msg: %(message)s | ln#:%(lineno)d"

@@ -20,7 +20,7 @@ import logging
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QDateTime, Qt
 
-from gambitpairing.core.constants import (
+from gambitpairing.constants import (
     CSV_FILTER,
     TB_CUMULATIVE,
     TB_CUMULATIVE_OPP,
@@ -105,7 +105,7 @@ class StandingsTab(QtWidgets.QWidget):
 
     def _get_current_round_info(self):
         """Get current round information for display in titles/headers."""
-        from gambitpairing.core.print_utils import TournamentPrintUtils
+        from gambitpairing.print_utils import TournamentPrintUtils
 
         # Use unified round information retrieval
         if hasattr(self.parent_window, "tournament_tab"):
@@ -349,7 +349,7 @@ class StandingsTab(QtWidgets.QWidget):
 
     def print_standings(self):
         """Print the current standings table in a clean, ink-friendly, professional format with a polished legend."""
-        from gambitpairing.core.print_utils import (
+        from gambitpairing.print_utils import (
             PrintOptionsDialog,
             TournamentPrintUtils,
         )

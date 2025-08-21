@@ -34,14 +34,12 @@ Example:
     >>> print(first_round)
 """
 
-from collections.abc import Sequence
 from typing import Iterable, List, Optional, Tuple
 
-from gambitpairing.core import Pairings  # These are types
-from gambitpairing.core import MatchPairing, Players, RoundSchedule
 from gambitpairing.core.exceptions import PairingException
 from gambitpairing.core.player import Player
 from gambitpairing.core.utils import setup_logger
+from gambitpairing.type_hints import Pairings, Players, RoundSchedule
 
 logger = setup_logger(__name__)
 

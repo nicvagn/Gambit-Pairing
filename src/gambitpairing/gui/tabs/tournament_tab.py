@@ -20,7 +20,7 @@ from typing import List, Optional, Tuple
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
-from gambitpairing.core.constants import (
+from gambitpairing.constants import (
     BYE_SCORE,
     DRAW_SCORE,
     LOSS_SCORE,
@@ -29,9 +29,9 @@ from gambitpairing.core.constants import (
     RESULT_WHITE_WIN,
     WIN_SCORE,
 )
-from gambitpairing.core.player import Player
 from gambitpairing.gui.dialogs import ManualPairingDialog
 from gambitpairing.gui.notournament_placeholder import NoTournamentPlaceholder
+from gambitpairing.player import Player
 
 
 def get_icon(icon_name: str, fallback_theme_name: str = None) -> QtGui.QIcon:
@@ -996,7 +996,7 @@ class TournamentTab(QtWidgets.QWidget):
         from PyQt6.QtCore import QDateTime
         from PyQt6.QtGui import QTextDocument
 
-        from gambitpairing.core.print_utils import (
+        from gambitpairing.print_utils import (
             PrintOptionsDialog,
             TournamentPrintUtils,
         )

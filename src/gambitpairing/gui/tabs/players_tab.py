@@ -23,12 +23,12 @@ from typing import Optional
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 
-from gambitpairing.core.player import Player
 from gambitpairing.gui.dialogs import PlayerManagementDialog
 from gambitpairing.gui.notournament_placeholder import (
     NoTournamentPlaceholder,
     PlayerPlaceholder,
 )
+from gambitpairing.player import Player
 
 
 class NumericTableWidgetItem(QtWidgets.QTableWidgetItem):

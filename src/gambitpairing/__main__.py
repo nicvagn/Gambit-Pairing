@@ -25,13 +25,13 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import QDir
 from PyQt6.QtGui import QIcon
 
-from gambitpairing.core.exceptions import IconException, StyleException
-from gambitpairing.core.utils import setup_logger
+from gambitpairing.exceptions import IconException, StyleException
 from gambitpairing.gui.mainwindow import GambitPairingMainWindow
 from gambitpairing.resources.resource_utils import (
     get_resource_path,
     read_resource_text,
 )
+from gambitpairing.utils import setup_logger
 
 logger = setup_logger(__name__)
 

@@ -22,8 +22,8 @@ from functools import lru_cache
 from itertools import permutations
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from gambitpairing.core import B, W
 from gambitpairing.core.player import Player
+from gambitpairing.type_hints import B, W
 
 
 def _get_lexicographic_key(perm_list: List[Player], N1: int) -> tuple:

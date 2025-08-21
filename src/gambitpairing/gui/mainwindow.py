@@ -28,12 +28,7 @@ from PyQt6.QtCore import QFileInfo, Qt
 from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtWidgets import QMessageBox
 
-from gambitpairing import APP_NAME, APP_VERSION
-from gambitpairing.core import utils
-from gambitpairing.core.tournament import Tournament
-from gambitpairing.core.update_worker import UpdateWorker
-from gambitpairing.core.updater import Updater
-from gambitpairing.core.utils import setup_logger
+from gambitpairing import APP_NAME, APP_VERSION, utils
 from gambitpairing.gui.dialogs import (
     AboutDialog,
     NewTournamentDialog,
@@ -49,6 +44,9 @@ from gambitpairing.gui.tabs import (
     StandingsTab,
     TournamentTab,
 )
+from gambitpairing.tournament import Tournament
+from gambitpairing.update import Updater, UpdateWorker
+from gambitpairing.utils import setup_logger
 
 logger = setup_logger(__name__)
 
