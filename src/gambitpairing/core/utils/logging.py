@@ -1,3 +1,5 @@
+"""Logging utilities."""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -22,17 +24,13 @@ import subprocess
 import sys
 import time
 
-from PyQt6 import QtCore
-from PyQt6.QtCore import QDateTime
-from PyQt6.QtWidgets import QApplication, QListWidget
-
 # the logger format used
 LOG_FMT = "LVL: %(levelname)s | FILE PATH: %(pathname)s | FUN: %(funcName)s | msg: %(message)s | ln#:%(lineno)d"
 
 
 # --- Logging Setup ---
 def setup_logger(logger_name: str) -> logging.Logger:
-    """Set up loger for a python module
+    """Set up loger for a python module.
 
     Sets up file handler and console handler
 
@@ -82,64 +80,4 @@ def setup_logger(logger_name: str) -> logging.Logger:
     return lgr
 
 
-# --- GUI Restart Functionality ---
-def restart_application() -> None:
-    """Restart the entire application to ensure clean state reload.
-
-    Raises
-    ------
-    an exception if one is raised when trying to restart
-    """
-
-    # Get the current application instance
-    app = QApplication.instance()
-    if app is None:
-        logging.error("app is None in restart_application")
-        return
-
-    # Get command line arguments for restart
-    args = sys.argv[:]
-
-    # Close all windows and quit the application
-    app.closeAllWindows()
-    app.quit()
-
-    # Small delay to ensure cleanup
-    time.sleep(0.1)
-
-    # Restart the application
-    try:
-        if sys.platform == "win32":
-            subprocess.Popen([sys.executable] + args)
-        else:
-            # For Linux/Unix systems, use os.execv for cleaner restart
-            os.execv(sys.executable, [sys.executable] + args)
-        return True
-    except Exception as e:
-        log = setup_logger(__name__)
-        log.error(f"Failed to restart application: {e}")
-        raise e
-
-
-# --- Utility Functions ---
-def generate_id(prefix: str = "item_") -> str:
-    """Generates a simple unique ID."""
-    return f"{prefix}{random.randint(100000, 999999)}_{int(QDateTime.currentMSecsSinceEpoch())}"
-
-
-def resize_list_to_show_all_items(list_widget: QListWidget):
-    """Resize QListWidget to show all items without scrolling - Qt6 version"""
-    if list_widget.count() == 0:
-        return
-
-    # Calculate total height needed
-    total_height = 0
-    for i in range(list_widget.count()):
-        total_height += list_widget.sizeHintForRow(i)
-
-    # Add frame margins
-    frame_height = list_widget.frameWidth() * 2
-
-    # Disable vertical scrollbar and set height
-    list_widget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-    list_widget.setFixedHeight(total_height + frame_height)
+#  LocalWords:  QListWidget

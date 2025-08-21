@@ -1,3 +1,5 @@
+"""update worker for updating Gambit Pairing."""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -33,7 +35,7 @@ class UpdateWorker(QtCore.QObject):
         self.updater = updater
 
     def run(self):
-        """Executes the update download and verification process."""
+        """Execute update download and verification process."""
         try:
             # 1. Download
             self.status.emit("Downloading update...")

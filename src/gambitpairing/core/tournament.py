@@ -36,8 +36,8 @@ from gambitpairing.core.constants import (
     B,
     W,
 )
-from gambitpairing.core.pairing_dutch_swiss import create_dutch_swiss_pairings
-from gambitpairing.core.pairing_round_robin import RoundRobin, create_round_robin
+from gambitpairing.core.pairing.dutch_swiss import create_dutch_swiss_pairings
+from gambitpairing.core.pairing.round_robin import RoundRobin, create_round_robin
 from gambitpairing.core.player import Player
 
 
@@ -751,6 +751,13 @@ class Tournament:
         return 0
 
     def get_standings(self) -> List[Player]:
+        """Get the current standings of the Tournament.
+
+        Returns
+        -------
+        List[Player]
+            [0] being leader of tournament, [1] being 2nd, ...
+        """
         # Active players are typically shown first, then inactive ones, or inactive are hidden.
         # Current _get_active_players() filters out inactive ones. This is fine for standings.
         players_for_standings = self._get_active_players()
@@ -795,6 +802,7 @@ class Tournament:
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes the tournament state to a dictionary."""
+        # TODO: Document
         return {
             "name": self.name,
             "players": [p.to_dict() for p in self.players.values()],
@@ -810,6 +818,7 @@ class Tournament:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Tournament":
         """Deserializes a tournament from a dictionary."""
+        # TODO document expected Dict parameters
         players = [Player.from_dict(p_data) for p_data in data["players"]]
         num_rounds = data["num_rounds"]
 
@@ -839,10 +848,5 @@ class Tournament:
             p._opponents_played_cache = []
         return tourney
 
-
-# --- GUI Dialogs ---
-# (No changes to PlayerEditDialog, PlayerDetailDialog, SettingsDialog, unless behaviorally impacted by core changes)
-# PlayerDetailDialog: Default rating could be None, Player class handles default.
-# SettingsDialog: Tiebreak order changes are reflected.
 
 #  LocalWords:  swiss RoundRobin
