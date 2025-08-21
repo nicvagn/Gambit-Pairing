@@ -1,3 +1,5 @@
+"""Manual adjustments to GP pairings."""
+
 import json
 from typing import List, Optional, Tuple
 
@@ -6,7 +8,7 @@ from PyQt6.QtCore import QMimeData, Qt, pyqtSignal
 from PyQt6.QtGui import QDrag
 from PyQt6.QtWidgets import QDockWidget, QHBoxLayout, QVBoxLayout, QWidget
 
-from gambitpairing.pairing_dutch_swiss import create_dutch_swiss_pairings
+from gambitpairing.pairing.dutch_swiss import create_dutch_swiss_pairings
 from gambitpairing.player import Player
 
 

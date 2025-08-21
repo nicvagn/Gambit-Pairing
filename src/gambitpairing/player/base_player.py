@@ -24,9 +24,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from dateutil.relativedelta import relativedelta
 
-from gambitpairing.core.club import Club
-from gambitpairing.core.utils import generate_id, setup_logger
+from gambitpairing.club import Club
 from gambitpairing.type_hints import B, Colour, W
+from gambitpairing.utils import generate_id, setup_logger
 
 logger = setup_logger(__name__)
 

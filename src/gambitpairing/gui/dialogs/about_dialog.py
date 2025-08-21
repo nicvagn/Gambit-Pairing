@@ -1,4 +1,4 @@
-"""About dialog for Gambit Pairing"""
+"""About dialog for Gambit Pairing."""
 
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
@@ -177,7 +177,7 @@ class AboutDialog(QDialog):
         Returns
         -------
         QWidget
-            A widget containing a scrollable text area with the MIT License text.
+            A widget containing a scroll-able text area with the MIT License text.
 
         Notes
         -----

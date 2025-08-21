@@ -1,2 +1,2 @@
-from gambitpairing.core.player.base_player import Player
-from gambitpairing.core.player.fide_player import FidePlayer
+from gambitpairing.player.base_player import Player
+from gambitpairing.player.fide_player import FidePlayer

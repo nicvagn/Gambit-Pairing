@@ -21,7 +21,7 @@ import functools
 import logging
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from gambitpairing.core.constants import (
+from gambitpairing.constants import (
     BYE_SCORE,
     DEFAULT_TIEBREAK_SORT_ORDER,
     DRAW_SCORE,
@@ -35,9 +35,9 @@ from gambitpairing.core.constants import (
     TB_SONNENBORN_BERGER,
     WIN_SCORE,
 )
-from gambitpairing.core.pairing.dutch_swiss import create_dutch_swiss_pairings
-from gambitpairing.core.pairing.round_robin import RoundRobin, create_round_robin
-from gambitpairing.core.player import Player
+from gambitpairing.pairing.dutch_swiss import create_dutch_swiss_pairings
+from gambitpairing.pairing.round_robin import RoundRobin, create_round_robin
+from gambitpairing.player import Player
 from gambitpairing.type_hints import B, Pairings, W
 
 

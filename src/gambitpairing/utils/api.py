@@ -15,7 +15,7 @@ from typing import Any, Dict, List
 import httpx
 from bs4 import BeautifulSoup
 
-from gambitpairing.core.utils import setup_logger
+from gambitpairing.utils import setup_logger
 
 logger = setup_logger(__name__)
 

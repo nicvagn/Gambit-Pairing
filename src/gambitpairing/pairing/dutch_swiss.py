@@ -22,7 +22,7 @@ from functools import lru_cache
 from itertools import permutations
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from gambitpairing.core.player import Player
+from gambitpairing.player import Player
 from gambitpairing.type_hints import B, W
 
 

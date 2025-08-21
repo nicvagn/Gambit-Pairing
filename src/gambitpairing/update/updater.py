@@ -27,8 +27,8 @@ from typing import Any, Dict, Optional, Tuple
 import httpx
 from packaging.version import parse as parse_version
 
-from gambitpairing.core.constants import UPDATE_URL
-from gambitpairing.core.utils import setup_logger
+from gambitpairing.constants import UPDATE_URL
+from gambitpairing.utils import setup_logger
 
 logger = setup_logger(__name__)
 

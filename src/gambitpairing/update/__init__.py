@@ -1,1 +1,2 @@
-from gambitpairing.core.update.worker import UpdateWorker
+from gambitpairing.update.updater import Updater
+from gambitpairing.update.worker import UpdateWorker

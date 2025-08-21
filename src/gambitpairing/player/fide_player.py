@@ -20,10 +20,10 @@
 from datetime import date
 from typing import Any, Dict, Optional
 
-from gambitpairing.core.club import Club
-from gambitpairing.core.player.base_player import Player
-from gambitpairing.core.utils import setup_logger
+from gambitpairing.club import Club
+from gambitpairing.player.base_player import Player
 from gambitpairing.type_hints import B
+from gambitpairing.utils import setup_logger
 
 logger = setup_logger(__name__)
 

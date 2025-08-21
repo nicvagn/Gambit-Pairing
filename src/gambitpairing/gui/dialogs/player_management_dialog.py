@@ -5,15 +5,13 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import QObject, Qt, QThread, pyqtSignal
 
-from gambitpairing.api_utils import (
-    get_cfc_player_info,
-    get_fide_player_info,
-    get_fide_top_players,
-    search_fide_players,
-)
 from gambitpairing.gui.notification import show_notification
 from gambitpairing.player import Player
-from gambitpairing.resources.resource_utils import get_icon_path
+from gambitpairing.utils.api import (
+    get_cfc_player_info,
+    get_fide_player_info,
+    search_fide_players,
+)
 
 # FIDE columns with better minimum widths
 FIDE_COLUMNS: List[Tuple[str, int]] = [
