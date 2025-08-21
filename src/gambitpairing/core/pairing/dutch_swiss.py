@@ -1,3 +1,5 @@
+"""Dutch Swiss Pairing System Implementation."""
+
 # Gambit Pairing
 # Copyright (C) 2025  Gambit Pairing developers
 #
@@ -14,21 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Dutch Swiss Pairing System Implementation
-"""
 
 from enum import Enum
 from functools import lru_cache
 from itertools import permutations
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from gambitpairing.core.constants import B, W
+from gambitpairing.core import B, W
 from gambitpairing.core.player import Player
 
 
 def _get_lexicographic_key(perm_list: List[Player], N1: int) -> tuple:
-    """Get lexicographic key for FIDE transposition sorting"""
+    """Get lexicographic key for FIDE transposition sorting."""
     comparison_length = min(N1, len(perm_list))
     return tuple(perm_list[i].bsn for i in range(comparison_length))
 
@@ -39,7 +38,8 @@ def _colors_satisfy_preferences_unified(
     """
     Unified color preference checking function.
 
-    Args:
+    Parameters
+    ----------
         white: Player assigned white pieces
         black: Player assigned black pieces
         use_fide_rules: If True, uses FIDE-compliant logic; if False, uses Dutch system logic
