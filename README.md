@@ -105,7 +105,23 @@ Gambit Pairing is a desktop application for managing Swiss-system chess tourname
 - [Before you commit](docs/before_you_commit.md)
 - [Developer Hacking Guide](docs/HACKING.md)
 - [Manual Pairing Guide](docs/manual-pairing-guide.md)
+- [GitHub Actions Build System](docs/github-actions-build-system.md)
 
+## Downloads
+
+### Automatic Releases
+Pre-built executables and installers are automatically created for each release:
+
+- **Windows MSI Installer** - Full installation with Start Menu shortcuts
+- **Windows Portable** - Single-file executable, run directly
+- **Windows Directory** - Faster startup, extract and run
+- **Linux** - Executable for Linux x64 systems  
+- **macOS** - App bundle for macOS x64 systems
+
+Visit the [Releases page](https://github.com/gambit-devs/gambit-pairing/releases) to download the latest version.
+
+### Build Status
+[![Build Windows Release](https://github.com/gambit-devs/gambit-pairing/actions/workflows/build-release.yml/badge.svg)](https://github.com/gambit-devs/gambit-pairing/actions/workflows/build-release.yml)
 ## Requirements
 
 To install with pip, there is a helper sh script, ensure-all-dependancies.sh

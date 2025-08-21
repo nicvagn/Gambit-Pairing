@@ -14,6 +14,7 @@ dependencies = [
     "httpx",
     "packaging",
     "importlib-resources",
+    "Pillow",  # Required for MSI branding generation
 ]
 license = {text = "GPL-3.0-or-later"}
 
@@ -91,6 +92,7 @@ include = ["src", "tests"]
 exclude = [
     "build",
     "dist",
+    "msi_build",
     ".venv",
     "*.egg-info",
     "__pycache__"

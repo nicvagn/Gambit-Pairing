@@ -1,3 +1,3 @@
 APP_NAME = "Gambit Pairing"
-APP_VERSION = "0.6.2 (alpha)"
-__version__ = APP_VERSION[0:4]  # for __version__ strip (alpha)
+APP_VERSION = "0.6.4 (alpha)"
+__version__ = APP_VERSION
